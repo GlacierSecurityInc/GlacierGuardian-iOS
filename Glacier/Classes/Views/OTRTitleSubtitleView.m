@@ -1,0 +1,153 @@
+//
+//  OTRTitleSubtitleView.m
+//  Off the Record
+//
+//  Created by David Chiles on 12/16/13.
+//  Copyright (c) 2013 Chris Ballinger. All rights reserved.
+//
+
+#import "OTRTitleSubtitleView.h"
+#import "OTRUtilities.h"
+
+@import PureLayout;
+
+static const CGFloat kOTRMaxImageViewHeight = 6;
+
+@interface OTRTitleSubtitleView ()
+
+@property (nonatomic, strong) UILabel * titleLabel;
+@property (nonatomic, strong) UILabel * subtitleLabel;
+
+@property (nonatomic, strong) UIImageView *titleImageView;
+@property (nonatomic, strong) UIImageView *subtitleImageView;
+@property (nonatomic, strong) UIActivityIndicatorView *dynConnectingView; //IOSM#60 from DGActivityIndicatorView
+
+@property (nonatomic) BOOL addedConstraints;
+
+@end
+
+@implementation OTRTitleSubtitleView
+
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        self.addedConstraints = NO;
+        self.backgroundColor = [UIColor clearColor];
+        self.autoresizesSubviews = YES;
+        
+        self.titleLabel = [[UILabel alloc] initForAutoLayout];
+        
+        self.titleLabel.backgroundColor = [UIColor clearColor];
+        
+        self.titleLabel.textAlignment = NSTextAlignmentCenter;
+        self.titleLabel.adjustsFontSizeToFitWidth = YES;
+        
+        self.subtitleLabel = [[UILabel alloc] initForAutoLayout];
+        self.subtitleLabel.backgroundColor = [UIColor clearColor];
+        self.subtitleLabel.textAlignment = NSTextAlignmentCenter;
+        self.subtitleLabel.textColor = [UIColor labelColor];
+        
+        //ALF IOSM-488, 485
+        UIFontDescriptor *userFont = [UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleBody];
+        float fontSize = [userFont pointSize]-1;
+        float subFontSize = [userFont pointSize]-6;
+        
+        self.titleLabel.font = [UIFont boldSystemFontOfSize:fontSize];//16];
+        self.subtitleLabel.font = [UIFont systemFontOfSize:subFontSize];//11];
+        
+        self.titleImageView = [[UIImageView alloc] initForAutoLayout];
+        self.subtitleImageView = [[UIImageView alloc] initForAutoLayout];
+        
+        self.dynConnectingView = [[UIActivityIndicatorView alloc] initForAutoLayout]; //IOSM#60
+        self.dynConnectingView.transform = CGAffineTransformMakeScale(0.75, 0.75);
+        
+        [self addSubview:self.titleImageView];
+        [self addSubview:self.dynConnectingView];
+        
+        [self addSubview:self.titleLabel];
+        [self addSubview:self.subtitleLabel];
+        
+        [self setNeedsUpdateConstraints];
+    }
+    return self;
+}
+
+- (void)updateConstraints {
+    if (!self.addedConstraints) {
+        [self setupContraints];
+        self.addedConstraints = YES;
+    } 
+    
+    [super updateConstraints];
+}
+
+- (void)setupContraints {
+    //UIView *backingbar = self.superview;
+    //UIView *navbar = backingbar.superview;
+    //[backingbar autoAlignAxisToSuperviewAxis:ALAxisVertical].constant = 800;
+    [self autoAlignAxisToSuperviewAxis:ALAxisVertical];
+        
+    //IOSM-574 test and constant above
+    //[backingbar autoAlignAxisToSuperviewAxis:ALAxisHorizontal];
+    [self autoAlignAxisToSuperviewAxis:ALAxisHorizontal];
+        
+    //[backingbar autoMatchDimension:ALDimensionWidth toDimension:ALDimensionWidth ofView:navbar withMultiplier:0.6 relation:NSLayoutRelationLessThanOrEqual];
+    [self autoMatchDimension:ALDimensionWidth toDimension:ALDimensionWidth ofView:self.superview withMultiplier:1.0];
+    
+    /////////TITLE LABEL ////////////////
+    [self.titleLabel autoPinEdgeToSuperviewEdge:ALEdgeTop];
+    [self.titleLabel autoAlignAxisToSuperviewAxis:ALAxisVertical];
+    [self.titleLabel autoMatchDimension:ALDimensionHeight toDimension:ALDimensionHeight ofView:self withMultiplier:0.6];
+    [self.titleLabel autoMatchDimension:ALDimensionWidth toDimension:ALDimensionWidth ofView:self withMultiplier:0.9 relation:NSLayoutRelationLessThanOrEqual];
+    
+    ///////////// SUBTITLE LABEL /////////////
+    [self.subtitleLabel autoAlignAxisToSuperviewAxis:ALAxisVertical];
+    [self.subtitleLabel autoPinEdgeToSuperviewEdge:ALEdgeBottom];
+    [self.subtitleLabel autoPinEdge:ALEdgeTop toEdge:ALEdgeBottom ofView:self.titleLabel withOffset:-4];
+    
+    ////// TITLE IMAGEVIEW //////
+    [self setupConstraintsWithImageView:self.titleImageView withLabel:self.titleLabel];
+    
+    ////// SUBTITILE IMAGEVIEW //////
+    [self setupConstraintsWithDynView:self.dynConnectingView withLabel:self.subtitleLabel];
+    [self.dynConnectingView autoMatchDimension:ALDimensionHeight toDimension:ALDimensionHeight ofView:self.subtitleLabel withMultiplier:1.0 relation:NSLayoutRelationLessThanOrEqual];
+}
+
+//IOSM#60 changed from DGActivityIndicatorView
+- (void)setupConstraintsWithDynView:(UIActivityIndicatorView *)imageView withLabel:(UILabel *)label
+{
+    //Keeps trailing edge off of leading edge of label by at least 2
+    [imageView autoPinEdge:ALEdgeTrailing toEdge:ALEdgeLeading ofView:label withOffset:0.0]; //-5.0]; //IOSM-574 test
+    //Keep centered vertically
+    [imageView autoAlignAxis:ALAxisHorizontal toSameAxisOfView:label];
+    
+    //Keep leading edge inside superview
+    [imageView autoPinEdgeToSuperviewEdge:ALEdgeLeading withInset:0 relation:NSLayoutRelationGreaterThanOrEqual];
+    
+    //Less than equal to height of label
+    //[imageView autoMatchDimension:ALDimensionHeight toDimension:ALDimensionHeight ofView:label withOffset:0 relation:NSLayoutRelationLessThanOrEqual];
+    //Less than equal to max height
+    [imageView autoSetDimension:ALDimensionHeight toSize:kOTRMaxImageViewHeight relation:NSLayoutRelationEqual];
+}
+
+- (void)setupConstraintsWithImageView:(UIImageView *)imageView withLabel:(UILabel *)label
+{
+    //Keeps trailing edge off of leading edge of label by at least 2
+    [imageView autoPinEdge:ALEdgeTrailing toEdge:ALEdgeLeading ofView:label withOffset:-5.0];
+    //Keep centered vertically
+    [imageView autoAlignAxis:ALAxisHorizontal toSameAxisOfView:label];
+    
+    //Keep leading edge inside superview
+    [imageView autoPinEdgeToSuperviewEdge:ALEdgeLeading withInset:0 relation:NSLayoutRelationGreaterThanOrEqual];
+    
+    //Less than equal to height of label
+    //[imageView autoMatchDimension:ALDimensionHeight toDimension:ALDimensionHeight ofView:label withOffset:0 relation:NSLayoutRelationLessThanOrEqual];
+    //Less than equal to max height
+    [imageView autoSetDimension:ALDimensionHeight toSize:kOTRMaxImageViewHeight relation:NSLayoutRelationEqual];
+    
+    //Square ImageView
+    [imageView autoMatchDimension:ALDimensionWidth toDimension:ALDimensionHeight ofView:imageView];
+}
+
+@end

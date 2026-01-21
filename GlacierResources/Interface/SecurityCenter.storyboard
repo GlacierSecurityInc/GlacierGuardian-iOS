@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22155" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22131"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Security Center View Controller-->
+        <scene sceneID="s0d-6b-0kx">
+            <objects>
+                <viewController storyboardIdentifier="securityCenter" title="Security Hub" id="Y6W-OH-hqX" userLabel="Security Center View Controller" customClass="SecurityCenterViewController" customModule="Glacier" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="5EZ-qb-Rvc">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="S38-8k-pcq">
+                                <rect key="frame" x="0.0" y="20" width="375" height="598"/>
+                                <subviews>
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="67S-KT-6iz">
+                                        <rect key="frame" x="0.0" y="0.0" width="375" height="650"/>
+                                        <subviews>
+                                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="securityhub_SAFE" translatesAutoresizingMaskIntoConstraints="NO" id="Xvj-Ee-GUo" userLabel="securityImage">
+                                                <rect key="frame" x="150.5" y="10" width="74" height="60"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="60" id="IJ6-Fz-NFS"/>
+                                                    <constraint firstAttribute="width" constant="74" id="Ltx-eZ-860"/>
+                                                </constraints>
+                                            </imageView>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="No issues found" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="RIq-XK-g0T" userLabel="secureDetailLabel">
+                                                <rect key="frame" x="30" y="78" width="315" height="21"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="21" id="alj-KZ-rfv"/>
+                                                </constraints>
+                                                <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
+                                                <nil key="textColor"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                            <containerView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="600" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="mA8-hL-7y6">
+                                                <rect key="frame" x="0.0" y="240" width="375" height="410"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="410" id="SB7-ac-CeL"/>
+                                                </constraints>
+                                                <connections>
+                                                    <segue destination="Ogt-ON-wLY" kind="embed" id="J2L-2A-Jmb"/>
+                                                </connections>
+                                            </containerView>
+                                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" verticalCompressionResistancePriority="1000" scrollEnabled="NO" editable="NO" textAlignment="justified" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xcC-73-U7g">
+                                                <rect key="frame" x="30" y="107" width="315" height="133"/>
+                                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" priority="500" constant="120" id="uAj-Ja-Sah"/>
+                                                </constraints>
+                                                <string key="text">The Glacier Security Hub protects your device, data, and communications by detecting if your device has been compromised. In addition, Glacier will verify that your device security settings are configured for optimal security. When a threat or issue is detected, Glacier will send you a notification within the app.</string>
+                                                <color key="textColor" systemColor="labelColor"/>
+                                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                                            </textView>
+                                        </subviews>
+                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                        <constraints>
+                                            <constraint firstItem="mA8-hL-7y6" firstAttribute="leading" secondItem="67S-KT-6iz" secondAttribute="leading" id="3Ml-mH-USS"/>
+                                            <constraint firstItem="RIq-XK-g0T" firstAttribute="leading" secondItem="67S-KT-6iz" secondAttribute="leading" constant="30" id="4Wt-93-Fop"/>
+                                            <constraint firstItem="RIq-XK-g0T" firstAttribute="top" secondItem="Xvj-Ee-GUo" secondAttribute="bottom" constant="8" id="517-R9-Mqy"/>
+                                            <constraint firstItem="mA8-hL-7y6" firstAttribute="trailing" secondItem="67S-KT-6iz" secondAttribute="trailing" id="HEZ-p4-tNi"/>
+                                            <constraint firstItem="xcC-73-U7g" firstAttribute="leading" secondItem="67S-KT-6iz" secondAttribute="leading" constant="30" id="OY6-hO-2ya"/>
+                                            <constraint firstItem="xcC-73-U7g" firstAttribute="top" secondItem="RIq-XK-g0T" secondAttribute="bottom" constant="8" id="Qoo-NV-qnB"/>
+                                            <constraint firstItem="Xvj-Ee-GUo" firstAttribute="centerX" secondItem="67S-KT-6iz" secondAttribute="centerX" id="Uuv-QN-2n9"/>
+                                            <constraint firstItem="RIq-XK-g0T" firstAttribute="trailing" secondItem="67S-KT-6iz" secondAttribute="trailing" constant="-30" id="ghl-q2-Bfb"/>
+                                            <constraint firstItem="mA8-hL-7y6" firstAttribute="bottom" secondItem="67S-KT-6iz" secondAttribute="bottom" id="lKM-KC-ptr"/>
+                                            <constraint firstItem="xcC-73-U7g" firstAttribute="trailing" secondItem="67S-KT-6iz" secondAttribute="trailing" constant="-30" id="p6s-T2-57l"/>
+                                            <constraint firstItem="Xvj-Ee-GUo" firstAttribute="top" secondItem="67S-KT-6iz" secondAttribute="top" constant="10" id="vbc-Ro-Zul"/>
+                                            <constraint firstItem="mA8-hL-7y6" firstAttribute="top" secondItem="xcC-73-U7g" secondAttribute="bottom" id="yZG-Q3-9xQ"/>
+                                        </constraints>
+                                    </view>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstItem="67S-KT-6iz" firstAttribute="width" secondItem="Lji-ZS-fq6" secondAttribute="width" id="KQw-50-78R"/>
+                                    <constraint firstItem="67S-KT-6iz" firstAttribute="bottom" secondItem="AbL-7e-OGM" secondAttribute="bottom" id="Rnn-EK-ERx"/>
+                                    <constraint firstItem="67S-KT-6iz" firstAttribute="top" secondItem="AbL-7e-OGM" secondAttribute="top" id="UUg-6G-QGv"/>
+                                    <constraint firstItem="67S-KT-6iz" firstAttribute="trailing" secondItem="AbL-7e-OGM" secondAttribute="trailing" id="lpS-lS-ooc"/>
+                                    <constraint firstItem="67S-KT-6iz" firstAttribute="height" secondItem="Lji-ZS-fq6" secondAttribute="height" priority="250" id="pgs-y5-Hm0"/>
+                                    <constraint firstItem="67S-KT-6iz" firstAttribute="leading" secondItem="AbL-7e-OGM" secondAttribute="leading" id="sva-TU-lDj"/>
+                                </constraints>
+                                <viewLayoutGuide key="contentLayoutGuide" id="AbL-7e-OGM"/>
+                                <viewLayoutGuide key="frameLayoutGuide" id="Lji-ZS-fq6"/>
+                            </scrollView>
+                            <tabBar contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="656-73-tie" customClass="GlacierTabs" customModule="Glacier">
+                                <rect key="frame" x="0.0" y="618" width="375" height="49"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <items>
+                                    <tabBarItem systemItem="favorites" id="Pk7-O2-AK2"/>
+                                    <tabBarItem systemItem="more" id="WGF-7y-9hg"/>
+                                </items>
+                            </tabBar>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="vDu-zF-Fre"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="S38-8k-pcq" firstAttribute="top" secondItem="vDu-zF-Fre" secondAttribute="top" id="1vh-WB-Xut"/>
+                            <constraint firstItem="656-73-tie" firstAttribute="top" secondItem="vDu-zF-Fre" secondAttribute="bottom" constant="-49" id="LuT-17-FPY"/>
+                            <constraint firstItem="656-73-tie" firstAttribute="bottom" secondItem="5EZ-qb-Rvc" secondAttribute="bottom" id="QIj-dz-aLJ"/>
+                            <constraint firstItem="S38-8k-pcq" firstAttribute="bottom" secondItem="656-73-tie" secondAttribute="top" id="VUH-v8-734"/>
+                            <constraint firstItem="656-73-tie" firstAttribute="trailing" secondItem="vDu-zF-Fre" secondAttribute="trailing" id="Zhy-ar-KXU"/>
+                            <constraint firstItem="656-73-tie" firstAttribute="leading" secondItem="vDu-zF-Fre" secondAttribute="leading" id="aFy-9d-DEG"/>
+                            <constraint firstItem="S38-8k-pcq" firstAttribute="leading" secondItem="vDu-zF-Fre" secondAttribute="leading" id="jfI-Tf-X49"/>
+                            <constraint firstItem="S38-8k-pcq" firstAttribute="trailing" secondItem="vDu-zF-Fre" secondAttribute="trailing" id="qCv-JT-enP"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="secureDescTextView" destination="xcC-73-U7g" id="ASx-us-Bbi"/>
+                        <outlet property="secureDetailLbl" destination="RIq-XK-g0T" id="KjM-Cj-F8S"/>
+                        <outlet property="securityImage" destination="Xvj-Ee-GUo" id="ajL-sy-jIu"/>
+                        <outlet property="tabBar" destination="656-73-tie" id="SVv-8Y-Kpr"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Ief-a0-LHa" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="53.600000000000001" y="36.431784107946029"/>
+        </scene>
+        <!--Security Center Table View Controller-->
+        <scene sceneID="h3X-kv-owB">
+            <objects>
+                <tableViewController id="Ogt-ON-wLY" customClass="SecurityCenterTableViewController" customModule="Glacier" sceneMemberID="viewController">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" scrollEnabled="NO" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" dataMode="static" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" id="gQ0-Wr-gWv">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="410"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <sections>
+                            <tableViewSection id="0lV-wC-sEg">
+                                <cells>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" rowHeight="55" id="Q4d-V9-hC4" userLabel="SystemSafeCell">
+                                        <rect key="frame" x="0.0" y="50" width="375" height="55"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="Q4d-V9-hC4" id="f0e-0Q-OlS">
+                                            <rect key="frame" x="0.0" y="0.0" width="375" height="55"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </tableViewCellContentView>
+                                        <listContentConfiguration key="contentConfiguration" style="subtitleCell" text="Your system is safe" secondaryText="No anomalies detected" image="shield_safe" imageToTextPadding="15" textToSecondaryTextVerticalPadding="3"/>
+                                    </tableViewCell>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" rowHeight="55" id="iIn-Ni-C2R" userLabel="ScreenLockCell">
+                                        <rect key="frame" x="0.0" y="105" width="375" height="55"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="iIn-Ni-C2R" id="0U0-mL-LAH">
+                                            <rect key="frame" x="0.0" y="0.0" width="375" height="55"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </tableViewCellContentView>
+                                        <listContentConfiguration key="contentConfiguration" style="subtitleCell" text="Screen Lock" secondaryText="Device passcode enabled" image="screen_lock" imageToTextPadding="15" textToSecondaryTextHorizontalPadding="15" textToSecondaryTextVerticalPadding="3"/>
+                                    </tableViewCell>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="default" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" rowHeight="55" id="NMK-e1-kL6" userLabel="LatestCell">
+                                        <rect key="frame" x="0.0" y="160" width="375" height="55"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="NMK-e1-kL6" id="gTk-MY-2ei">
+                                            <rect key="frame" x="0.0" y="0.0" width="375" height="55"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </tableViewCellContentView>
+                                        <listContentConfiguration key="contentConfiguration" style="subtitleCell" text="Latest Glacier/iOS" secondaryText="Glacier and iOS up to date" image="glaciersecure" imageToTextPadding="15" textToSecondaryTextHorizontalPadding="15" textToSecondaryTextVerticalPadding="3"/>
+                                    </tableViewCell>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" rowHeight="55" id="Zb9-rc-lVa" userLabel="BiometricLockCell">
+                                        <rect key="frame" x="0.0" y="215" width="375" height="55"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="Zb9-rc-lVa" id="rKi-38-I5M">
+                                            <rect key="frame" x="0.0" y="0.0" width="375" height="55"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </tableViewCellContentView>
+                                        <listContentConfiguration key="contentConfiguration" style="subtitleCell" text="Biometric Lock" secondaryText="Face ID enabled" image="biometric_lock" imageToTextPadding="15" textToSecondaryTextHorizontalPadding="15" textToSecondaryTextVerticalPadding="3"/>
+                                    </tableViewCell>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="default" accessoryType="disclosureIndicator" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" rowHeight="55" id="w1m-I2-OlM" userLabel="CoreConnectionCell">
+                                        <rect key="frame" x="0.0" y="270" width="375" height="55"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="w1m-I2-OlM" id="um9-UL-scL">
+                                            <rect key="frame" x="0.0" y="0.0" width="348.5" height="55"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </tableViewCellContentView>
+                                        <listContentConfiguration key="contentConfiguration" style="subtitleCell" text="Core Connection" secondaryText="Core is enabled" image="core_connection" imageToTextPadding="15" textToSecondaryTextHorizontalPadding="15" textToSecondaryTextVerticalPadding="3"/>
+                                    </tableViewCell>
+                                </cells>
+                            </tableViewSection>
+                        </sections>
+                        <connections>
+                            <outlet property="dataSource" destination="Ogt-ON-wLY" id="r7L-bg-Od8"/>
+                            <outlet property="delegate" destination="Ogt-ON-wLY" id="ArN-vX-u24"/>
+                        </connections>
+                    </tableView>
+                    <connections>
+                        <outlet property="bioLockCell" destination="Zb9-rc-lVa" id="8Lg-tS-k5K"/>
+                        <outlet property="coreConnectionCell" destination="w1m-I2-OlM" id="4Mu-cm-oAr"/>
+                        <outlet property="latestVersionCell" destination="NMK-e1-kL6" id="hPD-Ed-yrz"/>
+                        <outlet property="screenLockCell" destination="iIn-Ni-C2R" id="Kgl-12-LEb"/>
+                        <outlet property="securityTable" destination="gQ0-Wr-gWv" id="OI4-Yu-D5f"/>
+                        <outlet property="systemSafeCell" destination="Q4d-V9-hC4" id="tgD-pM-5Cu"/>
+                    </connections>
+                </tableViewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Oga-Po-kOn" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="956" y="250"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="biometric_lock" width="32" height="32"/>
+        <image name="core_connection" width="32" height="32"/>
+        <image name="glaciersecure" width="32" height="32"/>
+        <image name="screen_lock" width="32" height="32"/>
+        <image name="securityhub_SAFE" width="151" height="151"/>
+        <image name="shield_safe" width="32" height="32"/>
+        <systemColor name="labelColor">
+            <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>
