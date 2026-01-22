@@ -2,8 +2,6 @@
 
 [Glacier](http://www.glaciersecurity.com) Pro is an [XMPP](https://en.wikipedia.org/wiki/XMPP) messaging client for iOS that integrates [OMEMO](https://en.wikipedia.org/wiki/OMEMO) encrypted messaging support as well as external calling and messaging.
 
-[Glacier Security](http://www.glaciersecurity.com) is a full-service provider of secure, end-to-end encrypted, and anonymous communication solutions for enterprise and government. Our cloud based immutable infrastructure is launched automatically for each customer leveraging concepts of Department of Homeland Security’s Moving Target Defense project. Glacier controls change across multiple system dimensions in order to increase uncertainty for attackers, reduce their window of opportunity, increase the costs of their attack efforts, and keep end user devices anonymous.
-
 Because Glacier services typically run within a private network, numerous assumptions were purposefully made to optimize and simplify usage for this specific scenario. Glacier is not intended for use with public XMPP servers.
 
 
