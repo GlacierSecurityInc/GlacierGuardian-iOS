@@ -32,3 +32,7 @@ node_modules/
 aws-exports.js
 amplify-gradle-config.json
 amplifyxc.config
+
+# local backups
+.graphqlconfig.yml.bak
+*.bak
