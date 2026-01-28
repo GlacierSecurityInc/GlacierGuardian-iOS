@@ -223,7 +223,7 @@ import TwilioConversationsClient
                         var existing = SMSChatConversationModel.existingConversation(with: twilioId)
                         
                         if let smsConv = existing {
-                            self.syncMessages(smsConv, twilioConversation: twilioConv, smsmsgs:smsmsgs) //IOSM#120
+                            self.syncMessages(smsConv, twilioConversation: twilioConv, smsmsgs:smsmsgs)
                         } else {
                             let newConversation = SMSChatConversationModel(remoteNumber: toNumber, localNumber: fromNumber, accountId: acct)
                             newConversation.grdbRecord?.preferredName = toNumber
@@ -446,7 +446,6 @@ import TwilioConversationsClient
                                     smsAccount.grdbRecord?.displayName = acctname
                                 }
                                 
-                                //IOSM#105
                                 smsAccount.save(completion: {
                                     self.currentAccounts.append(smsAccount)
                                     self.selectedAccount = smsAccount
@@ -1052,7 +1051,6 @@ import TwilioConversationsClient
                         self.selectedAccount = smsAccount
                     }
                     
-                    //IOSM#105
                     smsAccount?.save(completion: {
                         self.smsDelegates.forEach({ (smsDel) in
                             smsDel.accountsUpdated()
@@ -1273,7 +1271,7 @@ import TwilioConversationsClient
         } else {
             let newConversation = SMSChatConversationModel(remoteNumber: remoteNumber, localNumber: sendingNum, accountId: acctid)
             newConversation.grdbRecord?.preferredName = smsContact.name
-            newConversation.grdbRecord?.isNew = true //IOSM#52 janky
+            newConversation.grdbRecord?.isNew = true // janky
                 
             if let ava = smsContact.avatar {
                 newConversation.avatar = ava
@@ -1654,7 +1652,6 @@ extension TwilioBackendManager: TwilioConversationsClientDelegate {
     }
 }
 
-//IOSM#76
 @objc public class GlacierSMS:NSObject {
     @objc public var selectedTwilionumber: [Dictionary<String,String>] = []
     @objc public var addUserToPurchaseNumbers:Bool = false

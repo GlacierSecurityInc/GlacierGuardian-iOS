@@ -64,16 +64,16 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
 @property (nonatomic, strong) UITapGestureRecognizer *timeTapGesture2;
 @property (nonatomic, strong) id<TimerPickerDelegate> timeDel;
 
-@property (nonatomic, strong) SecurityCenter *securityCenter; //IOSM#19
+@property (nonatomic, strong) SecurityCenter *securityCenter;
 
-@property (nonatomic, strong) UISwitch *threatDetectionSwitch; //IOSM#58
+@property (nonatomic, strong) UISwitch *threatDetectionSwitch;
 @property (nonatomic, strong) UISwitch *linkPreviewSwitch;
 @property (nonatomic, strong) UISwitch *readReceiptsSwitch;
 @property (nonatomic, strong) UISwitch *rebootReminderSwitch;
 @property (nonatomic, strong) UISwitch *trackingEnabledSwitch;
-@property (nonatomic, strong) UISwitch *enterToSendSwitch; //IOSM#92
+@property (nonatomic, strong) UISwitch *enterToSendSwitch;
 
-@property (nonatomic, strong) ChatAccountModel *primaryAccount; //IOSM#92
+@property (nonatomic, strong) ChatAccountModel *primaryAccount;
 @property (assign, nonatomic) BOOL trackingEnabled;
 
 //@property (nonatomic, strong) id allowPassphraseBackupNotificationToken;
@@ -88,7 +88,7 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
     {
         self.title = SETTINGS_STRING();
         _settingsManager = [[OTRSettingsManager alloc] init];
-        self.securityCenter = [[SecurityCenter alloc] init]; //IOSM#19
+        self.securityCenter = [[SecurityCenter alloc] init];
     }
     return self;
 }
@@ -104,7 +104,6 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
     self.tableView.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:self.tableView];
     
-    //IOSM#19
     //[self.tableView registerClass:[SecurityHubCell class] forCellReuseIdentifier:[SecurityHubCell reuseIdentifier]];
     
     NSBundle *bundle = [NSBundle mainBundle];
@@ -121,7 +120,7 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
         [self.tableView.bottomAnchor constraintEqualToAnchor:self.footerContainer.topAnchor]
     ]];
     
-    self.pickerArray = @[@"Off", @"15 seconds", @"1 minute", @"5 minutes", @"1 day", @"1 week", @"4 weeks"]; //IOSM#6 added 4 weeks
+    self.pickerArray = @[@"Off", @"15 seconds", @"1 minute", @"5 minutes", @"1 day", @"1 week", @"4 weeks"]; // added 4 weeks
     
     ////// KVO //////
     __weak typeof(self)weakSelf = self;
@@ -206,7 +205,7 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
     [logoutButton setClearsContextBeforeDrawing:YES];
  }
 
-- (BOOL) getIgnoreCompromisedAlert { //IOSM#58 (next 2)
+- (BOOL) getIgnoreCompromisedAlert { // (next 2)
     if (self.securityCenter != nil) {
         return [self.securityCenter shouldIgnoreCompromisedAlert];
     }
@@ -220,17 +219,15 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
     }
 }
 
-//IOSM#19
 - (BOOL)needsSecurityAlert {
     if (self.securityCenter != nil) {
-        BOOL showAlert = [self.securityCenter getCurrentCompromisedStatus] && ![self getIgnoreCompromisedAlert]; //IOSM#58 added getIgnoreCompromisedAlert
+        BOOL showAlert = [self.securityCenter getCurrentCompromisedStatus] && ![self getIgnoreCompromisedAlert]; // added getIgnoreCompromisedAlert
         return showAlert;
     }
     
     return NO;
 }
 
-//IOSM#99
 - (BOOL)needsSecurityAwareness {
     if (self.securityCenter != nil) {
         return ([self.securityCenter getCurrentCompromisedStatus] || ![self.securityCenter devicePasscodeEnabled]);
@@ -245,7 +242,7 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
     }
 }
 
-- (SecurityInfoUtil*) getLatestSecurityInfo { //IOSM#110
+- (SecurityInfoUtil*) getLatestSecurityInfo {
     if (self.securityCenter != nil) {
         return [self.securityCenter getSecurityInfo];
     }
@@ -282,7 +279,7 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
             XMPPJID *serverJID = [XMPPJID jidWithUser:nil domain:account.pushPubsubEndpoint resource:nil];
             [xmpp.serverCheck.pushModule disablePushForServerJID:serverJID node:account.pushPubsubNode elementId:nil];
             
-            //IOSM-453 log out of push. This will use the device and shouldn't impact other devices with same user
+            // log out of push. This will use the device and shouldn't impact other devices with same user
             XMPPJID *userjid = [XMPPJID jidWithString:account.username resource:account.resource];
             NSString *pushjid = [@"p2." stringByAppendingString:[GlacierInfo defaultHost]];
             [xmpp.serverCheck.pushModule unregisterPushForUserJID:userjid server:pushjid elementId:nil];
@@ -397,7 +394,7 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
         } else {
             ChatAccountModel *account = [self accountAtIndexPath:indexPath];
             
-            if (account == nil) { //IOSM#44
+            if (account == nil) {
                 cell = [tableView dequeueReusableCellWithIdentifier:addAccountCellIdentifier];
                 if (cell == nil) {
                     cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:addAccountCellIdentifier];
@@ -440,7 +437,7 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
 	}
     //cell.otrSetting = setting;
     
-    if ([setting isKindOfClass:[OTRBoolSetting class]]) { //IOSM#58 and else below
+    if ([setting isKindOfClass:[OTRBoolSetting class]]) { // and else below
         OTRBoolSetting *bsetting = (OTRBoolSetting*)setting;
         
         if ([bsetting.key isEqualToString:kThreatDetectionKey]) {
@@ -524,7 +521,6 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
     return cell;
 }
 
-//IOSM#58
 - (void) linkPreviewToggle {
     BOOL linkPreview = [OTRSettingsManager boolForOTRSettingKey:kLinkPreviewKey];
     
@@ -551,7 +547,6 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
     }
 }
 
-//IOSM#58
 - (void) threatDetectionToggled {
     BOOL threatDetection = [OTRSettingsManager boolForOTRSettingKey:kThreatDetectionKey];
     
@@ -725,7 +720,7 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
             UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:baseLoginViewController];
             navigationController.modalPresentationStyle = UIModalPresentationFormSheet;
             [self presentViewController:navigationController animated:YES completion:nil];
-        } else { //IOSM-479 should be account
+        } else { // should be account
             OTRSetting *setting = [self.settingsManager settingAtIndexPath:indexPath];
             OTRSettingActionBlock actionBlock = setting.actionBlock;
             if (actionBlock) {
@@ -819,7 +814,7 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
         ];
         [self.navigationController pushViewController:hostingVC animated:YES];
         return;
-    } else if (viewControllerClass == [SecurityCenterViewController class]) { //IOSM#19
+    } else if (viewControllerClass == [SecurityCenterViewController class]) {
         UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"SecurityCenter" bundle:[GlacierInfo resourcesBundle]];
         SecurityCenterViewController *securityCenterVC = [storyboard instantiateViewControllerWithIdentifier:@"securityCenter"];
         securityCenterVC.modalPresentationStyle = UIModalPresentationFormSheet;

@@ -58,7 +58,7 @@
     NSMutableDictionary *newSettingsDictionary = [NSMutableDictionary dictionary];
     
     OTRViewSetting *accountsViewSetting = [[OTRViewSetting alloc] initWithTitle:ACCOUNTS_STRING() description:nil viewControllerClass:[ChatProfileViewController class]];
-    //IOSM-479 nil to ChatProfileViewController above, and accessory below
+    // nil to ChatProfileViewController above, and accessory below
     accountsViewSetting.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     
     /*OTRViewSetting *resetPasswordSetting = [[OTRViewSetting alloc] initWithTitle:@"Reset Password" description:nil viewControllerClass:nil];
@@ -108,7 +108,7 @@
     
     [PushController checkPushNotifications];
     
-    //IOSM#58 also added below to other settings
+    // also added below to other settings
     OTRBoolSetting *threatDetectionViewSetting = [[OTRBoolSetting alloc] initWithTitle:@"Threat Detection" description:nil settingsKey:@"kThreatDetectionKey"];
     threatDetectionViewSetting.enabled = YES;
     [newSettingsDictionary setObject:threatDetectionViewSetting forKey:@"kThreatDetectionKey"];
@@ -119,7 +119,6 @@
     OTRBoolSetting *readReceiptsSetting = [[OTRBoolSetting alloc] initWithTitle:@"Read Receipts" description:nil settingsKey:kReadReceiptsKey];
     readReceiptsSetting.enabled = YES;
     
-    //IOSM#19
     OTRViewSetting *securityHubViewSetting = [[OTRViewSetting alloc] initWithTitle:@"Security Hub" description:nil viewControllerClass:[SecurityCenterViewController class]];
     securityHubViewSetting.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     
@@ -169,13 +168,13 @@
     //if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ) {
         OTRBoolSetting *enterToSendSetting = [[OTRBoolSetting alloc] initWithTitle:@"Tap enter to send" description:nil settingsKey:@"kOTREnterToSendKey"];
         [newSettingsDictionary setObject:enterToSendSetting forKey:@"kOTREnterToSendKey"];
-        //otherSettings = @[threatDetectionViewSetting, securityHubViewSetting, supportSetting, privacyInfoSetting, enterToSendSetting]; //IOSM#19
-        otherSettings = @[rebootAlertViewSetting, enterToSendSetting, supportSetting, privacyInfoSetting]; //IOSM#90 (and below remove Hub)
+        // otherSettings = @[threatDetectionViewSetting, securityHubViewSetting, supportSetting, privacyInfoSetting, enterToSendSetting]; //
+        otherSettings = @[rebootAlertViewSetting, enterToSendSetting, supportSetting, privacyInfoSetting]; // (and below remove Hub)
         if (accounts.count > 0) {
             ChatAccountModel *acct = accounts.firstObject;
             if (acct.trackingEnabled) {
                 self.trackingEnabled = YES;
-                otherSettings = @[rebootAlertViewSetting, trackingEnabledViewSetting, enterToSendSetting, supportSetting, privacyInfoSetting]; //IOSM#90 (and below remove Hub)
+                otherSettings = @[rebootAlertViewSetting, trackingEnabledViewSetting, enterToSendSetting, supportSetting, privacyInfoSetting]; // (and below remove Hub)
             }
         }
     /*} else {
@@ -185,7 +184,7 @@
             ChatAccountModel *acct = accounts.firstObject;
             if (acct.trackingEnabled) {
                 self.trackingEnabled = YES;
-                otherSettings = @[threatDetectionViewSetting, linkPreviewSetting, rebootAlertViewSetting, trackingEnabledViewSetting, supportSetting, privacyInfoSetting]; //IOSM#90 (and below remove Hub)
+                otherSettings = @[threatDetectionViewSetting, linkPreviewSetting, rebootAlertViewSetting, trackingEnabledViewSetting, supportSetting, privacyInfoSetting]; // (and below remove Hub)
             }
         }
     }*/
@@ -282,7 +281,7 @@
             [self.globalMessageTimerSetting setValue:@"604800"];
             time = @"1 week";
             break;
-        case 6: //IOSM#6
+        case 6:
             [self.globalMessageTimerSetting setValue:@"2419200"];
             time = @"4 weeks";
             break;

@@ -224,7 +224,7 @@ extension ChatOmemoDevice {
     func isTrusted() -> Bool {
         let trust = self.trustLevel
         return (trust == OMEMOTrustLevel.trustedTofu.rawValue || trust == OMEMOTrustLevel.trustedUser.rawValue) && self.isExpired() == false
-        //return YES; // because we are in closed network //IOSM-479
+        // return YES; // because we are in closed network //
     }
 
     /** if lastSeenDate is > 30 days */

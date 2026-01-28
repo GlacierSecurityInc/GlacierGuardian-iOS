@@ -150,7 +150,7 @@ import GRDB
                                         isOutgoingFromOtherDevice: Bool,
                                         split: Bool,
                                         preSave: PreSave? = nil ) {
-        //IOSM-486, IOSM-557 added split
+        // added split
         guard !xmppMessage.isErrorMessage else {
             DDLogWarn("Discarding forwarded error message: \(xmppMessage)")
             return
@@ -161,7 +161,7 @@ import GRDB
             
             if let roomJID = xmppMessage.from?.bareJID {
                 if let room = roomManager.room(for: roomJID) {
-                    //IOSM-540 placeholder...maybe a better place to set lastHistoryFetch
+                    // placeholder...maybe a better place to set lastHistoryFetch
                     if body == nil, let unwrapped = xmppMessage.omemo_offline() {
                         var isOutFromOtherDevice = isOutgoingFromOtherDevice
                         var bod = body
@@ -229,7 +229,7 @@ import GRDB
                     return
                 }
                 
-                //IOSM-584 If this is a receipt from a MAM device, we are done
+                // If this is a receipt from a MAM device, we are done
                 if isoutOther && (xmppMessage.hasReceiptResponse || xmppMessage.hasDisplayedChatMarker || xmppMessage.hasReceivedChatMarker) {
                     return
                 }
@@ -248,7 +248,7 @@ import GRDB
             }
             
             // Bail out if we receive duplicate messages identified by XEP-0359
-            //IOSM-486, IOSM-557 added split
+            // added split
             var chatmsg = message.grdbRecord!
             if !split, self.isDuplicate(message: chatmsg) {
                 DDLogWarn("Duplicate forwarded message received: \(xmppMessage)")
@@ -350,7 +350,6 @@ import GRDB
     private func handleExpiration(_ message:ChatMessageModel) {
         var updateExpires = false
         if let buddyThread = message.xmppBuddy() {
-            //IOSM#6
             if ((buddyThread.expiresIn == nil && message.messageExpires != nil) ||
                 (buddyThread.expiresIn != nil && message.messageExpires == nil) ||
                 !(buddyThread.expiresIn == message.messageExpires)) {
@@ -358,7 +357,6 @@ import GRDB
                 updateExpires = true
             }
 
-            //IOSM#6
             let tkey = buddyThread.threadIdentifier
             if (updateExpires){
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -387,7 +385,7 @@ import GRDB
             return
         }
         
-        //IOSM-486, IOSM-557 added split
+        // added split
         guard let fromJID = message.from else { return }
         ChatBuddyModel.getBuddyAndAccount(jid: fromJID, accountUniqueId: accountId, queue: self.moduleQueue, completion: { [weak self] (buddy, account) in
             guard let buddy = buddy, let account = account, let self = self else {return}
@@ -427,7 +425,7 @@ import GRDB
             let incoming = IncomingChatMessage(message: grec)
             
             // Check for duplicates
-            //IOSM-486, IOSM-557 added split, might not work how I want
+            // added split, might not work how I want
             if !split, self.isDuplicate(message: incoming.grdbRecord!) {
                 DDLogWarn("Duplicate message received: \(message)")
                 return
@@ -514,7 +512,6 @@ import GRDB
         })
     }
     
-    //IOSM-338c
     public func handleFailedIncomingMessage(_ message: XMPPMessage,
                                     body: String?,
                                     original: String?,
@@ -536,7 +533,7 @@ import GRDB
         }
 
         if insert {
-            self.handleDirectMessage(message, body: "Message cannot be decrypted", original: nil, accountId: accountId, split: false) //IOSM-531
+            self.handleDirectMessage(message, body: "Message cannot be decrypted", original: nil, accountId: accountId, split: false)
         }
         
         return insert
@@ -609,7 +606,7 @@ extension MessageStorage: XMPPCapabilitiesDelegate {
 extension MessageStorage: XMPPStreamDelegate {
     public func xmppStreamDidAuthenticate(_ sender: XMPPStream) {
         DispatchQueue.main.async {
-            let appDelegate = Application.shared.delegate as? OTRAppDelegate  //IOSM#80
+            let appDelegate = Application.shared.delegate as? OTRAppDelegate
             DDLogInfo("***** MessageStorage xmppStreamDidAuthenticate with voipNotification \(appDelegate?.voipNotification ?? false)")
             if appDelegate?.voipNotification == true {
                 self.performBlock(async: true) {
@@ -1011,7 +1008,7 @@ extension NSCopying {
 }
 
 public extension MessageStorage {
-    //IOSM-443 added account
+    // added account
     @objc static func markAsReadIfVisible(message: MessageProtocol, account: ChatAccountModel) {
         guard message.isMessageRead == false else {
             return
@@ -1036,7 +1033,6 @@ public extension MessageStorage {
                         shouldShowReadReceipts = chatThread.shouldShowReadReceipts
                     }
                     
-                    //IOSM-443
                     if shouldShowReadReceipts, message.isMarkable == true, let xmpp = OTRProtocolManager.shared.xmppManager(forChatAccount: account) {
                         xmpp.sendReadReceipt(message)
                     }
@@ -1052,7 +1048,6 @@ public extension MessageStorage {
                         shouldShowReadReceipts = chatThread.shouldShowReadReceipts
                     }
                     
-                    //IOSM-443
                     if shouldShowReadReceipts, message.isMarkable == true, let xmpp = OTRProtocolManager.shared.xmppManager(forChatAccount: account) {
                         xmpp.sendReadReceipt(message)
                     }

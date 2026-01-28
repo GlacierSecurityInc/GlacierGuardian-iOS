@@ -258,7 +258,7 @@ import MapKit
         }
     }*/
 
-    override func updateExpiresState() { //IOSM#6
+    override func updateExpiresState() {
         self.updateTimeButton()
     }
 
@@ -461,7 +461,6 @@ import MapKit
         self.present(alert, animated: true, completion: nil)
     }
 
-    //IOSM-464
     /*func handleLocationNotReady() {
         let alert = UIAlertController(title: "Location Not Available", message: "Still determining location. Try again in a few seconds.", preferredStyle: .alert)
         let ok = UIAlertAction(title: "OK", style: .cancel)
@@ -478,17 +477,17 @@ import MapKit
             //}
             
             if self.needsLocationPermission() {
-                self.awaitingLocationPermission = true //IOSM#26
+                self.awaitingLocationPermission = true
                 return
             }
             
             DispatchQueue.main.async {
-                self.doShareLocation() //IOSM#26
+                self.doShareLocation()
             }
         }
     }
 
-    func doShareLocation() { //IOSM#26
+    func doShareLocation() {
         guard let mapView = self.mapView else { return }
         self.view.endEditing(true)
         self.addLocationViewBtns(true)
@@ -694,7 +693,7 @@ import MapKit
     func currentTimeSelectedRow() -> Int {
         if let thread = self.getBuddy(), let etime = thread.expiresIn {
             self.timeOn = true
-            if etime  == "2419200" { //IOSM#6
+            if etime  == "2419200" {
                 return 6
             } else if etime == "604800" {
                 return 5
@@ -737,7 +736,7 @@ import MapKit
             case 5:
                 messageInputBar.sendButton.setImage(UIImage(named: "timer_1w_blue", in: GlacierInfo.resourcesBundle, with: nil), for: .normal)
                 break
-            case 6: //IOSM#6
+            case 6:
                 messageInputBar.sendButton.setImage(UIImage(named: "timer_4w_blue", in: GlacierInfo.resourcesBundle, with: nil), for: .normal)
                 break
             default:
@@ -794,7 +793,7 @@ import MapKit
                 messageInputBar.sendButton.setImage(UIImage(named: "timer_1w_blue", in: GlacierInfo.resourcesBundle, with: nil), for: .normal)
                 thread.expiresIn = "604800"
                 break
-            case 6: //IOSM#6
+            case 6:
                 messageInputBar.sendButton.setImage(UIImage(named: "timer_4w_blue", in: GlacierInfo.resourcesBundle, with: nil), for: .normal)
                 thread.expiresIn = "2419200"
                 break
@@ -850,7 +849,6 @@ extension ChatViewControllerExt : CLLocationManagerDelegate {
     public func locationManagerDidChangeAuthorization(_ manager:CLLocationManager) {
         let authStatus = manager.authorizationStatus
         if (authStatus == .authorizedAlways || authStatus == .authorizedWhenInUse) {
-            //IOSM#26
             self.mapView?.userTrackingMode = .follow
             self.mapView?.showsUserLocation = true
             

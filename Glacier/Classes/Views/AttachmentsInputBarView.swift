@@ -97,16 +97,15 @@ extension AttachmentsInputBarView: PHPickerViewControllerDelegate {
         /*NSString *imageString = (NSString *)kUTTypeImage;
         NSString *videoString = (NSString *)kUTTypeVideo;
         NSString *movieString = (NSString *)kUTTypeMovie;
-        NSString *gifString = (NSString *)kUTTypeGIF; //IOSM#61
+        NSString *gifString = (NSString *)kUTTypeGIF;
         
-        //IOSM-602
         var infodict = ["Multiselect":NSNumber(false)]
         if (results.count > 1) {
             infodict["Multiselect"] = NSNumber(true)
         }
         
         for result in results {
-            if result.itemProvider.hasItemConformingToTypeIdentifier(UTType.gif.identifier) { //IOSM#61
+            if result.itemProvider.hasItemConformingToTypeIdentifier(UTType.gif.identifier) {
                 result.itemProvider loadFileRepresentationForTypeIdentifier:gifString completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
                     if ([self.delegate respondsToSelector:@selector(attachmentPicker:gotGif:withInfo:)]) {
                         NSData *imageData = [NSData dataWithContentsOfURL:url];

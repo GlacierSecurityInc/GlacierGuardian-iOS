@@ -125,7 +125,6 @@ class ShareViewController: SLComposeServiceViewController, ShareExtensionDelegat
         for attachment in extensionItem.attachments as! [NSItemProvider] {
             print("item.attachments!======&gt;&gt;&gt; \(attachment)")
             
-            //IOSM-548
             let attached = attachment
             let registeredTypeIdentifiers = attached.registeredTypeIdentifiers
             if let first = registeredTypeIdentifiers.first, attached.hasItemConformingToTypeIdentifier(first) == true {
@@ -294,7 +293,7 @@ class ShareViewController: SLComposeServiceViewController, ShareExtensionDelegat
                 sharectr=2
                 self.dataInterface?.doShare(extraText, with: tOwner)
             }
-        } else if let mediatype = self.mediaType, let data = self.sharedata { //IOSM-548
+        } else if let mediatype = self.mediaType, let data = self.sharedata {
             self.hud = MBProgressHUD.showAdded(to: self.view, animated: true)
             self.dataInterface?.doShare(data, with: tOwner, withType: mediatype.rawValue)
             if let extraText = self.finalText {
@@ -349,9 +348,9 @@ class ShareViewController: SLComposeServiceViewController, ShareExtensionDelegat
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            self.dataInterface?.teardownStream() //IOSM-517
+            self.dataInterface?.teardownStream()
         
-            //IOSM-517 doesn't seem to help, retest after removing
+            // doesn't seem to help, retest after removing
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                 self.dataInterface = nil
                 self.userConversations.removeAll()

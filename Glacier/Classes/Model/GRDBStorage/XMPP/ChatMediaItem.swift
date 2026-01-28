@@ -141,7 +141,7 @@ extension ChatMediaItemModel {
     #if !TARGET_IS_NOTIFICATION
         if (mimetype.contains("audio") || fileext == "m4a") {
             mediaClass = ChatAudioItem.self
-        } else if (mimetype.contains("image") || fileext == "GIF" || fileext == "gif") { //IOSM#61 add gif
+        } else if (mimetype.contains("image") || fileext == "GIF" || fileext == "gif") { // add gif
             mediaClass = ChatImageItem.self
         } else if (mimetype.contains("video") || fileext == "MOV" || fileext == "mov") {
             mediaClass = ChatVideoItem.self

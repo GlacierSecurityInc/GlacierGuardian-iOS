@@ -46,7 +46,6 @@ import UIKit
         cancelBarButtonItem.tintColor = UIColor.label
         self.navigationItem.leftBarButtonItem = cancelBarButtonItem
         
-        //IOSM#95
         let plusBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(plusButtonPressed(_:)))
         plusBarButtonItem.tintColor = UIColor.label
         self.navigationItem.rightBarButtonItem = plusBarButtonItem
@@ -80,7 +79,6 @@ import UIKit
         self.delegate?.controllerDidCancel(self)
     }
     
-    //IOSM#95
     @objc open func plusButtonPressed(_ sender: AnyObject?) {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = NSTextAlignment.left
@@ -157,7 +155,7 @@ import UIKit
                     newConversation.avatar = OTRImages.avatarImage(withUsername: lasttwo)
                 }
                 
-                newConversation.grdbRecord?.isNew = true //IOSM#52 janky
+                newConversation.grdbRecord?.isNew = true // janky
                 newConversation.save()
                 
                 conversation = newConversation
@@ -280,7 +278,7 @@ import UIKit
             if conversation == nil {
                 let newConversation = SMSChatConversationModel(remoteNumber: remoteNumber, localNumber: sendingNum, accountId: acct)
                 newConversation.grdbRecord?.preferredName = name
-                newConversation.grdbRecord?.isNew = true //IOSM#52 janky
+                newConversation.grdbRecord?.isNew = true // janky
                 
                 if let ava = avatar {
                     newConversation.avatar = ava

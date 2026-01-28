@@ -56,7 +56,6 @@ NSString *const kOTRRootMediaDirectory = @"media";
     //return _ioCipher != nil;
 }
 
-//IOSM-517
 - (void)releaseDBConnection {
     _ioCipher = nil;
 }

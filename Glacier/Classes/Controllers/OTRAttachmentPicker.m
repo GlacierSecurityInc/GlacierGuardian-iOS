@@ -12,13 +12,12 @@
 #import "OTRUtilities.h"
 #import "OTRStrings.h"
 #import "UIActionSheet+ChatSecure.h"
-#import "Glacier-Swift.h" //IOSM#61
+#import "Glacier-Swift.h"
 
 // and delegate below
 #import <Photos/Photos.h>
 #import <PhotosUI/PhotosUI.h>
 
-//IOSM#69
 @import GiphyUISDK;
 
 @interface OTRAttachmentPicker () <UINavigationControllerDelegate, PHPickerViewControllerDelegate, GiphyDelegate>
@@ -46,7 +45,7 @@
     
     if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
         UIAlertAction *takePhotoAction = [UIAlertAction actionWithTitle:USE_CAMERA_STRING() style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
-            //IOSM-464 check if camera available
+            // check if camera available
             if ([AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo] != AVAuthorizationStatusAuthorized) {
                 [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
                     if (!granted) {
@@ -77,7 +76,6 @@
         [alertController addAction:openLibraryAction];
     }
     
-    //IOSM#69
     UIAlertAction *gifPickerAction = [UIAlertAction actionWithTitle:@"GIF" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         [self showGifController];
     }];
@@ -118,7 +116,7 @@
 }
 
 
-//IOSM#69 (next 3)
+// (next 3)
 - (void) showGifController {
     GiphyViewController *giphy = [[GiphyViewController alloc]init ] ;
     giphy.theme = [[GPHTheme alloc] init];
@@ -173,7 +171,7 @@
     
     UIDocumentPickerViewController *documentPicker = [[UIDocumentPickerViewController alloc] initWithDocumentTypes:types inMode:UIDocumentPickerModeImport];
     documentPicker.modalPresentationStyle = UIModalPresentationCurrentContext;
-    documentPicker.allowsMultipleSelection = true; //IOSM-504
+    documentPicker.allowsMultipleSelection = true;
     documentPicker.delegate = self;
     
     self.documentPicker = documentPicker;
@@ -187,7 +185,7 @@
     */
 }
 
-- (void)documentPicker:(UIDocumentPickerViewController *)controller didPickDocumentsAtURLs:(NSArray <NSURL *>*)urls //IOSM-504 changed URL to URLs
+- (void)documentPicker:(UIDocumentPickerViewController *)controller didPickDocumentsAtURLs:(NSArray <NSURL *>*)urls // changed URL to URLs
 {
     if ([self.delegate respondsToSelector:@selector(attachmentPicker:gotFileURLs:)]) {
         [self.delegate attachmentPicker:self gotFileURLs:urls];
@@ -204,7 +202,7 @@
 
 - (void)showImagePickerForSourceType:(UIImagePickerControllerSourceType)sourceType
 {
-    if (sourceType != UIImagePickerControllerSourceTypeCamera){ //IOSM-473
+    if (sourceType != UIImagePickerControllerSourceTypeCamera){
         PHPickerConfiguration *config = [[PHPickerConfiguration alloc] init];
         config.selectionLimit = 5;
         
@@ -249,9 +247,8 @@
     NSString *imageString = (NSString *)kUTTypeImage;
     NSString *videoString = (NSString *)kUTTypeVideo;
     NSString *movieString = (NSString *)kUTTypeMovie;
-    NSString *gifString = (NSString *)kUTTypeGIF; //IOSM#61
+    NSString *gifString = (NSString *)kUTTypeGIF;
     
-    //IOSM-602
     NSMutableDictionary *infodict = [[NSMutableDictionary alloc]initWithCapacity:1];
     if (results.count > 1) {
         [infodict setObject:[NSNumber numberWithBool:YES] forKey:@"Multiselect"];
@@ -261,7 +258,7 @@
     
     for (PHPickerResult *result in results)
     {
-        if ([result.itemProvider hasItemConformingToTypeIdentifier:gifString]) { //IOSM#61
+        if ([result.itemProvider hasItemConformingToTypeIdentifier:gifString]) {
             [result.itemProvider loadFileRepresentationForTypeIdentifier:gifString completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
                 if ([self.delegate respondsToSelector:@selector(attachmentPicker:gotGif:withInfo:)]) {
                     NSData *imageData = [NSData dataWithContentsOfURL:url];
@@ -305,7 +302,7 @@
             [fileManager removeItemAtPath:tmppath error:&error];
         }
         
-        if ([self.delegate respondsToSelector:@selector(addUploadHUD)]) { //IOSM-565
+        if ([self.delegate respondsToSelector:@selector(addUploadHUD)]) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.delegate addUploadHUD];
             });

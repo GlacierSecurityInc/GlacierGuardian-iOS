@@ -71,7 +71,7 @@ NS_SWIFT_NAME(XMPPManager)
 
 - (NSDate * _Nullable) getLastConnected;
 
-- (NSDate * _Nullable) getLastConnectAttempt; //IOSM-570
+- (NSDate * _Nullable) getLastConnectAttempt;
 
 /** Call this if you want to register a new account on a compatible server */
 - (BOOL)startRegisteringNewAccount;
@@ -91,7 +91,6 @@ NS_SWIFT_NAME(XMPPManager)
 // Delivery receipts
 - (void) sendDeliveryReceiptForMessage:(IncomingChatMessage*)message;
 
-//IOSM-443
 - (void) sendReadReceipt:(id<MessageProtocol>)message;
 
 - (void) sendAcknowledgments;

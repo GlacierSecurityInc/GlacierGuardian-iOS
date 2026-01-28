@@ -263,7 +263,7 @@ public extension OTRAppDelegate {
     /// Returns key/collection of visible thread, or nil if not visible or unset
     @objc static func visibleThread(_ block: @escaping (_ tkey: String?, _ tcollection: String?)->(), completionQueue: DispatchQueue? = nil) {
         DispatchQueue.main.async {
-            //IOSM#104 added isActive
+            // added isActive
             guard UIApplication.shared.applicationState == .active else {
                 block(nil, nil)
                 return
@@ -297,7 +297,6 @@ public extension OTRAppDelegate {
         }
     }
     
-    //IOSM#102
     @objc static func visibleSMSThread(_ block: @escaping (_ tkey: String?)->(), completionQueue: DispatchQueue? = nil) {
         DispatchQueue.main.async {
             let smsMessagesVC = OTRAppDelegate.appDelegate.smsMessagesViewController
@@ -352,7 +351,6 @@ public extension OTRAppDelegate {
         let singleMessagesToMarkAsRead: [ChatMessageModel] = ChatMessageModel.getUnreadMessages()
         let roomMessagesToMarkAsRead: [ChatRoomMessageModel] = ChatRoomMessageModel.getUnreadMessages()
             
-        //IOSM-443
         var singleConversationsForReadReceipts = [String: ChatMessageModel]()
         var roomConversationsForReadReceipts = [String: ChatRoomMessageModel]()
         var threads:Set<String> = []
@@ -367,7 +365,7 @@ public extension OTRAppDelegate {
                     threads.insert(threadid)
                 }
                 
-                //IOSM-443 maybe only send once...if toBeSaved has objects
+                // maybe only send once...if toBeSaved has objects
                 if message.isMarkable, message.grdbRecord?.type == ChatMessageType.incoming.rawValue {
                     singleConversationsForReadReceipts[message.threadId] = message
                 }
@@ -383,14 +381,12 @@ public extension OTRAppDelegate {
                     threads.insert(threadid)
                 }
                 
-                //IOSM-443
                 if let roomjid = message.grdbRecord?.roomJid, message.isMarkable == true {
                     roomConversationsForReadReceipts[roomjid] = message
                 }
             }
         })
             
-        //IOSM-443
         if let account = ChatAccountModel.firstAccount(), let xmpp = OTRProtocolManager.shared.xmppManager(forChatAccount:account) {
             for message in singleConversationsForReadReceipts.values {
                 if let buddyUniqueId = message.grdbRecord?.buddyUniqueId,
@@ -438,7 +434,6 @@ public extension OTRAppDelegate {
         }
     }
     
-    //IOSM#103
     @objc func enterSMSThread(key: String, collection: String) {
         if let smsthread = SMSChatConversationModel.getConversation(with: key) {
             //should probably also switch to account
@@ -599,7 +594,7 @@ extension OTRAppDelegate: UNUserNotificationCenterDelegate {
             completionHandler([.badge, .sound, .banner, .list])
         case .connectionError:
             completionHandler([.badge, .sound, .banner, .list])
-        case .smsMessage: //IOSM#102 only show if not currently visible
+        case .smsMessage: // only show if not currently visible
             if let (key, _) = extractThreadInformation(notification: notification) {
                 OTRAppDelegate.visibleSMSThread({ (tkey) in
                     if key == tkey {
@@ -705,7 +700,7 @@ extension OTRAppDelegate: PKPushRegistryDelegate {
                     // Always call the completion handler when done.
                     completeOnce()
                 }
-            } else if let status = userInfo[kNotificationCallStatusKey] as? String, let callId = userInfo[kNotificationCallIdKey] as? NSNumber { //IOSM-569
+            } else if let status = userInfo[kNotificationCallStatusKey] as? String, let callId = userInfo[kNotificationCallIdKey] as? NSNumber {
                 if status == "accept" || status == "reject" || status == "busy" {
                     awaitingAsyncCompletion = true
                     CallManager.sharedCallManager().reportMAMCallResponse(callId: callId.stringValue, status: status) { _ in

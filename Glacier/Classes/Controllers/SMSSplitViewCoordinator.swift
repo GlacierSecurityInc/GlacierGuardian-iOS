@@ -30,7 +30,7 @@ import Foundation
         }
         
         //Set nav controller root view controller to mVC and then show detail with nav controller
-        //changed from uinqueId IOSM#105
+        // changed from uinqueId
         if let tid = conversation.grdbRecord?.twilioId {
             mVC.setConversationKey(tid, collection: SMSChatConversationModel.collection())
         } else {
@@ -39,7 +39,6 @@ import Foundation
         
         //iPad check where there are two navigation controllers and we want the second one
         if splitVC.viewControllers.count > 1 && ((splitVC.viewControllers[1] as? UINavigationController)?.viewControllers.contains(mVC)) ?? false {
-            //IOSM#20
             //let navController = UINavigationController(rootViewController: mVC)
             //navController.topViewController!.navigationItem.leftBarButtonItem = splitVC.displayModeButtonItem;
             //navController.topViewController!.navigationItem.leftItemsSupplementBackButton = true;

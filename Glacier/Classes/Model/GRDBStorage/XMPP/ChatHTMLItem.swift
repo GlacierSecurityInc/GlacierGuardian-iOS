@@ -308,7 +308,7 @@ extension ChatHTMLItem: MediaItem {
 
 extension ChatHTMLItem {
     
-    //IOSM#32 next 3 and commented above, and all HTMLCache references
+    // next 3 and commented above, and all HTMLCache references
     static func metadataWithIdentifier(_ identifier: String) -> HTMLCache?
     {
         if let hcache = self.htmlCache.object(forKey: identifier as NSString) {

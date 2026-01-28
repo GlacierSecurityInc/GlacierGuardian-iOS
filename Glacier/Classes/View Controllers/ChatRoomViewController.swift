@@ -111,7 +111,6 @@ import MCEmojiPicker
     fileprivate let attrs = [NSAttributedString.Key.font: UIFontMetrics(forTextStyle: .caption2).scaledFont(for: UIFont.systemFont(ofSize: 10)), NSAttributedString.Key.foregroundColor: UIColor.lightGray]
     fileprivate let faattrs = [NSAttributedString.Key.font:UIFont(name: kFontAwesomeFont, size: 11) ?? UIFont.systemFont(ofSize: 11), NSAttributedString.Key.foregroundColor: UIColor.lightGray]
 
-    //IOSM#8
     fileprivate var lastDisplayed = Set<String>()
     fileprivate var displayedTextAttributes = [NSAttributedString.Key:AnyObject]()
     fileprivate var displayedNeedsUpdate = false
@@ -140,7 +139,7 @@ import MCEmojiPicker
         self.cellTopCache.countLimit = 1000
         self.cellBottomCache.countLimit = 1000
         
-        //IOSM#69 setup Giphy
+        // setup Giphy
         if let token = Bundle.main.object(forInfoDictionaryKey: "GiphyAPIToken") as? String {
             Giphy.configure(apiKey: token)
         }
@@ -265,11 +264,11 @@ import MCEmojiPicker
         self.statusTapGestureRecognizer.numberOfTapsRequired = 1
         
         if xmppManager() != nil {
-            //self.currentmgr = xmpp  //IOSM#22 change to _currentmgr
+            // self.currentmgr = xmpp // change to _currentmgr
             loginStatusToken = self.xmppMgr?.observe(\.loginStatus, options: [.new, .old], changeHandler: {[weak self](xmpp, change) in
                 self?.setConnectionStatus()
             })
-            self.xmppMgr?.callManager.setCallStatusDelegate(self) //IOSM-527b
+            self.xmppMgr?.callManager.setCallStatusDelegate(self)
         }
     }
     
@@ -284,7 +283,6 @@ import MCEmojiPicker
         super.viewDidAppear(animated)
         self.tryToMarkAllMessagesAsRead()
         
-        //IOSM#8
         //self.updateDisplayedMessage()
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -310,7 +308,7 @@ import MCEmojiPicker
             }
         }
         
-        if self.statusTimer == nil { //IOSM#22
+        if self.statusTimer == nil {
             self.statusTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(updateStatusTimer), userInfo: nil, repeats: true)
         }
         
@@ -342,7 +340,7 @@ import MCEmojiPicker
         
         self.saveCurrentMessageText(self.messageInputBar.inputTextView.text, key: self.threadKey)
         
-        self.handleScreenDisappearing() //IOSM#60
+        self.handleScreenDisappearing()
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: NetworkStatusNotificationName), object: nil)
         
         self.unregisterKeyboardNotifications()
@@ -813,7 +811,7 @@ import MCEmojiPicker
         self.statusTimer?.invalidate()
         self.statusCtr = 0
         
-        if !ChatRoomViewController.IS_IPHONE { //IOSM-570
+        if !ChatRoomViewController.IS_IPHONE {
             return
         }
         
@@ -822,7 +820,6 @@ import MCEmojiPicker
         self.setConnectionStatus()
     }
 
-    //IOSM#104
     @objc func becameActiveStatus(_ notification: NSNotification) {
         self.tryToMarkAllMessagesAsRead()
         self.drawCellsIfNeeded()
@@ -846,7 +843,6 @@ import MCEmojiPicker
         }
     }
 
-    //IOSM-338c
     @objc func handleLoginSuccess(_ notification: NSNotification) {
         DispatchQueue.main.async {
             if (self.isViewLoaded && self.view.window != nil) {
@@ -1155,7 +1151,7 @@ import MCEmojiPicker
     @objc func updateStatusTimer()
     {
         //DDLogWarn(@"*** statusCtr %d", _statusCtr);
-        if (self.statusCtr < 22 && self.showConnStatus) { //IOSM-395 added &&
+        if (self.statusCtr < 22 && self.showConnStatus) { // added &&
             self.statusCtr+=1
         } else {
             self.statusTimer?.invalidate()
@@ -1247,7 +1243,7 @@ import MCEmojiPicker
         if let xmpp = xmppManager(), let thread = getThread() {
             let ispub = self.room?.isPublic ?? false
             let threadModel = ChatThreadModel(thread: thread)
-            if (showHUD) { //IOSM-602
+            if (showHUD) {
                 DispatchQueue.main.async {
                     self.addUploadHUD()
                     xmpp.fileTransferManager.send(image: photo, thread: threadModel, jpeg: asJPEG, label: self.uploadHUD?.label, isPublic: ispub) { [weak self] (success:Bool, error:Error?) in
@@ -1264,7 +1260,7 @@ import MCEmojiPicker
                     }
                 }
             } else {
-                //IOSM#61 add jpeg
+                // add jpeg
                 xmpp.fileTransferManager.send(image: photo, thread: threadModel, jpeg: asJPEG, label: self.uploadHUD?.label, isPublic: ispub) { [weak self] (success:Bool, error:Error?) in
                     guard let strongSelf = self else { return }
                     strongSelf.handleMediaError(error: error)
@@ -1333,7 +1329,7 @@ import MCEmojiPicker
         do {
             if (asJPEG) {
                 image = UIImage(contentsOfFile: filePath)
-                if image == nil, let url = URL(string: filePath) { //IOSM-486, IOSM-557
+                if image == nil, let url = URL(string: filePath) {
                     let data = try Data(contentsOf: url)
                     image = UIImage(data: data)
                 }
@@ -1473,7 +1469,7 @@ import MCEmojiPicker
     }
     
     func setConnectionStatus() {
-        if ChatRoomViewController.IS_IPHONE, let account = getAccount() { //IOSM-570
+        if ChatRoomViewController.IS_IPHONE, let account = getAccount() {
             DispatchQueue.main.async {
                 self.addStatusGestures(false)
                 if OTRProtocolManager.shared.existsProtocol(forAccountId: account.uniqueId) {
@@ -1516,23 +1512,23 @@ import MCEmojiPicker
         }
         
         //if the timer doesn't exist here we need to recreate it. Happens on loss of network conenction.
-        if (self.statusTimer == nil && protocolExists) { //IOSM#22
+        if (self.statusTimer == nil && protocolExists) {
             self.statusCtr = 0
             self.statusTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(updateStatusTimer), userInfo: nil, repeats: true)
         }
         
         if (self.statusCtr < 4) {
-            //self.titleView.subtitleLabel.text = nil; //IOSM#60
+            // self.titleView.subtitleLabel.text = nil; //
             self.refreshTitleView()
             self.titleView.dynConnectingView.isHidden = true
         } else if (self.statusCtr < 6) {
-            self.titleView.subtitleLabel.text = "Connecting" //IOSM#60 nil to Connecting
+            self.titleView.subtitleLabel.text = "Connecting" // nil to Connecting
             self.titleView.dynConnectingView.isHidden = false
             self.titleView.dynConnectingView.startAnimating()
         } else {
             self.removeUploadHUD()
             if (protocolExists) {
-                if self.statusCtr >= 14 { //IOSM#60
+                if self.statusCtr >= 14 {
                     self.titleView.dynConnectingView.stopAnimating()
                     self.titleView.dynConnectingView.isHidden = true
                     self.refreshTitleView()
@@ -1592,7 +1588,7 @@ import MCEmojiPicker
         }
     }
     
-    //IOSM-527b doesn't this depend on what the current conversation is?
+    // doesn't this depend on what the current conversation is?
     public func joinStatusUpdated(_ join: Bool) {
         //NSString *callname = [xmpp.callManager getCallToJoin];
         /*if (join) {
@@ -1798,7 +1794,6 @@ import MCEmojiPicker
             return updateString
         }
         
-        //IOSM#8
         var lineLength = 45
         if updateString.contains("read up to this point") {
             lineLength = 60
@@ -1881,7 +1876,7 @@ import MCEmojiPicker
                     let nsErr = NSError(domain: merror.errDomain, code: merror.errCode)
                     if !nsErr.isUserCanceledError, !nsErr.isAutomaticDownloadError {
                         let clockChar: UniChar = 0xf017
-                        let progressString = String(format: " %C ", clockChar) //IOSM#57 from WAITING_STRING()
+                        let progressString = String(format: " %C ", clockChar) // from WAITING_STRING()
                         
                         let attrStr = NSAttributedString(string: progressString, attributes: attrs)
                         //NSAttributedString(string: progressString, attributes: [NSAttributedString.Key.font:font ?? UIFont.systemFont(ofSize: 12)])
@@ -1896,7 +1891,7 @@ import MCEmojiPicker
                 if let merror = message.error {
                     let nsErr = NSError(domain: merror.errDomain, code: merror.errCode)
                     if !nsErr.isUserCanceledError, !nsErr.isAutomaticDownloadError {
-                        //IOSM#57 handled in deliveryStatus as clockIcon, and below
+                        // handled in deliveryStatus as clockIcon, and below
                     } else if percentProgress > 0 {
                         progressString = String(format: " %@ %.0f%%", SENDING_STRING(), percentProgress)
                     }
@@ -2087,7 +2082,7 @@ import MCEmojiPicker
     /** Currently uses clock for queued, and checkmark for delivered. */
     func deliveryStatusString(for message:ChatRoomMessage) -> NSAttributedString? {
         let deliveryStatusString = NSMutableAttributedString(string: "")
-        if message.sentDate == nil { //} && ![message messageMediaItemKey]) { //IOSM#57
+        if message.sentDate == nil { // } && ![message messageMediaItemKey]) { //
             // Waiting to send message. This message is in the queue.
             let clockChar: UniChar = 0xf017
             let clockString = String(format: " %C", clockChar)
@@ -2097,7 +2092,6 @@ import MCEmojiPicker
         return deliveryStatusString
     }
     
-    //IOSM-486, IOSM-557
     func send(htmlURL:URL) {
         //guard let htmlURL = htmlURL else { return; }
         //check urls for jpg, etc, if so use sendImageFilePath
@@ -2105,10 +2099,10 @@ import MCEmojiPicker
         if ustr.hasSuffix("jpg") || ustr.hasSuffix("jpeg") || ustr.hasSuffix("png") {
             self.sendImageFilePath(htmlURL.absoluteString, asJPEG:true, shouldResize:true)
             return
-        } else if ustr.hasSuffix("gif") { //IOSM#61
+        } else if ustr.hasSuffix("gif") {
             self.sendImageFilePath(htmlURL.absoluteString, asJPEG:false, shouldResize:false)
             return
-        } else if ustr.hasSuffix("mp4") || ustr.hasSuffix(".mov") { //IOSM#71
+        } else if ustr.hasSuffix("mp4") || ustr.hasSuffix(".mov") {
             DispatchQueue.global().async {
                 DispatchQueue.main.async {
                     self.addUploadHUD()
@@ -2524,8 +2518,7 @@ extension ChatRoomViewController { //call stuff
                 return
             }
             
-            //IOSM-503
-            if (callBuddies.count > 4) { //IOSM-514 edited message
+            if (callBuddies.count > 4) { // edited message
                 let alert = UIAlertController(title: "Unable to Call", message: "Calls are limited to five participants.", preferredStyle: .alert)
                 let cancelAction = UIAlertAction(title: "OK", style: .default, handler: nil)
                 alert.addAction(cancelAction)
@@ -2533,7 +2526,7 @@ extension ChatRoomViewController { //call stuff
                 return
             }
             
-            //IOSM-464 verify
+            // verify
             if xmppMgr.callManager.checkAudioPermissions() == true {
                 AVAudioSession.sharedInstance().requestRecordPermission({ [weak self] (granted) in
                     DispatchQueue.main.async {
@@ -2552,10 +2545,10 @@ extension ChatRoomViewController { //call stuff
                 })
             }
             
-            //IOSM-509 prevent accidental hot mic
+            // prevent accidental hot mic
             let alert = UIAlertController(title: "Start Call?", message: nil, preferredStyle: .alert)
             let callAction = UIAlertAction(title: "Call", style: .default, handler: { alert in
-                //if xmppMgr.callManager.makeCall(callBuddies, name:self.getThreadName()!) == true { //IOSM#70 if
+                // if xmppMgr.callManager.makeCall(callBuddies, name:self.getThreadName()!) == true { // if
                     // add "outgoing" message to thread
                     //self.addCallUpdate("You called", mgr: xmppMgr, room: room)
                 //}
@@ -2595,7 +2588,7 @@ extension ChatRoomViewController { //call stuff
     }
 
     func enablePhoneButton(_ enable:Bool) {
-        //IOSM-503 handle this when not just a single bar button
+        // handle this when not just a single bar button
         let navitem = self.navigationItem
         if let rightNav = navitem.rightBarButtonItem {
             rightNav.isEnabled = enable
@@ -2714,8 +2707,7 @@ extension ChatRoomViewController: AttachmentsInputBarViewDelegate {
             inputBar.inputTextView.resignFirstResponder()
         }
         
-        //IOSM-486, IOSM-557 check for links
-        //IOSM-579
+        // check for links
         let sendtxt = self.convertBadLinksText(text)
         let msgurls = sendtxt.urls
         if msgurls.count > 0, self.automaticURLFetchingDisabled == false {
@@ -2783,7 +2775,6 @@ extension ChatRoomViewController: AttachmentsInputBarViewDelegate {
         }
     }
     
-    //IOSM-486, IOSM-557
     func doSendMessage(_ text: String) {
         if let xmpp = xmppManager(), let room = getRoom() {
             let roomModel = ChatRoomModel(room: room)
@@ -2804,7 +2795,6 @@ extension ChatRoomViewController: AttachmentsInputBarViewDelegate {
         }
     }
 
-    //IOSM-486, IOSM-557
     func handleTextWithLinks(_ text: String, msgurls: [URL]) {
         if !msgurls.isEmpty, let firsturl = msgurls.first {
             Task {
@@ -2826,7 +2816,6 @@ extension ChatRoomViewController: AttachmentsInputBarViewDelegate {
         }
     }
     
-    //IOSM-579
     func convertBadLinksText(_ text: String) -> String {
         //let newtext = text.replacingOccurrences(of: "http://", with: "https://")
         //check out espn.com and suntrust.com and let me know
@@ -2952,7 +2941,7 @@ extension ChatRoomViewController: OTRAttachmentPickerDelegate{
     }
     
     public func addUploadHUD(_ message: String, tapToCancel: Bool) {
-        if self.uploadHUD == nil { //IOSM-601
+        if self.uploadHUD == nil {
             self.uploadHUD = MBProgressHUD.showAdded(to: self.view, animated: true)
             self.uploadHUD?.label.text = message
             if tapToCancel == true {
@@ -3002,7 +2991,6 @@ extension ChatRoomViewController: AVPlayerViewControllerDelegate {
             let moviePlayerViewController = AVPlayerViewController()
             moviePlayerViewController.player = player
             
-            //IOSM-467
             moviePlayerViewController.delegate = self
             self.originalAudioCategory = AVAudioSession.sharedInstance().category as AVAudioSession.Category
             do {
@@ -3014,7 +3002,6 @@ extension ChatRoomViewController: AVPlayerViewControllerDelegate {
         }
     }
     
-    //IOSM-467
     public func playerViewController(_ playerViewController: AVPlayerViewController, willEndFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator) {
         if playerViewController.isBeingDismissed, let audioCat = self.originalAudioCategory {
             do {

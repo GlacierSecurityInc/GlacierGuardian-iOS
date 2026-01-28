@@ -170,7 +170,7 @@ import SignalProtocolObjC
                         {
                         groupMessage.addAttribute(withName: "type", stringValue: "groupchat")
                         groupMessage.addReceiptRequest()
-                        groupMessage.addBody("Message cannot be decrypted.") //IOSM-605
+                        groupMessage.addBody("Message cannot be decrypted.")
                         self.omemoModule?.xmppStream?.send(groupMessage)
                     } else if message is OTROutgoingMessage {
                         self.omemoModule?.sendKeyData(keyDataArray, iv: ivData, to: destinationJID, payload: finalPayload, elementId: message.remoteMessageId, expiration: message.messageExpires)

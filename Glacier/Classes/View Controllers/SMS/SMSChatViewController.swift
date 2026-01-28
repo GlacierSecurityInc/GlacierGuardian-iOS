@@ -192,7 +192,6 @@ class SMSChatViewController: MessagesViewController, MessagesDataSource {
         }
     }
 
-    //IOSM#95
     @objc open func infoButtonPressed(_ sender: AnyObject?) {
         if let conv = self.conversation, let number = conv.grdbRecord?.remoteNumber, let displayName = conv.grdbRecord?.preferredName {
             
@@ -556,7 +555,7 @@ extension SMSChatViewController {
             })
         }
             
-        //IOSM-509 prevent accidental hot mic
+        // prevent accidental hot mic
         let alert = UIAlertController(title: "Start Call?", message: nil, preferredStyle: .alert)
         let callAction = UIAlertAction(title: "Call", style: .default, handler: { alert in
             CallManager.sharedCallManager().makeVoiceCall(callnum, name: name)

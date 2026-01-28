@@ -277,7 +277,7 @@ class VMPlayerViewController: UIViewController {
             })
         }
             
-        //IOSM-509 prevent accidental hot mic
+        // prevent accidental hot mic
         let alert = UIAlertController(title: "Start Call?", message: nil, preferredStyle: .alert)
         let callAction = UIAlertAction(title: "Call", style: .default, handler: { alert in
             let number = CallManager.cleanPhoneNumber(self.voicemailRec.from!)

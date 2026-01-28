@@ -19,7 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)attachmentPicker:(OTRAttachmentPicker *)attachmentPicker gotVideoURL:(NSURL *)videoURL;
 
 @optional
-- (void) addUploadHUD; //IOSM-565
+- (void) addUploadHUD;
 
 - (void)attachmentPicker:(OTRAttachmentPicker *)attachmentPicker addAdditionalOptions:(UIAlertController *)alertController;
 
@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 // for sending other file types
 - (void)attachmentPicker:(OTRAttachmentPicker *)attachmentPicker gotFileURLs:(NSArray <NSURL *>*)fileURLs;
 
-- (void)attachmentPicker:(OTRAttachmentPicker *)attachmentPicker gotGif:(UIImage *)photo withInfo:(NSDictionary *)info; //IOSM#61
+- (void)attachmentPicker:(OTRAttachmentPicker *)attachmentPicker gotGif:(UIImage *)photo withInfo:(NSDictionary *)info;
 
 /** This shoud reutrn an array of media types like kUTTypeImage. This array will be checked against availableMediaTypesForSourceType: To make sure no erronous types are used
  

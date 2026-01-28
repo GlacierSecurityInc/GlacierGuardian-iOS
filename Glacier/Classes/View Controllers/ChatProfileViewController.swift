@@ -76,7 +76,7 @@ import GRDB
         }
     }
     
-    //IOSM-479 get view width for constant?
+    // get view width for constant?
     open override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         self.viewWidth = self.view.bounds.size.width
@@ -124,7 +124,7 @@ import GRDB
         if (section == 0) {
             let cnt = ChatAccountModel.countXMPPAccounts()
             if (cnt == 0) {
-                return cnt+3 //IOSM-338 +1 and below
+                return cnt+3 // +1 and below
             } else {
                 return cnt+2
             }
@@ -397,7 +397,7 @@ import GRDB
         self.present(alert, animated: true, completion: nil)
     }
     
-    @objc func resetSecureConnectionsButtonPressed() { //IOSM-338
+    @objc func resetSecureConnectionsButtonPressed() {
         let alertController = UIAlertController(title: "Reset Secure Sessions", message: "This may help if you are having problems with message delivery. All your messages will be kept.", preferredStyle: .alert)
         let resetAction = UIAlertAction(title: "Reset", style: .default, handler: {[weak self] _ in
             self?.doResetSecureConnections()
@@ -452,7 +452,7 @@ import GRDB
             allDevicesToClear.append(curDevice)
         }
         
-        //IOSM-338d only remove current device
+        // only remove current device
         var mutableDevices:[NSNumber] = []
         if let bareJid = account.bareJID {
             let devices = omemoCoord.fetchDeviceIds(for: bareJid)
@@ -472,7 +472,6 @@ import GRDB
             }
         }
         
-        //IOSM-338b
         DBManager.sharedDB().grdbStorage.asyncWrite(block: { transaction in
             do {
                 try ChatAccountSignalIdentity
@@ -490,7 +489,7 @@ import GRDB
                 //NSArray<NSNumber *>* mydevice = @[idNumber];
                 omemoCoord.omemoModule?.publishBundle(bundle, elementId: nil)
                 //[xmpp.omemoSignalCoordinator.omemoModule publishDeviceIds:mydevice elementId:nil];
-                //IOSM-338d should include my other deviceIDs
+                // should include my other deviceIDs
                 mutableDevices.append(NSNumber(value: bundle.deviceId))
                 let copyDevices = mutableDevices
                 omemoCoord.omemoModule?.publishDeviceIds(copyDevices, elementId: nil)
@@ -520,7 +519,7 @@ import GRDB
             //NSArray<NSNumber *>* mydevice = @[idNumber];
             omemoCoord.omemoModule?.publishBundle(bundle, elementId: nil)
             //[xmpp.omemoSignalCoordinator.omemoModule publishDeviceIds:mydevice elementId:nil];
-            //IOSM-338d should include my other deviceIDs
+            // should include my other deviceIDs
             mutableDevices.append(NSNumber(value: bundle.deviceId))
             let copyDevices = mutableDevices
             omemoCoord.omemoModule?.publishDeviceIds(copyDevices, elementId: nil)

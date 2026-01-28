@@ -5,7 +5,6 @@
 //  Created by andyfriedman on 1/27/22.
 //  Copyright © 2022 Glacier. All rights reserved.
 //
-//IOSM#19
 
 import UIKit
 import Alamofire
@@ -55,7 +54,7 @@ import IOSSecuritySuite
         super.viewWillAppear(animated)
         self.tabBar.selectedItem = self.tabBar.hubItem
         
-        //IOSM#99 check security status
+        // check security status
         if let appDelegate = Application.shared.delegate as? OTRAppDelegate {
             let securityAwareness = appDelegate.settingsViewController.needsSecurityAwareness()
             self.tabBar?.setSecurityAlert(securityAwareness)
@@ -67,7 +66,7 @@ import IOSSecuritySuite
         }
     }
     
-    //IOSM#90 (and viewWillAppear above)
+    // (and viewWillAppear above)
     public func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
         self.navigationController?.popToRootViewController(animated: false)
         if let appDelegate = Application.shared.delegate as? OTRAppDelegate {

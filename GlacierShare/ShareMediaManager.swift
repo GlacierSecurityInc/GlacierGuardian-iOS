@@ -139,7 +139,6 @@ public class ShareMediaManager: NSObject {
         httpFileUpload.removeDelegate(self)
     }
     
-    //IOSM-517
     @objc public func teardownConnections() {
         //self.connection = nil
     }
@@ -160,7 +159,6 @@ public class ShareMediaManager: NSObject {
         return UIImage(cgImage: downsampledImage)
     }
     
-    //IOSM-548
     @objc public func compressImageData(_ imageData: Data, to pointSize: CGSize, scale: CGFloat) -> UIImage {
         let imageSourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary
      
@@ -453,7 +451,6 @@ public class ShareMediaManager: NSObject {
         }
     }*/
     
-    //IOSM-486, IOSM-557
     /*@objc public func send(htmlURL url: URL, thread: OTRThreadOwner, completion: @escaping (_ success: Bool, _ error: Error?) -> ()) {
         self.callbackQueue.async {
             completion(false, nil)
@@ -505,7 +502,6 @@ public class ShareMediaManager: NSObject {
                 message.messageText = nil
                 message.mediaItemId = mediaItem.uniqueId
                 //We are NOT checking for existing keys, just assuming
-                //IOSM-517
                 message.messageSecurityInfo = OTRMessageEncryptionInfo(messageSecurity: .OMEMO)
                 return message
             }
@@ -530,7 +526,7 @@ public class ShareMediaManager: NSObject {
                 
                 message.messageError = error
                 message.save()
-                self.shareDelegate.doShare(nil) //handle failure IOSM-517
+                self.shareDelegate.doShare(nil) // handle failure
                 return
             }
 
@@ -659,7 +655,7 @@ extension URL {
         return (self as String).isSingleURLOnly
     }
     
-    @objc var urls: [URL] { //IOSM-486, IOSM-557
+    @objc var urls: [URL] {
         return (self as String).urls
     }
 }
@@ -677,7 +673,7 @@ public extension String {
         
         for match in matches where match.resultType == .link {
             if let url = match.url {
-                if (!url.absoluteString.hasPrefix("mailto")) { //IOSM-579
+                if (!url.absoluteString.hasPrefix("mailto")) {
                     urls.append(url)
                     ranges.append(match.range)
                 }
@@ -751,7 +747,7 @@ public extension ShareMediaManager {
         
         // so media messages don't show as link in group, maybe remove after OMEMO
         /*if messageText.isSingleURLOnly,
-           message.downloads().count > 0, message.isMessageIncomingOrDifferentDevice { //IOSM-474 added incoming
+           message.downloads().count > 0, message.isMessageIncomingOrDifferentDevice { // added incoming
             return false
         }*/
 

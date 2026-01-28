@@ -24,7 +24,6 @@ open class OTRComposeGroupViewController: UIViewController, UITableViewDelegate,
     @IBOutlet weak var tableView:UITableView!
     @IBOutlet weak var doneButton: UIBarButtonItem!
     
-    //IOSM#9
     var searchController:ComposeSearchController?
     let tableViewHeader = OTRVerticalStackView.init()
     var modalStyle: UIModalPresentationStyle?
@@ -53,7 +52,7 @@ open class OTRComposeGroupViewController: UIViewController, UITableViewDelegate,
         self.tableView.delegate = self
         self.tableView.dataSource = self
         
-        self.setupSearchController() //IOSM#9
+        self.setupSearchController()
         
         let accounts = ChatAccountModel.allXMPPAccounts()
         guard accounts.count > 0, let xacct = accounts.first, let acctgrec = xacct.grdbRecord else {return}
@@ -68,7 +67,7 @@ open class OTRComposeGroupViewController: UIViewController, UITableViewDelegate,
         self.tableView.register(OTRBuddyInfoCheckableCell.self, forCellReuseIdentifier: OTRBuddyInfoCheckableCell.reuseIdentifier())
     }
     
-    //IOSM#9 (next 7, all search functions)
+    // (next 7, all search functions)
     func setupSearchController() {
         
         self.tableViewHeader.backgroundColor = UIColor.systemGroupedBackground
@@ -191,7 +190,7 @@ open class OTRComposeGroupViewController: UIViewController, UITableViewDelegate,
         if let cell = tableView.dequeueReusableCell(withIdentifier: OTRBuddyInfoCheckableCell.reuseIdentifier(), for: indexPath) as? OTRBuddyInfoCheckableCell,
             let buddy = self.threadOwnerAt(indexPath: indexPath, tableView: tableView), let acctId = buddy.accountUniqueId {
             let account:ChatAccountModel? = ChatAccountModel.getXMPPAccount(uniqueId: acctId)
-            //IOSM-519 gray and not selectable if no keys
+            // gray and not selectable if no keys
             let devices:[ChatOmemoDevice] = ChatOmemoDevice.allOMEMODevices(for: buddy.uniqueId)
 
             let buddyModel = ChatBuddyModel(buddy: buddy)
@@ -208,7 +207,6 @@ open class OTRComposeGroupViewController: UIViewController, UITableViewDelegate,
             cell.identifierLabel.textColor = isExistingOccupant ? UIColor.gray : tColor
             cell.accountLabel.text = nil;
             
-            //IOSM-519
             if (isExistingOccupant) {
                 cell.isUserInteractionEnabled = false
                 cell.setChecked(checked: true)
@@ -217,7 +215,7 @@ open class OTRComposeGroupViewController: UIViewController, UITableViewDelegate,
                 cell.accountLabel.text = "No secure keys available"
                 cell.accountLabel.textColor = UIColor.gray
                 cell.nameLabel.textColor = UIColor.gray
-            } else { //IOSM-537
+            } else {
                 cell.isUserInteractionEnabled = true
             }
             
@@ -264,7 +262,7 @@ open class OTRComposeGroupViewController: UIViewController, UITableViewDelegate,
     open func setExisting(roomOccupants:Set<String>, room:ChatRoomModel?) {
         self.existingItems = roomOccupants
         
-        //IOSM-519 query keys as needed
+        // query keys as needed
         ChatBuddyModel.getAllBuddies(completion: { [weak self] (buddies) in
             DispatchQueue.global().async {
                 var budjids:[XMPPJID] = []
@@ -297,7 +295,6 @@ open class OTRComposeGroupViewController: UIViewController, UITableViewDelegate,
     }
 }
 
-//IOSM#9
 class ComposeSearchController: UISearchController {
     var modalStyle:UIModalPresentationStyle?
     func setModalStyle(navModalStyle: UIModalPresentationStyle) {

@@ -116,7 +116,6 @@ public extension UIAlertAction  {
         })
             
         let openInSafari = UIAlertAction(title: "Open in Default Browser", style: UIAlertAction.Style.default, handler: {  _ in
-            //IOSM#7
             let visitURL = UIAlertAction(title: "Open", style: UIAlertAction.Style.default, handler: {  _ in
                 UIApplication.shared.open(url)
             })

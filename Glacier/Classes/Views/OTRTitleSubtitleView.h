@@ -16,6 +16,6 @@
 
 @property (nonatomic, strong, readonly) UIImageView *titleImageView;
 @property (nonatomic, strong, readonly) UIImageView *subtitleImageView;
-@property (nonatomic, strong, readonly) UIActivityIndicatorView *dynConnectingView; //IOSM#60 from DGActivityIndicatorView
+@property (nonatomic, strong, readonly) UIActivityIndicatorView *dynConnectingView; // from DGActivityIndicatorView
 
 @end

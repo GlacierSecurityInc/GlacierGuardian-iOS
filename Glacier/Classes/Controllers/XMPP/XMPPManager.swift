@@ -177,7 +177,6 @@ public extension XMPPManager {
     
     /*@objc func getChatStateToSend(_ chatState: ChatState, buddyUniqueId:String) -> XMPPMessage? {
         var xMessage:XMPPMessage?
-        //IOSM#43
         if !(self.loginStatus == OTRLoginStatus.authenticated) {
             return
         }

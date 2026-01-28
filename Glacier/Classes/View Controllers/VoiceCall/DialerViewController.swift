@@ -437,7 +437,7 @@ import MBProgressHUD
             })
         }
             
-        //IOSM-509 prevent accidental hot mic
+        // prevent accidental hot mic
         let alert = UIAlertController(title: "Start Call?", message: nil, preferredStyle: .alert)
         let callAction = UIAlertAction(title: "Call", style: .default, handler: { alert in
             let name = CallManager.cleanPhoneNumber(self.dialedNumbersDisplayString)
@@ -651,7 +651,7 @@ extension DialerViewController : TwilioAccountDelegateProtocol {
                 }
             }
             
-            if menuItems.count == 0 && tmgr.glacierSMS?.addUserToPurchaseNumbers == false { //IOSM#85
+            if menuItems.count == 0 && tmgr.glacierSMS?.addUserToPurchaseNumbers == false {
                 self.shouldHaveToolTip = true
                 self.settingsButton?.menu = nil
                 self.settingsButton?.addToolTip(description: "You are not authorized to add a number. Please contact your administrator.")

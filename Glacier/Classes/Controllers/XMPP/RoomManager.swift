@@ -173,7 +173,7 @@ public extension OTRXMPPRoomManager {
                 dateComponents.day = -7
                 let lastWeek = Calendar.current.date(byAdding: dateComponents, to: currentDate)!
                 //dateToFetch = lastWeek
-                //IOSM-541 - archiveJID was nil. Which means this was being queried numerous times?
+                // archiveJID was nil. Which means this was being queried numerous times?
                 self.archiving.fetchHistory(archiveJID: xmppRoom.roomJID, userJID: nil, since: lastWeek)
             }
             

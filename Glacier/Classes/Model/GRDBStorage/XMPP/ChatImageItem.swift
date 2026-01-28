@@ -193,7 +193,7 @@ extension ChatImageItem: MediaItem {
                 return
             }
             
-            //IOSM#61 gif...
+            // gif...
             var image:UIImage?
             if (filename as? NSString)?.pathExtension.lowercased() == "gif" {
                 image = GifHelper.getGifImage(data)

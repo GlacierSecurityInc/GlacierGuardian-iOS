@@ -29,7 +29,6 @@
 
 @property (nonatomic, strong) OTRSetting *otrSetting;
 
-//IOSM#58
 - (void) setOtrBoolSetting:(OTRBoolSetting *)boolSetting boolSwitch:(UISwitch *)boolSwitch;
 
 @end

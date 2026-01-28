@@ -9,7 +9,6 @@
 import UIKit
 import PureLayout;
 
-//IOSM#19
 @objc public class SecurityHubCell: OTRSettingTableViewCell {
     
     private var securityAlertView: UIImageView!

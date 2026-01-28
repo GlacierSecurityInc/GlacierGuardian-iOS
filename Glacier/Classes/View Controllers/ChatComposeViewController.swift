@@ -80,7 +80,7 @@ import MBProgressHUD
         self.title = COMPOSE_STRING()
         self.navigationItem.leftBarButtonItem = cancelBarButtonItem
         self.navigationItem.rightBarButtonItem = self.groupBarButtonItem
-        self.navigationItem.title = "New Chat" //IOSM#55 and commented above
+        self.navigationItem.title = "New Chat" // and commented above
         
         self.doneBarButtonItem.target = self
         self.groupBarButtonItem.target = self
@@ -128,7 +128,7 @@ import MBProgressHUD
         })
     }
     
-    //IOSM-519 query missing keys
+    // query missing keys
     func queryMissingKeys() {
         let accounts = ChatAccountModel.allXMPPAccounts()
         if accounts.count == 0 {return}
@@ -212,18 +212,17 @@ import MBProgressHUD
         if let cell = tableView.dequeueReusableCell(withIdentifier: OTRBuddyInfoCell.reuseIdentifier(), for: indexPath) as? OTRBuddyInfoCell,
             let buddy = self.threadOwnerAt(indexPath: indexPath, tableView: tableView) {
             
-            //IOSM-519 gray and not selectable if no bundle/keys
+            // gray and not selectable if no bundle/keys
             let deviceCount = ChatOmemoDevice.countOMEMODevices(for: buddy.uniqueId)
             let buddyModel = ChatBuddyModel(buddy: buddy)
             cell.setBuddyThread(buddyModel, account: nil)
             
-            //IOSM-519
             if (deviceCount == 0) {
                 cell.isUserInteractionEnabled = false //not selectable, gray
                 cell.accountLabel.text = "No secure keys available"
                 cell.accountLabel.textColor = UIColor.gray
                 cell.nameLabel.textColor = UIColor.gray
-            } else { //IOSM-537
+            } else {
                 cell.isUserInteractionEnabled = true
             }
             
@@ -263,7 +262,6 @@ import MBProgressHUD
         return UITableViewCell.EditingStyle.delete
     }
     
-    //IOSM#55
     /*public func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         if let thread = self.threadOwnerAt(indexPath: indexPath, tableView: tableView) {
             return UITableView.editActions(forThread: thread)
@@ -478,7 +476,7 @@ import MBProgressHUD
         return UIBarPosition.top
     }*/
     
-    //IOSM#9 (next 7, all search functions)
+    // (next 7, all search functions)
     func setupSearchController() {
         //self.tableViewHeader.backgroundColor = UIColor.systemGroupedBackground
         //self.tableView.tableHeaderView = self.tableViewHeader

@@ -520,7 +520,7 @@
                 dispatch_async(moduleQueue, ^{
                     [self removeRoomOnDestroyed:xjid];
                 });
-            } /*else { //IOSM-553, backtrack due to #168
+            } /*else { // backtrack due to #168
                 NSXMLElement *item = [x elementForName:@"item"];
                 NSString *role = [item attributeStringValueForName:@"role"];
                 NSString *affiliation = [item attributeStringValueForName:@"affiliation"];
@@ -553,7 +553,7 @@
 }
 
 // this happens when room no longer exists or we are kicked out and we try to enter it
-// updated for IOSM-553
+// updated for
 - (void) removeRoomOnDestroyed:(XMPPJID*)roomjid kicked:(BOOL)kicked{
     [self performBlockAsync:^{
         __block ChatAccountModel *account = [ChatAccountModel accountForStream:self.xmppStream];
@@ -744,7 +744,6 @@
     }
 }
 
-//IOSM-511
 - (void) xmppRoom:(XMPPRoom *)room didEditPrivileges:(nonnull XMPPIQ *)iqResult {
     [self performBlockAsync:^{
         [room fetchMembersList];
@@ -754,7 +753,7 @@
 - (void) xmppRoom:(XMPPRoom *)room didFetchMembersList:(NSArray<NSXMLElement*> *)items {
     //DDLogInfo(@"Fetched members list: %@", items);
     
-    //IOSM-511 remove old non-existing members
+    // remove old non-existing members
     ChatRoomModel *xroom = [self roomWithXMPPRoom:room];
     NSArray<ChatRoomOccupantModel*> *allOccs = [ChatRoomOccupantModel allXMPPRoomOccupantsFor:xroom.uniqueId];
     
@@ -866,7 +865,7 @@
     if (name) {
         [self.tempRoomName removeObjectForKey:sender.roomJID.bare];
         
-        //IOSM-495 changed from subject to name added this to save change
+        // changed from subject to name added this to save change
         __block ChatRoomModel *xroom = [self roomWithXMPPRoom:sender];
         if (xroom && ![xroom.roomName isEqualToString:name]) {
             xroom.roomName = name;
@@ -1082,7 +1081,7 @@
 
     [form addChild:formTypeField];
     [form addChild:publicField];
-    if (name) { //IOSM-495
+    if (name) {
         [form addChild:roomnameField];
     }
     [form addChild:persistentField];

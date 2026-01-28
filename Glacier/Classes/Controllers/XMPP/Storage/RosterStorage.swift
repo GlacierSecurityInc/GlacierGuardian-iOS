@@ -76,7 +76,7 @@ import XMPPFramework
         }
         if lastSeen != nil {
             BuddyCache.shared().setLastSeen(date: lastSeen, buddy: buddy)
-        } //IOSM-168 remove this or get rid of delayedDelivery?
+        } // remove this or get rid of delayedDelivery?
     }
 }
 

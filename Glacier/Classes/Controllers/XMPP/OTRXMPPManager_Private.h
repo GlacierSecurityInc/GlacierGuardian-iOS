@@ -43,7 +43,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readwrite) BOOL userInitiatedConnection;
 @property (atomic, readwrite) OTRLoginStatus loginStatus;
 
-//IOSM-570
 @property (nonatomic, strong) NSDate *lastDisconnect;
 @property (nonatomic, strong) NSDate *lastConnectAttempt; 
 
@@ -56,7 +55,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** wtf. why isn't this being picked up by OTRProtocol */
 - (void) connectUserInitiated:(BOOL)userInitiated;
-- (BOOL) connectFromBackground; //IOSM#80
+- (BOOL) connectFromBackground;
 
 /** Return a newly allocated stream object.  */
 - (OTRXMPPStream*) newStream;

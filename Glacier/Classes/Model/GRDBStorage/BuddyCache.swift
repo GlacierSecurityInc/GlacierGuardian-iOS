@@ -83,7 +83,6 @@ import Foundation
     }
 
     @objc func setThreadStatus(_ status:ThreadStatus, buddyId:String, resource:String?) {
-        //IOSM#56
         var buddyDict:[String:NSNumber]?
         queue.sync {
             buddyDict = self.threadStatuses[buddyId]
@@ -102,7 +101,6 @@ import Foundation
                 self.threadStatuses.removeValue(forKey: buddyId)
             }
             
-            //IOSM#56
             if let bdict = buddyDict {
                 self.threadStatuses.updateValue(bdict, forKey: buddyId)
             }
@@ -122,7 +120,7 @@ import Foundation
             for info in resInfo {
                 if let resourceStatus = ThreadStatus(rawValue: info.value.intValue) {
                     // Check if it less than becauase ThreadStatusAvailable == 0 and the closer you are to ThreadStatusAvailable the more 'real' it is.
-                    //IOSM#56 added && resourceStatus != Unknown
+                    // added && resourceStatus != Unknown
                     if (resourceStatus.rawValue < status.rawValue && resourceStatus != ThreadStatus.unknown) {
                         status = resourceStatus
                     }

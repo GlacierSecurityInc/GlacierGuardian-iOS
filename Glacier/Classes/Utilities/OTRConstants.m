@@ -37,7 +37,7 @@ NSString *const kOTRNotificationAccountCollectionKey = @"kOTRNotificationAccount
 NSString *const kOTRServiceName            = @"org.chatsecure.ChatSecure";
 NSString *const kOTRCertificateServiceName = @"org.chatsecure.ChatSecure.Certificate";
 
-NSString *const kGlacierServiceName            = @"com.glaciersec.Chat"; //IOSM#105
+NSString *const kGlacierServiceName            = @"com.glaciersec.Chat";
 NSString *const kGlacierGroup      = @"group.com.glaciersec.apps";
 NSString *const kGlacierAcct       = @"com.glaciersec.Acct";
 NSString *const kGlacierAppIsActiveKey = @"com.glaciersec.AppIsActive";
@@ -62,12 +62,12 @@ NSString *const kOTRSettingUserAgreedToEULA            = @"kOTRSettingUserAgreed
 NSString *const kOTRSettingAccountsKey                 = @"kOTRSettingAccountsKey";
 NSString *const kOTRSettingsValueUpdatedNotification = @"kOTRSettingsValueUpdatedNotification";
 NSString *const kGlacierCoreConnection = @"kGlacierCoreConnection";
-NSString *const kThreatDetectionKey = @"kThreatDetectionKey"; //IOSM#58
+NSString *const kThreatDetectionKey = @"kThreatDetectionKey";
 NSString *const kLinkPreviewKey = @"kLinkPreviewKey";
 NSString *const kReadReceiptsKey = @"kReadReceiptsKey";
 NSString *const kRebootReminderKey = @"kRebootReminderKey";
 NSString *const kTrackingOnKey = @"kTrackingOnKey";
-NSString *const kBgTaskId = @"com.glacier.Messenger.task.refresh"; //IOSM#88
+NSString *const kBgTaskId = @"com.glacier.Messenger.task.refresh";
 NSString *const kBgRebootTaskId = @"com.glacier.Messenger.task.reboot";
 
 NSString *const kOTRPushEnabledKey = @"kOTRPushEnabledKey";
@@ -94,7 +94,7 @@ NSString *const OTRYapDatabaseName = @"ChatSecureYap.sqlite";
 NSString *const GlacierYapDatabaseName = @"GlacierYap.sqlite";
 NSString *const GlacierMediaDatabaseName = @"Glacier-media.sqlite";
 
-NSString *const GlacierGRDBPassphraseAccountName = @"GlacierGRDBPassphraseAccountName"; //IOSM#105
+NSString *const GlacierGRDBPassphraseAccountName = @"GlacierGRDBPassphraseAccountName";
 NSString *const GlacierMediaPassphraseName = @"GlacierMediaPassphraseName";
 
 //Noticications
@@ -113,7 +113,7 @@ NSString *const BuddyPendingApprovalDidChangeNotification = @"BuddyPendingApprov
 NSString *const kNotificationCallIdKey   = @"call_id";
 NSString *const kNotificationCallerKey   = @"caller";
 NSString *const kNotificationRoomnameKey   = @"roomname";
-NSString *const kNotificationCallStatusKey = @"status"; //IOSM-569
+NSString *const kNotificationCallStatusKey = @"status";
 
 // Twilio Voice Calls
 NSString *const kNotificationTwilioCallIdKey   = @"twi_call_sid";

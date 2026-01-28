@@ -26,7 +26,7 @@
 @property (nonatomic, strong) dispatch_queue_t workQueue;
 @property (nonatomic, strong, nullable) ChatAccountModel *acct;
 @property (nonatomic, assign) BOOL msgDecrypted;
-@property (nonatomic, strong) NSTimer *failTimer; //IOSM#23, IOSM#24
+@property (nonatomic, strong) NSTimer *failTimer;
 @property (nonatomic, assign) BOOL databaseReady;
 
 @end
@@ -76,17 +76,17 @@
 
 - (void)teardownStream
 {
-    if (self.failTimer) [self.failTimer invalidate]; //IOSM#23, IOSM#24
+    if (self.failTimer) [self.failTimer invalidate];
     self.failTimer = nil;
     [_xmppStream disconnect];
     [_xmppStream removeDelegate:self];
     [_omemoModule removeDelegate:self.omemoSignalCoordinator];
     [_omemoModule deactivate];
     
-    _workQueue = nil; //IOSM#70
+    _workQueue = nil;
     _omemoSignalCoordinator = nil;
     _omemoModule = nil;
-    [_xmppStream predealloc]; //IOSM#23, IOSM#24
+    [_xmppStream predealloc];
     _xmppStream = nil;
 }
 
@@ -108,7 +108,6 @@
     //NSLog(@"NotificationService didReceiveNotificationRequest with userInfo: %@", userInfo);
     NSString *smsType = userInfo[kNotificationTwilioType];
     if (smsType) {
-        //IOSM#103
         [self handleSMSContent];
         return;
     }
@@ -271,7 +270,7 @@
     [queryElement addChild:[NSXMLElement elementWithName:@"flip-page"]];
     
     dispatch_async(dispatch_get_main_queue(), ^{
-        self.failTimer = [NSTimer scheduledTimerWithTimeInterval:1.2 target:self selector:@selector(handleFailureGracefully:) userInfo:nil repeats:NO]; //IOSM#70
+        self.failTimer = [NSTimer scheduledTimerWithTimeInterval:1.2 target:self selector:@selector(handleFailureGracefully:) userInfo:nil repeats:NO];
     });
     
     self.msgDecrypted = NO;
@@ -328,7 +327,7 @@
     //[queryElement addChild:[NSXMLElement elementWithName:@"flip-page"]];
     
     dispatch_async(dispatch_get_main_queue(), ^{
-        self.failTimer = [NSTimer scheduledTimerWithTimeInterval:1.2 target:self selector:@selector(handleFailureGracefully:) userInfo:nil repeats:NO]; //IOSM#70
+        self.failTimer = [NSTimer scheduledTimerWithTimeInterval:1.2 target:self selector:@selector(handleFailureGracefully:) userInfo:nil repeats:NO];
     });
     
     self.msgDecrypted = NO;
@@ -340,7 +339,6 @@
 
 - (void)xmppStream:(XMPPStream *)sender didReceiveMessage:(XMPPMessage *)xmppMessage
 {
-    //IOSM-483
     XMPPJID *myJID = sender.myJID;
     if (!myJID) { return; }
     NSXMLElement *mamResult = xmppMessage.mamResult;
@@ -366,7 +364,7 @@
         {
             [self.omemoSignalCoordinator processUnencryptedData:isIncoming message:offmsg forJID:forJID];
         }
-    } else { //IOSM-544 check for invite
+    } else { // check for invite
         NSXMLElement *x1 = [mam elementForName:@"x" xmlns:XMPPMUCUserNamespace];
         if (!x1) {
             return;
@@ -405,10 +403,10 @@
     if (self.msgDecrypted) {return;}
     self.msgDecrypted = YES;
     
-    if (self.failTimer) [self.failTimer invalidate]; //IOSM#70
+    if (self.failTimer) [self.failTimer invalidate];
     self.failTimer = nil;
     
-    if (message.threadId) { //IOSM#16
+    if (message.threadId) {
         NSDictionary *userInfo = @{kOTRNotificationThreadKey:message.threadId,
                                    kOTRNotificationThreadCollection:message.threadCollection,
                                    kOTRNotificationType:kOTRNotificationTypeChatMessage};
@@ -429,7 +427,7 @@
     if (self.msgDecrypted) {return;}
     NSLog(@"NotificationService failedToDecryptMessage");
     
-    if (message.threadId) { //IOSM#16
+    if (message.threadId) {
         NSDictionary *userInfo = @{kOTRNotificationThreadKey:message.threadId,
                                    kOTRNotificationThreadCollection:message.threadCollection,
                                    kOTRNotificationType:kOTRNotificationTypeChatMessage};
@@ -441,7 +439,7 @@
     }
     
     /*dispatch_async(dispatch_get_main_queue(), ^{
-        self.failTimer = [NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(handleFailureGracefully:) userInfo:nil repeats:NO]; //IOSM#23, IOSM#24
+        self.failTimer = [NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(handleFailureGracefully:) userInfo:nil repeats:NO];
     });*/
 }
 
