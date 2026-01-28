@@ -305,10 +305,7 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     self.conversationViewController.delegate = self.splitViewCoordinator;
     
     //MessagesViewController Nav
-    //self.messagesViewController.hidesBottomBarWhenPushed = YES;
     UINavigationController *messagesNavigationController = [[UINavigationController alloc ]initWithRootViewController:self.chatViewController];
-    //[messagesNavigationController setCustomBackButton];
-    //messagesNavigationController.hidesBottomBarWhenPushed = YES;
     
     //SplitViewController
     UISplitViewController *splitViewController = [[UISplitViewController alloc] init];
@@ -318,9 +315,6 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     splitViewController.presentsWithGesture = NO;
     splitViewController.displayModeButtonItem.enabled = NO;
     splitViewController.view.backgroundColor = UIColor.systemBackgroundColor;
-    
-    //splitViewController.hidesBottomBarWhenPushed = YES;
-    //splitViewController.navigationController.hidesBottomBarWhenPushed = YES;
     
     // for preferred iPad views
     //splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryOverlay;
@@ -335,7 +329,6 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     return splitViewController;
 }
 
-//IOSM#76
 - (UIViewController *)setupSMSSplitViewControllerWithLeadingViewController:(nonnull UIViewController *)leadingViewController
 {
     _smsSplitViewCoordinator = [[SMSSplitViewCoordinator alloc] init];

@@ -259,63 +259,6 @@ import NetworkExtension
         }
     }
     
-    /*func handleResults(securityResults: String) {
-        let curVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-    
-        do {
-            let securityEl = try XMLElement.init(xmlString: securityResults)
-            let glacierversion = securityEl.element(forName: "glacier")?.stringValue
-            let latestiosversion = securityEl.element(forName: "ios")?.stringValue
-            
-            //check our Glacier version vs latest
-            if (curVersion != self.secInfoUtil.securityInfo.glacier_version) {
-                self.secInfoUtil.secinfoNeedsUpdate = true
-            }
-            self.secInfoUtil.securityInfo.glacier_version = curVersion
-            if let myVersion = curVersion, let latestVersion = glacierversion, myVersion.compare(latestVersion, options: .numeric) == .orderedAscending {
-                self.versionNeedsNotification = true
-                
-                if self.secInfoUtil.securityInfo.glacier_version_outdated == false {
-                    self.secInfoUtil.secinfoNeedsUpdate = true
-                }
-                self.secInfoUtil.securityInfo.glacier_version_outdated = true
-            } else {
-                if self.secInfoUtil.securityInfo.glacier_version_outdated == true {
-                    self.secInfoUtil.secinfoNeedsUpdate = true
-                }
-                self.secInfoUtil.securityInfo.glacier_version_outdated = false
-            }
-            
-            //check our iOS version vs latest
-            let osversion = UIDevice.current.systemVersion
-            if osversion != self.secInfoUtil.securityInfo.os_version {
-                self.secInfoUtil.secinfoNeedsUpdate = true
-            }
-            self.secInfoUtil.securityInfo.os_version = osversion
-            
-            if let latestios = latestiosversion, self.iOS_VERSION_LESS_THAN(version: latestios) {
-                self.versionNeedsNotification = true
-                
-                if self.secInfoUtil.securityInfo.os_version_outdated == false {
-                    self.secInfoUtil.secinfoNeedsUpdate = true
-                }
-                self.secInfoUtil.securityInfo.os_version_outdated = true
-            } else {
-                if self.secInfoUtil.securityInfo.os_version_outdated == true {
-                    self.secInfoUtil.secinfoNeedsUpdate = true
-                }
-                self.secInfoUtil.securityInfo.os_version_outdated = false
-            }
-            
-            if self.versionNeedsNotification {
-                self.needsNotification = true
-            }
-                
-        } catch {
-            DDLogError("Failure parsing latest iOS/Glacier versions")
-        }
-    }*/
-    
     @objc public func setVersionIssue(_ versionIssue: Bool) {
         self.versionNeedsNotification = versionIssue
     }

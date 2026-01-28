@@ -163,13 +163,6 @@ import GRDB
                 message.grdbRecord?.originalText = original
             }
             
-            //if (!message.isMessageIncoming && message.isMessageIncomingOrDifferentDevice) {
-            /*if (isOutgoingFromOtherDevice) { //IOSM-371
-             if (original?.hasPrefix("geo:") ?? false) {
-             message.messageText = original ?? body
-             }
-             }*/
-            
             message.grdbRecord?.originId = originId
             message.grdbRecord?.stanzaId = stanzaId
             
@@ -181,11 +174,8 @@ import GRDB
                 message.grdbRecord?.buddyUniqueId = occupant?.buddyUniqueId
             }
             
-            //occupant?.grdbRecord?.storeInGRDB(completion: {})
-            
             room.grdbRecord?.lastRoomMessageId = message.uniqueId
             
-            //IOSM-443
             if (xmppMessage.hasMarkableChatMarker) {
                 message.grdbRecord?.markable = true
             }

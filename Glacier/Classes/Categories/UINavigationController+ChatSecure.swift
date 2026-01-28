@@ -24,13 +24,4 @@ public extension UINavigationController {
         }
         return result
     }
-    
-    /*@objc func setCustomBackButton() {
-        let backButtonBackgroundImage = UIImage(systemName: "chevron.right")
-        let barAppearance = UINavigationBar.appearance(whenContainedInInstancesOf: [ChatViewController.self])
-        barAppearance.backIndicatorImage = backButtonBackgroundImage
-        barAppearance.backIndicatorTransitionMaskImage = backButtonBackgroundImage
-        let backBarButton = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
-        navigationItem.backBarButtonItem = backBarButton
-    }*/
 }

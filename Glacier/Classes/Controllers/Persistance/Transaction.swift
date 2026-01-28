@@ -129,14 +129,6 @@ public class GRDBWriteTransaction: GRDBReadTransaction {
     }
 }
 
-// MARK: -
-
-/*public extension StoreContext {
-    var asTransaction: SDSAnyWriteTransaction {
-        return self as! SDSAnyWriteTransaction
-    }
-}*/
-
 // MARK: - Convenience Methods
 
 public extension GRDBWriteTransaction {

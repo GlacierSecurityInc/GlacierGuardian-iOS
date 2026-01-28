@@ -158,11 +158,6 @@ import GRDB
         // Inject MAM messages into group chat storage
         if xmppMessage.containsGroupChatElements {
             DDLogVerbose("Injecting forwarded MAM message into room: \(xmppMessage)")
-            /*var unwrapped = xmppMessage
-            if let mam = xmppMessage.mamResult, let forwarded = mam.forwardedMessage {
-                unwrapped = forwarded
-            }
-            let finalMessage = unwrapped*/
             
             if let roomJID = xmppMessage.from?.bareJID {
                 if let room = roomManager.room(for: roomJID) {
@@ -188,25 +183,7 @@ import GRDB
                         roomManager.xmppMUC(nil, roomJID: roomJID, didReceiveInvitation: xmppMessage)
                     }
                 }
-            } /*else { //check for wrapped message
-                var wrapped = xmppMessage.omemo_offline()
-                if wrapped == nil, let mam = xmppMessage.mamResult, let forwarded = mam.forwardedMessage {
-                    wrapped = forwarded.omemo_offline()
-                }
-                if let wrapped = wrapped {
-                    let xmsg = XMPPMessage(from: wrapped)
-                    if let roomJID = xmsg.from?.bareJID {
-                        if let room = roomManager.room(for: roomJID) {
-                            //IOSM-540 placeholder...maybe a better place to set lastHistoryFetch
-                            roomStorage.insertIncoming(xmsg, body: body, original: original, delayed: delayed, into: room, split: false, isOutgoingFromOtherDevice: isOutgoingFromOtherDevice, transaction:nil)
-                        } else { // if is invite message
-                            if xmsg.element(forName: "x", xmlns: XMPPMUCUserNamespace)?.element(forName:"invite") != nil {
-                                roomManager.xmppMUC(nil, roomJID: roomJID, didReceiveInvitation: xmsg)
-                            }
-                        }
-                    }
-                }
-            }*/
+            }
             return
         }
 
@@ -867,11 +844,6 @@ extension MessageStorage: XMPPMessageArchiveManagementDelegate {
         if let origto = message.to {
             if (origto.bare == from.bare && origto.resource != from.resource) {
                 isOutgoingFromOtherDevice = true
-                /*if let messageString = message.body,
-                    messageString.hasPrefix("geo:") {
-                    handleForwardedMessage(forwarded, forJID: forJID, body: messageString, original: messageString, accountId: accountId, delayed: delayed, isIncoming: isIncoming, isOutgoingFromOtherDevice: isOutgoingFromOtherDevice, split: false)
-                    return
-                }*/
             }
         }
         

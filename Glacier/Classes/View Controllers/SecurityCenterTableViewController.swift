@@ -91,68 +91,6 @@ open class SecurityCenterTableViewController: UITableViewController {
         }
     }
     
-    /*func handleResults(securityResults: String) {
-        let curVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-    
-        do {
-            let securityEl = try XMLElement.init(xmlString: securityResults)
-            let glacierversion = securityEl.element(forName: "glacier")?.stringValue
-            let latestiosversion = securityEl.element(forName: "ios")?.stringValue
-            
-            DispatchQueue.main.async {
-                //check our Glacier version vs latest
-                var gversionissue = false
-                var iversionissue = false
-                if let myVersion = curVersion, let latestVersion = glacierversion, myVersion.compare(latestVersion, options: .numeric) == .orderedAscending {
-                    gversionissue = true
-                }
-            
-                //check our iOS version vs latest
-                if let latestios = latestiosversion, self.iOS_VERSION_LESS_THAN(version: latestios) {
-                    iversionissue = true
-                }
-                
-                if gversionissue || iversionissue {
-                    if var latestContent = self.latestVersionCell.contentConfiguration as? UIListContentConfiguration {
-                        latestContent.secondaryTextProperties.color = .red
-                        if gversionissue && iversionissue {
-                            latestContent.secondaryText = "Both Glacier and iOS are not up to date"
-                        } else if gversionissue {
-                            latestContent.secondaryText = "Glacier is not up to date"
-                        } else if iversionissue {
-                            latestContent.secondaryText = "iOS is not up to date"
-                        }
-                        
-                        if let notlatest = UIImage(named: "glaciersecure_disabled", in: GlacierInfo.resourcesBundle, compatibleWith: nil) {
-                            latestContent.image = notlatest
-                        }
-                        
-                        latestContent.imageProperties.maximumSize = CGSize(width: 30, height: 30)
-                        self.latestVersionCell.contentConfiguration = latestContent
-                    }
-                    
-                    OTRAppDelegate.appDelegate.settingsViewController.setVersionIssue(true) //IOSM#58 modified and below
-                    if self.issuesFound == false {
-                        self.issuesFound = true
-                    }
-                } else {
-                    if var latestContent = self.latestVersionCell.contentConfiguration as? UIListContentConfiguration {
-                        latestContent.secondaryText = "Glacier and iOS up to date"
-                        latestContent.secondaryTextProperties.color = .label
-                        self.latestVersionCell.contentConfiguration = latestContent
-                    }
-                    OTRAppDelegate.appDelegate.settingsViewController.setVersionIssue(false)
-                }
-                
-                if let delegate = self.securityDelegate {
-                    delegate.secureSummaryUpdated(isSecure: !self.issuesFound)
-                }
-            }
-        } catch {
-            DDLogError("Failure parsing latest iOS/Glacier versions")
-        }
-    }*/
-    
     public func setSecurityCenterDelegate(delegate: SecurityCenterDelegate) {
         self.securityDelegate = delegate
     }

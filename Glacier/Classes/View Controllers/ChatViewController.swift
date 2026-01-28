@@ -1408,18 +1408,13 @@ import MCEmojiPicker
         //return self.dataInput[0].elements[indexPath.row]
         
         var message = self.shownMessages[indexPath.section]
-        /*if let txt = message.text, txt.starts(with: "geo:") {
-            message.text = "Location sent"
-        }*/
-        
-        //ALF test
         if message.systemUpdate {
             message.text = nil
         }
         
         let finalMsg = message
         
-        return finalMsg//self.dataInput[indexPath.section].elements[indexPath.row]
+        return finalMsg
     }
     
     public func nextMessageForItem(at indexPath: IndexPath) -> MessageKit.MessageType? {

@@ -205,12 +205,6 @@ import Foundation
     }
     
     private func addObservers() {
-            // Cross process writes
-        /*crossProcess.callback = { [weak self] in
-            DispatchQueue.main.async {
-                self?.handleCrossProcessWrite()
-            }
-        }*/
         NotificationCenter.default.addObserver(self, selector: #selector(didBecomeActive), name:UIApplication.didBecomeActiveNotification, object: nil)
     }
     
