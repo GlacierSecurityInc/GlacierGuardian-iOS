@@ -230,7 +230,6 @@ class SMSChatViewController: MessagesViewController, MessagesDataSource {
     func setupTopRightButtons() {
         let lblColor = UIColor.label
         
-        //ALF IOSM-503
         phoneButton.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 4.0, leading: 8.0, bottom: 4.0, trailing: 8.0)
         self.phoneButton.translatesAutoresizingMaskIntoConstraints = false
         self.phoneButton.frame = CGRectMake(0, 0, 64, 48)

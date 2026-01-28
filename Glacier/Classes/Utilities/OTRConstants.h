@@ -47,13 +47,12 @@ extern NSString *const kGlacierAppIsActiveKey;
 extern NSString *const kCognitoAcct;
 extern NSString *const kGlacierVpn;
 
-//ALF IOSM-465
 extern NSString *const kGlacierSalt;
 extern NSString *const kGlacierKeySpec;
 extern NSString *const kGlacierMediaSalt;
 extern NSString *const kGlacierMediaKeySpec;
 
-extern NSString *const kGlacierBackup; //ALF IOSM-499
+extern NSString *const kGlacierBackup;
 
 extern NSString *const kGlacierImage;
 
@@ -82,7 +81,6 @@ extern NSString *const OTRSuccessfulRemoteNotificationRegistration;
 extern NSString *const GRDBDatabasePassphraseAccountName;
 extern NSString *const OTRYapDatabaseName;
 
-//ALF IOSM-465
 extern NSString *const GlacierYapDatabaseName;
 extern NSString *const GlacierMediaDatabaseName;
 

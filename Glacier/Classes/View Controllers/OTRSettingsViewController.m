@@ -76,7 +76,7 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
 @property (nonatomic, strong) ChatAccountModel *primaryAccount; //IOSM#92
 @property (assign, nonatomic) BOOL trackingEnabled;
 
-//@property (nonatomic, strong) id allowPassphraseBackupNotificationToken; //ALF IOSM-499
+//@property (nonatomic, strong) id allowPassphraseBackupNotificationToken;
 
 @end
 
@@ -111,7 +111,7 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
     UINib *nib = [UINib nibWithNibName:[XMPPAccountCell cellIdentifier] bundle:bundle];
     [self.tableView registerNib:nib forCellReuseIdentifier:[XMPPAccountCell cellIdentifier]];
     
-    [self createFooterStack]; //ALF IOSM-479
+    [self createFooterStack];
 
     UILayoutGuide *safeArea = self.view.safeAreaLayoutGuide;
     [NSLayoutConstraint activateConstraints:@[
@@ -135,7 +135,6 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
     //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(han:) name:DBManager.didSetupDatabase object:nil];
 }
 
-//ALF IOSM-479
 - (void) createFooterStack {
     self.footerContainer = [[UIView alloc] init];
     self.footerContainer.translatesAutoresizingMaskIntoConstraints = NO;
@@ -259,7 +258,7 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
     }
 }
 
-//ALF IOSM-479 commented out
+// commented out
 - (void)logoutButtonPressed:(id)sender {
     UIAlertAction * cancelButtonItem = [UIAlertAction actionWithTitle:CANCEL_STRING() style:UIAlertActionStyleCancel handler:nil];
     UIAlertAction * okButtonItem = [UIAlertAction actionWithTitle:@"Yes" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
@@ -298,7 +297,6 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
     [[[OTRAppDelegate appDelegate] conversationViewController] resetAfterLogout:account];
 }
 
-//ALF IOSM-479
 /*-(void) handleLogout {
     [self.KVOController unobserve:[OTRProtocolManager sharedInstance]];
 }*/
@@ -334,7 +332,6 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
     
     [self.tableView reloadData];
     
-    //ALF IOSM-499
     /*if (self) {
         __weak __typeof__(self) weakSelf = self;
         self.allowPassphraseBackupNotificationToken = [[NSNotificationCenter defaultCenter] addObserverForName:kOTRSettingsValueUpdatedNotification object:kOTRSettingKeyAllowDBPassphraseBackup queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *_Nonnull note) {
@@ -348,7 +345,6 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
     [super viewWillDisappear:animated];
     //[[NSNotificationCenter defaultCenter] removeObserver:self];
     
-    //ALF IOSM-499
     /*if (self.allowPassphraseBackupNotificationToken != nil) {
         [[NSNotificationCenter defaultCenter] removeObserver:self.allowPassphraseBackupNotificationToken];
     }*/
@@ -387,7 +383,7 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
 
 -(UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    if (indexPath.section == 0) {// && indexPath.row != [self.settingsManager numberOfSettingsInSection:indexPath.section]-1) { //ALF IOSM-479
+    if (indexPath.section == 0) {// && indexPath.row != [self.settingsManager numberOfSettingsInSection:indexPath.section]-1) {
         static NSString *addAccountCellIdentifier = @"addAccountCellIdentifier";
         UITableViewCell * cell = nil;
         if (indexPath.row == [ChatAccountModel allXMPPAccounts].count) {
@@ -653,7 +649,7 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
     }
 }
 
-//ALF IOSM-499 (not in use right now)
+// (not in use right now)
 /*- (void) handleDatabaseBackup {
     BOOL allowBackup = [OTRSettingsManager boolForOTRSettingKey:kOTRSettingKeyAllowDBPassphraseBackup];
     
@@ -720,7 +716,7 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    if (indexPath.section == 0) { //} && indexPath.row != [self.settingsManager numberOfSettingsInSection:indexPath.section]-1) { //ALF IOSM-479
+    if (indexPath.section == 0) { //} && indexPath.row != [self.settingsManager numberOfSettingsInSection:indexPath.section]-1) {
         if (indexPath.row == [ChatAccountModel allXMPPAccounts].count) {
             OTRBaseLoginViewController *baseLoginViewController = [[OTRBaseLoginViewController alloc] init];
             baseLoginViewController.showsCancelButton = YES;
@@ -772,7 +768,7 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
     vCardTemp.nickname = newname;
     [xmgr updateNickname:vCardTemp];
     //manually update?
-    //[xmgr forcevCardUpdateWithCompletion:^(BOOL success){}]; //ALF IOSM-452
+    //[xmgr forcevCardUpdateWithCompletion:^(BOOL success){}];
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         [self refreshView];
     });
@@ -806,7 +802,7 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
             [self.navigationController pushViewController:coreConnectionVC animated:YES];
         }
         return;
-    } else if (viewControllerClass == [ChatProfileViewController class]) { //ALF IOSM-479
+    } else if (viewControllerClass == [ChatProfileViewController class]) {
         // Assuming you're inside a method of your view controller (e.g., didSelectRowAtIndexPath or a button action)
         ChatAccountModel *account = [ChatAccountModel firstAccount];
         if (!account) {

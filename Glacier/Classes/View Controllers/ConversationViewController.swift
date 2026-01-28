@@ -937,7 +937,7 @@ import SwiftUI
                 self.connectionSuccess = true
                 
                 OTRAppDelegate.appDelegate.resetDoubleNotificationHandlerIfNeeded()
-                xaccount.loginDate = Date() //ALF IOSM-497
+                xaccount.loginDate = Date()
                 xaccount.grdbRecord?.lastHistoryFetchDate = Date()
                 
                 if let orgdata = AWSAcctManager.sharedMgr().getGlacierEnablements() {
@@ -1153,7 +1153,7 @@ import SwiftUI
     func connectVideoCall(_ call:TwilioCall) {
         guard let account = self.getFirstAccount() else { return }
         
-        //ALF IOSM-503 need to keep separate accounts for receiver at least if outgoing
+        // need to keep separate accounts for receiver at least if outgoing
         //if its a group it should probably be handled by the group, not individually?
         //if call currently connected and open don't need to do anything here
         var calltitle = call.calltitle
@@ -1181,7 +1181,6 @@ import SwiftUI
             appDelegate?.openVideoCallController(calltitle)
         }*/
         
-        //ALF IOSM-442
         if let csysMessage = call.systemMessage {
             DispatchQueue.global().async {
                 //IOSM-503
@@ -1223,7 +1222,6 @@ import SwiftUI
         }
     }
 
-    //ALF IOSM-442
     func addSystemMessage(_ message:String, with callerJid:String, with username:String) {
         
         let str = "\(message) from \(username)"
@@ -1248,7 +1246,6 @@ import SwiftUI
         }
     }
 
-    //ALF IOSM-527
     func addSystemGroupMessage(_ messagetext:String, with groupTitle:String) {
         guard let xacct = self.getFirstAccount() else { return }
         

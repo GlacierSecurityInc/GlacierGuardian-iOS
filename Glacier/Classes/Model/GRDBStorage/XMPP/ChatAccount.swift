@@ -62,7 +62,7 @@ extension ChatAccountModel: ChatvCard {
         set {
             self.grdbRecord?.lastUpdatedvCardTemp = newValue
         }
-    }//ALF IOSM#105
+    }
     
     @objc public var waitingForvCardTempFetch: Bool {
         get {

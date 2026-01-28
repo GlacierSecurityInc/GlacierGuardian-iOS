@@ -1283,7 +1283,6 @@ extension FileTransferManager {
         if mediaItem != nil {
             //do nothing, keep exiting just redownload
         } else if url.absoluteString.contains("abnb.me") || url.absoluteString.contains(".airbnb.") {
-            //ALF IOSM-283
             mediaItem = ChatHTMLItem(filename: url.lastPathComponent, mimetype: contentType, isIncoming: true)
         } else if (url.lastPathComponent.hasSuffix(".null")) {
             let fullPathComponent = url.lastPathComponent
@@ -1389,7 +1388,6 @@ extension FileTransferManager {
         downloadMessage.transferProgress = NSNumber(value: 1.0)
         downloadMessage.save()
         
-        //ALF IOSM-540
         var cthread:ChatThreadModel?
         if let thread = downloadMessage.threadOwner()  {
             thread.grdbRecord?.modified = Date()

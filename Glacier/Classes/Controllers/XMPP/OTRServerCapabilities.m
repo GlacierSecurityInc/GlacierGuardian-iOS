@@ -305,7 +305,6 @@ static NSString *const OTRServerCapabilitiesErrorDomain = @"OTRServerCapabilitie
 - (void)xmppStreamDidAuthenticate:(XMPPStream *)sender
 {
 #if !TARGET_IS_EXTENSION
-//ALF IOSM-328
     dispatch_async(dispatch_get_main_queue(), ^{
         if ([UIApplication sharedApplication].applicationState != UIApplicationStateBackground) {
             //back to xmppQueue

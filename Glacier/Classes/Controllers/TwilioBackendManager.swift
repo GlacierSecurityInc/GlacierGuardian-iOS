@@ -1716,7 +1716,7 @@ public class VoicemailRecord:AnyObject {
     public var time:String?
     public var duration:String?
     public var callSid:String?
-    public var to:String? //ALF IOSM-503
+    public var to:String?
     public var url:String?
     public var status:String?
     var contact:PhoneContact?

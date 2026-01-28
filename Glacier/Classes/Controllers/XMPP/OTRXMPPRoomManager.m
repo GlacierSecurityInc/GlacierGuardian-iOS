@@ -34,7 +34,7 @@
 /** This array is a temporary holding with rooms we should configure once connected */
 @property (nonatomic, strong, readonly) NSMutableArray<NSString*> *roomsToConfigure;
 
-@property (nonatomic) BOOL updateRoomName; //ALF IOSM-495
+@property (nonatomic) BOOL updateRoomName;
 
 @property (nonatomic) BOOL addedCapsDelegate;
 
@@ -60,7 +60,7 @@
         _bookmarksModule = [[XMPPBookmarksModule alloc] initWithMode:XMPPBookmarksModePrivateXmlStorage dispatchQueue:nil];
     }
     self.addedCapsDelegate = NO;
-    self.updateRoomName = NO; //ALF IOSM-495
+    self.updateRoomName = NO;
     self.highSeedNum = -1;
     return self;
 }
@@ -227,12 +227,12 @@
     if (identity) {
         NSString* cat = [identity attributeStringValueForName:@"category"];
         NSString* type = [identity attributeStringValueForName:@"type"];
-        NSString* name = [identity attributeStringValueForName:@"name"]; //ALF IOSM-495
+        NSString* name = [identity attributeStringValueForName:@"name"];
         if ([cat isEqualToString:@"conference"] && [type isEqualToString:@"text"]) {
             XMPPRoom *room = [self roomForJID:jid];
             ChatRoomModel *xroom = nil;
             
-            //ALF IOSM-495 verify name, public/private and change if needed
+            // verify name, public/private and change if needed
             if (room) {
                 xroom = [self roomWithXMPPRoom:room];
                 __block BOOL changed = NO;
@@ -543,7 +543,7 @@
     [OTRAppDelegate.appDelegate.window.rootViewController  presentViewController:alert animated:YES completion:nil];
 }
 
-//ALF IOSM-511 and next, and added kicked to the original
+// and next, and added kicked to the original
 - (void) removeRoomOnKicked:(XMPPJID*)roomjid {
     [self removeRoomOnDestroyed:roomjid kicked:YES];
 }
@@ -580,7 +580,7 @@
                     [[NSNotificationCenter defaultCenter] postNotificationName:ReloadDataNotificationName object:self userInfo:nil];
                     
                     NSString *amsg = [NSString stringWithFormat:@"The %@ group was deleted, so you won’t see it in your conversations anymore.", roomjid.user];
-                    if (kicked) { //ALF IOSM-511
+                    if (kicked) {
                         amsg = [NSString stringWithFormat:@"You are no longer a member of the %@ group, so you won’t see it in your conversations anymore.", roomjid.user];
                     }
                     UIAlertAction * cancelButtonItem = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil];
@@ -848,7 +848,7 @@
         [self.roomStatusDict removeObjectForKey:sender.roomJID.bare];
     }
     
-    //ALF IOSM-495 added name here and optino to change name
+    // added name here and optino to change name
     NSString *roomname = [self.tempRoomName objectForKey:sender.roomJID.bare];
     if (self.updateRoomName) {
         [sender configureRoomUsingOptions:[[self class] roomNameConfiguration:configForm withName:roomname]];
@@ -992,7 +992,6 @@
     return room;
 }
 
-//ALF IOSM-495
 - (void) setRoomName:(nonnull XMPPRoom*)room name:(nonnull NSString*)roomname {
     self.updateRoomName = YES;
     [self.tempRoomName setObject:roomname forKey:room.roomJID.bare];
@@ -1000,7 +999,7 @@
 }
 
 #pragma - mark Class Methods
-//ALF IOSM-495 added roomname
+// added roomname
 + (NSXMLElement *)roomNameConfiguration:(DDXMLElement *)configForm withName:(NSString *)roomname
 {
     DDXMLElement *form = [configForm copy];
@@ -1023,7 +1022,7 @@
     return form;
 }
 
-//ALF IOSM-495 added roomname
+// added roomname
 + (NSXMLElement *)defaultRoomConfiguration:(BOOL)ispublicroom roomname:(NSString *)name
 {
     NSXMLElement *form = [[NSXMLElement alloc] initWithName:@"x" xmlns:@"jabber:x:data"];
@@ -1040,7 +1039,6 @@
         [publicField addChild:[[NSXMLElement alloc] initWithName:@"value" numberValue:@(0)]];
     }
     
-    //ALF IOSM-495
     NSXMLElement *roomnameField = nil;
     if (name) {
         roomnameField = [[NSXMLElement alloc] initWithName:@"field"];

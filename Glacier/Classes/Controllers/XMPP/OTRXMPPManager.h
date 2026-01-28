@@ -69,7 +69,7 @@ NS_SWIFT_NAME(XMPPManager)
 
 - (instancetype) initWithChatAccount:(ChatAccountModel*)account;
 
-- (NSDate * _Nullable) getLastConnected; //ALF IOSM-479
+- (NSDate * _Nullable) getLastConnected;
 
 - (NSDate * _Nullable) getLastConnectAttempt; //IOSM-570
 
@@ -128,7 +128,7 @@ NS_SWIFT_NAME(XMPPManager)
 
 - (void) clearMemory;
 
-- (NSArray<NSString *> *)getTeams; //ALF IOSM-479
+- (NSArray<NSString *> *)getTeams;
 
 /** Enqueues a message to be sent by message queue */
 - (void) enqueueMessage:(id<MessageProtocol>)message;

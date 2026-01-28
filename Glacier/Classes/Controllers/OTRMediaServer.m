@@ -49,7 +49,6 @@
                       }];
     return [self.webServer startWithOptions:@{GCDWebServerOption_BindToLocalhost: @(YES),GCDWebServerOption_AutomaticallySuspendInBackground: @(NO)}
                                       error:error];
-    //ALF IOSM-328
     //return [self.webServer startWithOptionsForExtension:@{GCDWebServerOption_BindToLocalhost: @(YES)}
     //                                  error:error];
 }

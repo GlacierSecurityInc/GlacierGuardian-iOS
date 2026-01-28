@@ -178,7 +178,7 @@ extension ChatRoomOccupantModel {
     }
 #endif
     
-    //ALF IOSM-495 changed subject to name, reqts to owner only
+    // changed subject to name, reqts to owner only
     public func canModifyName() -> Bool {
         // TODO - Check muc#roomconfig_changesubject, participants may be allowed to change subject based on config!
         return [RoomOccupantAffiliation.owner].contains(self.affiliation)

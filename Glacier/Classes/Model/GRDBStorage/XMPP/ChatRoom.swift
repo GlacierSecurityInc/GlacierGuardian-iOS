@@ -478,7 +478,6 @@ extension ChatRoomModel {
         }, completion: completionBlock)
     }
     
-    //ALF23
     @objc static func updateLastHistory(accountId:String) {
         DBManager.sharedDB().grdbStorage.asyncWrite(block: { transaction in
             let nowdate = Date()

@@ -805,7 +805,6 @@ import MapKit
                 break
         }
         
-        //ALF IOSM-456
         self.buddy?.expiresIn = thread.expiresIn
         thread.storeInGRDB()
     }

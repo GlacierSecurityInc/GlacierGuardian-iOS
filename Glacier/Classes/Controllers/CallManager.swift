@@ -225,7 +225,6 @@ public class CallManager: XMPPModule {
         self.statusDelegate = del
     }
     
-    //ALF IOSM-503
     public func getCallBuddy(_ identity: String) -> ChatBuddyModel? {
         var bud:ChatBuddyModel?
         if let jid = XMPPJID(string: identity), let acct = self.cAccount {
@@ -304,7 +303,7 @@ public class CallManager: XMPPModule {
      * </iq>
      * Note: caller is a bare/full JID, but receiver is the bare JID of the receiver
      */
-    //ALF IOSM-503 changed to receivers and added name/title
+    // changed to receivers and added name/title
     public func makeCall(_ receivers: [String], name: String, callType:CallType) -> Bool
     {
         if (self.xmppStream?.isConnected == false) { //IOSM#70
@@ -440,7 +439,7 @@ public class CallManager: XMPPModule {
 
         let call = TwilioCall()
         call.receiver = callto
-        call.calltitle = contact.name //ALF IOSM-503 and change to receivers above
+        call.calltitle = contact.name // and change to receivers above
         call.caller = TwilioBackendManager.sharedMgr().selectedAccount?.grdbRecord?.phoneNumber
         self.currentUuid = UUID.init()
         call.callUuid = self.currentUuid
@@ -536,7 +535,7 @@ public class CallManager: XMPPModule {
         
         //openCallStuff
         DispatchQueue.main.async {
-            call.systemMessage = "Received call" //ALF IOSM-442
+            call.systemMessage = "Received call"
             OTRAppDelegate.appDelegate.conversationViewController.connectVideoCall(call)
             self.gcdelegate?.setStatus("Connecting...")
         }
@@ -1043,7 +1042,6 @@ extension CallManager: XMPPStreamDelegate {
         return result
     }
     
-    //ALF IOSM-437
     public func xmppStream(_ sender: XMPPStream, didReceive message: XMPPMessage) {
         guard !message.containsGroupChatElements,
             // We handle carbons elsewhere via XMPPMessageCarbonsDelegate
@@ -1154,7 +1152,7 @@ public class TwilioCall:AnyObject {
     public var roomname:String?
     public var token:String?
     public var callid:String?
-    public var calltitle:String? //ALF IOSM-503
+    public var calltitle:String?
     public var status:String?
     public var systemMessage:String?
     public var callUuid:UUID?
@@ -1631,7 +1629,6 @@ extension CallManager {
         return self.bluetoothAvailable
     }
     
-    //ALF IOSM-451
     @objc func audioRouteChange(_ notification:Notification) {
         //if (IPAD)
         //    return;
@@ -1716,7 +1713,6 @@ extension CallManager {
         }
     }
     
-    //ALF IOSM-437
     @objc func isRinging() -> Bool {
         if (self.awaitingCallResponse) {
             return true
@@ -2112,7 +2108,6 @@ extension CallManager {
         }
     }
     
-    //ALF IOSM-503
     @objc public func reportCallAccepted(_ from:String, callid:String, deviceid:String) {
         //might need to match up uuid or something with current call from notification
         if let tcall = self.currentCall { //}, let acct = self.cAccount {
@@ -2122,7 +2117,7 @@ extension CallManager {
             //createConnectingTimeoutTimer
             self.prepareSessionInitiate(from, callId: callid, deviceId: deviceid)
             
-            //ALF IOSM-503 check if this particular call is already in progress. If so
+            // check if this particular call is already in progress. If so
             //this is likely a group call and I don't need to handle it here
             if tcall.status == "inprogress" || tcall.status == "accept", callid == tcall.callid {
                 return
@@ -2638,7 +2633,6 @@ extension CallManager {
     }
     
     func reportCallDisconnected(uuid: UUID, error: Error?) {
-        //ALF IOSM-515
         self.isBusy = false
         self.busyTone = false
         
@@ -2665,7 +2659,7 @@ extension CallManager {
     @objc public func reportCallConnected(uuid: UUID?, connectTime: Date) {
         self.stopSound()
         
-        self.currentCall?.status = "inprogress" //ALF IOSM-503
+        self.currentCall?.status = "inprogress"
         
         let cxObserver = callKitCallController.callObserver
         let calls = cxObserver.calls

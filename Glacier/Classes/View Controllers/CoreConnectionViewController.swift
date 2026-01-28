@@ -65,7 +65,7 @@ import Authenticator
         attributedString.addAttribute(.link, value: "https://glacier.chat/core", range: NSRange(location: 126, length: 12))
         let textRange = NSMakeRange(0, coreDescription.count)
         
-        //ALF IOSM-488, 485 might need to put everything inside a scroll view
+        // might need to put everything inside a scroll view
         //let userFont = UIFontDescriptor.preferredFontDescriptor(withTextStyle: UIFontTextStyle.body, compatibleWith: nil)
         //let fontSize = userFont.pointSize-3
         
@@ -89,7 +89,6 @@ import Authenticator
     func setupRefreshButton() {
         let lblColor = UIColor.label
         
-        //ALF IOSM-503
         refreshButton.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 4.0, leading: 8.0, bottom: 4.0, trailing: 8.0)
         self.refreshButton.translatesAutoresizingMaskIntoConstraints = false
         self.refreshButton.frame = CGRectMake(0, 0, 64, 48)

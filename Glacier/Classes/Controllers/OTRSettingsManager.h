@@ -47,7 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) handleChangeDisplayName:(id)sender currentDisplayName:(NSString*)displayName;
 
-- (void) setBackupCancelled; //ALF IOSM-499
+- (void) setBackupCancelled;
 
 + (BOOL) boolForOTRSettingKey:(NSString*)key;
 + (double) doubleForOTRSettingKey:(NSString*)key;

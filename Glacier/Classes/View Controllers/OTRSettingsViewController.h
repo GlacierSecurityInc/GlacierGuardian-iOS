@@ -37,7 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) showTimerSelector:(id<TimerPickerDelegate>)tdel withSelectedRow:(NSInteger)selrow;
 
 -(void)changeDisplayName:(id)sender withNewName:(NSString *)newname;
-//-(void) handleLogout; //ALF IOSM-479
+//-(void) handleLogout;
 
 //IOSM#19
 - (BOOL)needsSecurityAlert;

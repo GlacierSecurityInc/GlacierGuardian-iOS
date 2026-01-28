@@ -43,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)leaveRoom:(XMPPJID *)jid;
 - (nullable XMPPRoom*) roomForJID:(XMPPJID*)jid;
-- (void) setRoomName:(nonnull XMPPRoom*)room name:(nonnull NSString*)roomname; //ALF IOSM-495
+- (void) setRoomName:(nonnull XMPPRoom*)room name:(nonnull NSString*)roomname;
 
 /** Returns ThreadOwner.threadIdentifier. buddiesArray is array of ChatBuddy.uniqueId */
 - (void)startGroupChatWithBuddies:(nullable NSArray <NSString *>*)buddiesArray
@@ -56,7 +56,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)inviteBuddies:(nullable NSArray<NSString *>*)buddyUniqueIds
                toRoom:(XMPPRoom*)room;
 
-- (void)xmppMUC:(nullable XMPPMUC *)sender roomJID:(XMPPJID *)roomJID didReceiveInvitation:(XMPPMessage *)message; //ALF IOSM-450
+- (void)xmppMUC:(nullable XMPPMUC *)sender roomJID:(XMPPJID *)roomJID didReceiveInvitation:(XMPPMessage *)message;
 
 - (void) publishJoinedRoom:(XMPPJID *)roomjid withName:(NSString *)name;
 

@@ -29,7 +29,6 @@
         
         UIColor *lblColor = lblColor = [UIColor labelColor];
         
-        //ALF IOSM-485
         UIFontDescriptor *userFont = [UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleBody];
         float smallFontSize = [userFont pointSize]-6;
         UIFont *faFontSmall = [UIFont fontWithName:kFontAwesomeFont size:smallFontSize];

@@ -22,7 +22,6 @@ import AVKit
     @IBOutlet weak var profileImageView: UIImageView!
     //@IBOutlet weak var remoteView: VideoView!
     
-    //ALF IOSM-503
     @IBOutlet weak var remoteParticipantsView: WebRTCCallVideoView!
     
     @IBOutlet weak var signalStateLabel: UILabel!
@@ -109,7 +108,7 @@ import AVKit
         videoButton.isSelected = false
         videoButton.isHidden = true
         
-        UIApplication.shared.isIdleTimerDisabled = true //ALF IOSM-462, 471
+        UIApplication.shared.isIdleTimerDisabled = true
         NotificationCenter.default.addObserver(self, selector: #selector(becameActive), name: UIApplication.didBecomeActiveNotification, object: nil) //IOSM-521
         NotificationCenter.default.addObserver(self, selector: #selector(handleRouteChange(_:)), name: AVAudioSession.routeChangeNotification, object: nil)
         
@@ -121,13 +120,11 @@ import AVKit
         UIApplication.shared.isIdleTimerDisabled = true
     }
     
-    //ALF IOSM-521
     override public func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         UIApplication.shared.isIdleTimerDisabled = true
     }
     
-    //ALF IOSM-521
     override public func viewWillDisappear(_ animated: Bool) {
         // Allow the device to sleep.
         super.viewWillDisappear(animated)
@@ -245,7 +242,7 @@ import AVKit
         // Enable audio route changes immediately
         speakerButton.isEnabled = true
         
-        //ALF IOSM-451 if bluetooth
+        // if bluetooth
         if callManager?.isBluetoothAvailable() ?? false {
             let icBluetoothOnImage = UIImage(named: "ic-bluetooth-on", in: GlacierInfo.resourcesBundle, compatibleWith: nil)
             speakerButton.setImage(icBluetoothOnImage, for: .normal)
@@ -316,7 +313,7 @@ import AVKit
         self.speakerButton.setImage(iconImage, for: .normal)
     }
     
-    //ALF IOSM-464 (next 3)
+    // (next 3)
     public func handleAudioDenied() {
         handlePermissionDenied("Allow Audio", message: "Whoops! It looks like you have not permitted Glacier to access your Microphone. To use Glacier calling, please enable the Microphone in the Glacier settings on your device.", includeEnable: true)
     }
@@ -546,7 +543,6 @@ import AVKit
         //profileImageView.isHidden = sender.isSelected
     }
     
-    //ALF IOSM-451
     public func setBluetoothEnabled(_ bluetoothEnabled: Bool) {
         DispatchQueue.main.async {
             var normalImage: UIImage?
@@ -634,7 +630,7 @@ import AVKit
                 appDelegate.window?.frame = CGRect(x: 0, y: 0, width: screenSize.width, height: screenSize.height)
                 appDelegate.chatRoomViewController.enablePhoneButton(true)
                 appDelegate.chatViewController.enablePhoneButton(true)
-                UIApplication.shared.isIdleTimerDisabled = false //ALF IOSM-462, 471
+                UIApplication.shared.isIdleTimerDisabled = false
             }
         }
     }

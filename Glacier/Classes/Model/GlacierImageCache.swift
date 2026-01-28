@@ -5,7 +5,6 @@
 //  Created by Andy Friedman on 12/7/20.
 //  Copyright © 2020 Glacier. All rights reserved.
 //
-//ALF IOSM-472
 
 import Kingfisher
 import GRDB
@@ -43,7 +42,6 @@ import GRDB
     }
     
     @objc public static func image(_ identifier:String) -> UIImage? {
-        //ALF IOSM-472
         return Self.glacierCache.retrieveImageInMemoryCache(forKey: identifier)
     }
 

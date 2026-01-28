@@ -259,7 +259,6 @@ extension ChatRoomMessageModel:MessageProtocol {
         return false
     }
     
-    //ALF IOSM-443
     public var isMessageDisplayed: Bool {
         if let displayed = self.grdbRecord?.isDisplayed {
             return displayed
@@ -327,11 +326,11 @@ extension ChatRoomMessageModel:MessageProtocol {
         return self.grdbRecord?.read ?? false
     }
     
-    public var isSystemUpdate: Bool { //ALF IOSM-442
+    public var isSystemUpdate: Bool {
         return self.grdbRecord?.systemUpdate ?? false
     }
     
-    public var isMarkable: Bool { //ALF IOSM-443
+    public var isMarkable: Bool {
         return self.grdbRecord?.markable ?? false
     }
     

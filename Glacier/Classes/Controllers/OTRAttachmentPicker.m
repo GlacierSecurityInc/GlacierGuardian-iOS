@@ -14,7 +14,7 @@
 #import "UIActionSheet+ChatSecure.h"
 #import "Glacier-Swift.h" //IOSM#61
 
-//ALF IOSM-473 and delegate below
+// and delegate below
 #import <Photos/Photos.h>
 #import <PhotosUI/PhotosUI.h>
 
@@ -242,7 +242,6 @@
     [self.parentViewController presentViewController:self.imagePickerController animated:YES completion:nil];
 }
 
-//ALF IOSM-473
 #pragma - mark PHPickerViewControllerDelegate
 -(void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14.0)){
     [picker dismissViewControllerAnimated:YES completion:nil];
@@ -295,7 +294,6 @@
     }
 }
 
-//ALF IOSM-473 
 - (void) handleVideoPicked:(NSURL *)url {
     if ([self.delegate respondsToSelector:@selector(attachmentPicker:gotVideoURL:)]) {
         NSError *error;

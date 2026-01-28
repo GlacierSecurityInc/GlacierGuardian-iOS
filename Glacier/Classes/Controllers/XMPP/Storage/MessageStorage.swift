@@ -113,7 +113,6 @@ import GRDB
     }
     
     /// Marks a previously sent outgoing message as read.
-    //ALF IOSM-443
     private func handleDisplayedResponse(message: XMPPMessage) {
         guard message.hasDisplayedChatMarker,
             !message.isErrorMessage,
@@ -184,7 +183,7 @@ import GRDB
                     } else {
                         roomStorage.insertIncoming(xmppMessage, body: body, original: original, delayed: delayed, into: room, split: false, isOutgoingFromOtherDevice: isOutgoingFromOtherDevice, transaction:nil)
                     }
-                } else { //ALF IOSM-450  if is invite message
+                } else { // if is invite message
                     if xmppMessage.element(forName: "x", xmlns: XMPPMUCUserNamespace)?.element(forName:"invite") != nil {
                         roomManager.xmppMUC(nil, roomJID: roomJID, didReceiveInvitation: xmppMessage)
                     }
@@ -200,7 +199,7 @@ import GRDB
                         if let room = roomManager.room(for: roomJID) {
                             //IOSM-540 placeholder...maybe a better place to set lastHistoryFetch
                             roomStorage.insertIncoming(xmsg, body: body, original: original, delayed: delayed, into: room, split: false, isOutgoingFromOtherDevice: isOutgoingFromOtherDevice, transaction:nil)
-                        } else { //ALF IOSM-450  if is invite message
+                        } else { // if is invite message
                             if xmsg.element(forName: "x", xmlns: XMPPMUCUserNamespace)?.element(forName:"invite") != nil {
                                 roomManager.xmppMUC(nil, roomJID: roomJID, didReceiveInvitation: xmsg)
                             }
@@ -219,7 +218,7 @@ import GRDB
             if isIncoming {
                 self.handleDeliveryResponse(message: xmppMessage)
                 self.handleChatState(message: xmppMessage, buddy: buddy)
-                self.handleDisplayedResponse(message: xmppMessage) //ALF IOSM-443 and hasDisplayed below
+                self.handleDisplayedResponse(message: xmppMessage) // and hasDisplayed below
                 
                 // If this is a receipt, we are done
                 if xmppMessage.hasReceiptResponse || xmppMessage.hasDisplayedChatMarker {
@@ -234,7 +233,6 @@ import GRDB
                     //
                 }
                 
-                //ALF IOSM-443
                 if xmppMessage.hasMarkableChatMarker {
                     incomingMessage.grdbRecord?.markable = true
                 }
@@ -285,7 +283,6 @@ import GRDB
             }
             chatmsg.originalText = original
             
-            //ALF IOSM-442
             if xmppMessage.element(forName: "x", xmlns: "jabber:x:systemupdate") != nil {
                 chatmsg.systemUpdate = true
             }
@@ -423,7 +420,7 @@ import GRDB
             
             // Handle Delivery Receipts
             self.handleDeliveryResponse(message: message)
-            self.handleDisplayedResponse(message: message) //ALF IOSM-443 and hasDisplayed below
+            self.handleDisplayedResponse(message: message) // and hasDisplayed below
             
             // Update lastSeenDate
             // If we receive a message from an online buddy that counts as them interacting with us
@@ -469,12 +466,10 @@ import GRDB
             }
             incoming.grdbRecord?.originalText = original
             
-            //ALF IOSM-442
             if message.element(forName: "x", xmlns: "jabber:x:systemupdate") != nil {
                 incoming.grdbRecord?.systemUpdate = true
             }
             
-            //ALF IOSM-443
             if message.hasMarkableChatMarker {
                 incoming.grdbRecord?.markable = true
             }
@@ -704,7 +699,7 @@ extension MessageStorage: XMPPStreamDelegate {
             message.mamResult == nil,
             // OMEMO messages cannot be processed here
             !message.omemo_hasEncryptedElement(.conversationsLegacy),
-            //ALF IOSM-437 Call info cannot be processed here
+            // Call info cannot be processed here
             !message.containsCallElements,
             !message.containsJmiElements,
             let accountId = sender.accountId else {
@@ -917,7 +912,6 @@ extension XMPPMessage {
         return false
     }
     
-    //ALF IOSM-437
     var containsCallElements: Bool {
         let message = self
         guard message.element(forName: "x", xmlns: "jabber:x:callupdate") == nil else {

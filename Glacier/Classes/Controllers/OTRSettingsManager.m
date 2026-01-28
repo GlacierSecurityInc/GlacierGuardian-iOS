@@ -61,7 +61,6 @@
     //IOSM-479 nil to ChatProfileViewController above, and accessory below
     accountsViewSetting.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     
-    //ALF IOSM-479
     /*OTRViewSetting *resetPasswordSetting = [[OTRViewSetting alloc] initWithTitle:@"Reset Password" description:nil viewControllerClass:nil];
     resetPasswordSetting.actionBlock = ^void(id sender) {
         [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://console.glacier.chat/forget-password/"] options:@{} completionHandler:nil];
@@ -84,7 +83,7 @@
     OTRBoolSetting *backupKeySetting = [[OTRBoolSetting alloc] initWithTitle:ALLOW_DB_PASSPHRASE_BACKUP_TITLE_STRING()
         description:ALLOW_DB_PASSPHRASE_BACKUP_DESCRIPTION_STRING()
         settingsKey:kOTRSettingKeyAllowDBPassphraseBackup];
-    [newSettingsDictionary setObject:backupKeySetting forKey:kOTRSettingKeyAllowDBPassphraseBackup]; //ALF IOSM-499
+    [newSettingsDictionary setObject:backupKeySetting forKey:kOTRSettingKeyAllowDBPassphraseBackup];
 
     OTRViewSetting *clearHistorySetting = [[OTRViewSetting alloc] initWithTitle:@"Clear all history"
                                                                     description:nil viewControllerClass:nil];
@@ -151,7 +150,7 @@
     [newSettingsDictionary setObject:rebootAlertViewSetting forKey:@"kRebootReminderKey"];
     [newSettingsDictionary setObject:trackingEnabledViewSetting forKey:@"kTrackingOnKey"];
     
-    //ALF IOSM-499 added backupKeySetting (removed again for now)
+    // added backupKeySetting (removed again for now)
     NSArray *chatSettings = @[self.globalMessageTimerSetting, clearHistorySetting, coreConnectionViewSetting, threatDetectionViewSetting, linkPreviewSetting, readReceiptsSetting];
     OTRSettingsGroup *chatSettingsGroup = [[OTRSettingsGroup alloc] initWithTitle:@"Privacy" settings:chatSettings];
     [settingsGroups addObject:chatSettingsGroup];
@@ -219,7 +218,6 @@
     return NO;
 }
 
-//ALF IOSM-499
 - (void) setBackupCancelled {
     OTRBoolSetting *dbbackupSetting = (OTRBoolSetting *)[self settingForOTRSettingKey:kOTRSettingKeyAllowDBPassphraseBackup];
     [dbbackupSetting toggle];

@@ -35,7 +35,7 @@ open class RoomAttachmentWebViewController: UIViewController, WKUIDelegate {
         let webConfiguration = WKWebViewConfiguration()
         webView = WKWebView(frame: .zero, configuration: webConfiguration)
         webView.uiDelegate = self
-        webView.navigationDelegate = self //ALF IOSM-283
+        webView.navigationDelegate = self
         view = webView
     }
     
@@ -155,7 +155,6 @@ open class RoomAttachmentWebViewController: UIViewController, WKUIDelegate {
     }
 }
 
-//ALF IOSM-283
 extension RoomAttachmentWebViewController: WKNavigationDelegate {
 
     public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
