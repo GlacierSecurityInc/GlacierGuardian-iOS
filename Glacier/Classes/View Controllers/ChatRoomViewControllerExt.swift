@@ -434,7 +434,6 @@ import MessageKit
         self.present(alert, animated: true, completion: nil)
     }
 
-    //IOSM-464
     /*func handleLocationNotReady() {
         let alert = UIAlertController(title: "Location Not Available", message: "Still determining location. Try again in a few seconds.", preferredStyle: .alert)
         let ok = UIAlertAction(title: "OK", style: .cancel)
@@ -451,17 +450,17 @@ import MessageKit
             //}
             
             if self.needsLocationPermission() {
-                self.awaitingLocationPermission = true //IOSM#26
+                self.awaitingLocationPermission = true
                 return
             }
             
             DispatchQueue.main.async {
-                self.doShareLocation() //IOSM#26
+                self.doShareLocation()
             }
         }
     }
 
-    func doShareLocation() { //IOSM#26
+    func doShareLocation() {
         guard let mapView = self.mapView else { return }
         self.view.endEditing(true)
         self.addLocationViewBtns(true)
@@ -624,7 +623,6 @@ extension ChatRoomViewControllerExt : CLLocationManagerDelegate {
     public func locationManagerDidChangeAuthorization(_ manager:CLLocationManager) {
         let authStatus = manager.authorizationStatus
         if (authStatus == .authorizedAlways || authStatus == .authorizedWhenInUse) {
-            //IOSM#26
             self.mapView?.userTrackingMode = .follow
             self.mapView?.showsUserLocation = true
             

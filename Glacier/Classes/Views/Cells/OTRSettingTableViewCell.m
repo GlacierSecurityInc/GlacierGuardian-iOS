@@ -92,7 +92,6 @@
     otrSetting = setting;
 }
 
-//IOSM#58
 - (void) setOtrBoolSetting:(OTRBoolSetting *)boolSetting boolSwitch:(UISwitch *)boolSwitch {
     self.textLabel.text = boolSetting.title;
     self.detailTextLabel.text = boolSetting.settingDescription;

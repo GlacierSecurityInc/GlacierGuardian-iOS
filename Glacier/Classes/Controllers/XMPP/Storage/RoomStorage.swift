@@ -61,7 +61,7 @@ import GRDB
             return
         }
         
-        //IOSM-486, IOSM-557 added split
+        // added split
         if xmppMessage.isUsingExplicitEncryption(namespace: .omemo),
             body == nil {
             
@@ -87,10 +87,10 @@ import GRDB
         }
         
         // TODO unify this with the non-MUC receipt logic
-        if OTRProtocolManager.sharedInstance().isAccountIdConnected(account.uniqueId), let xmppStream = xStream { //IOSM#43
+        if OTRProtocolManager.sharedInstance().isAccountIdConnected(account.uniqueId), let xmppStream = xStream {
             ChatRoomMessageModel.handleDeliveryReceiptRequest(message: xmppMessage, xmppStream: xmppStream)
         }
-        //IOSM#8 if this is a displayed, we are done
+        // if this is a displayed, we are done
         if self.handleDisplayedResponse(message: xmppMessage, xmppRoom: xmppRoom, transaction: transaction) {
             return //if this is a displayed, we are done
         }
@@ -107,7 +107,7 @@ import GRDB
         DBManager.sharedDB().grdbStorage.asyncWrite(block: { transaction in
             if let _ = self.existingSentMessage(xmppMessage: xmppMessage, stanzaId: stanzaId, originId: originId, transaction: transaction) {
                 // DDLogVerbose("Discarding duplicate MUC message: \(duplicate) \(xmppMessage)")
-                if (!split) { //IOSM-486, IOSM-557
+                if (!split) {
                     return
                 }
             }
@@ -298,7 +298,6 @@ import GRDB
     
     /// Marks a previously sent outgoing message as read.
     /// returns true if done and no more processing needed
-    //IOSM#8
     private func handleDisplayedResponse(message: XMPPMessage, xmppRoom: XMPPRoom, transaction: GRDBWriteTransaction?) -> Bool {
         guard message.hasDisplayedChatMarker,
             !message.isErrorMessage,
@@ -531,7 +530,7 @@ extension RoomStorage: XMPPRoomStorage {
             return
         }
         
-        if (messageString.hasPrefix("Sent encrypted message") || messageString.hasPrefix("Message cannot be decrypted")) { //IOSM-605
+        if (messageString.hasPrefix("Sent encrypted message") || messageString.hasPrefix("Message cannot be decrypted")) {
             return
         }
         
@@ -542,7 +541,7 @@ extension RoomStorage: XMPPRoomStorage {
         var insert = true
         if let messageString = message.body, messageString.count > 0 {
             if (messageString.contains("encrypted message") || messageString.contains("Message cannot be decrypted")) {
-                //IOSM-338 duplicate check
+                // duplicate check
                 // this is also done in insertIncoming but I don't get the result
                 if let account = room.xmppAccount(transaction) {
                     let stanzaId = message.extractStanzaId(chatAccount: account)
@@ -563,7 +562,7 @@ extension RoomStorage: XMPPRoomStorage {
     // just for fun
     static var failedMsgNum:Int = -1
     public func getFailedDecryptMessage() -> String {
-        return "Message cannot be decrypted" //IOSM-531
+        return "Message cannot be decrypted"
         //For more information visit https://glaciersecurity.zendesk.com/hc/en-us/articles/360027880632"
         /*RoomStorage.failedMsgNum = RoomStorage.failedMsgNum+1
         if (RoomStorage.failedMsgNum > 9) {

@@ -85,7 +85,7 @@ const CGFloat OTRBuddyImageCellPadding = 12.0;
         self.avatarImageView.image = [self defaultImage];
     }
     UIColor *statusColor =  [Colors colorWith:[buddy currentStatus]];
-    if (statusColor) { //IOSM#56 border color
+    if (statusColor) { // border color
         self.avatarImageView.layer.borderWidth = 1.5;
         [self setImageViewBorderColor:statusColor];
     } else {

@@ -74,7 +74,7 @@
     
     if (self.shareMediaManager) {
         [self.shareMediaManager removeDelegates];
-        [self.shareMediaManager teardownConnections]; //IOSM-517
+        [self.shareMediaManager teardownConnections];
         self.shareMediaManager = nil;
         
         //force wal write?
@@ -182,11 +182,9 @@
         return;
     }
     
-    //IOSM-517
     message.messageSecurityInfo = [[OTRMessageEncryptionInfo alloc] initWithMessageSecurity:OTRMessageTransportSecurityOMEMO];
     message.messageSecurity = OTRMessageTransportSecurityOMEMO;
         
-    //IOSM-486, IOSM-557
     NSArray<NSURL*>* msgurls = text.urls;
     if (msgurls.count > 0) {
         [self setupMediaManager];
@@ -201,7 +199,6 @@
     
     [message save];
             
-    //IOSM-517
     if ([owner isKindOfClass:[OTRXMPPRoom class]]) {
         OTRXMPPRoom *roomie = (OTRXMPPRoom *)owner;
         [roomie saveThread];
@@ -228,7 +225,6 @@
     }
 }
 
-//IOSM-548
 - (void) doShareData:(NSData *)data withOwner:(id<OTRThreadOwner>)owner withType:(NSInteger)mediaType {
     if (self.shareMediaManager && mediaType == MediaURLTypeImage) {
         

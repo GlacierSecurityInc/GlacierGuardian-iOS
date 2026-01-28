@@ -55,11 +55,11 @@ import SwiftUI
     var currentmgr:XMPPManager?
 
     var hasPresentedOnboarding = false
-    let navTitleView:TitleView //IOSM#60
+    let navTitleView:TitleView
     private var hasPresentedCompromiseAlert = false
     
     @objc public var delegate: ConversationViewControllerDelegate?
-    var tabBar:GlacierTabs //IOSM#90
+    var tabBar:GlacierTabs
     
     override public init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         self.navTitleView = TitleView()
@@ -88,7 +88,7 @@ import SwiftUI
         let settingsBarButtonItem = UIBarButtonItem(image:settingsIcon, style:UIBarButtonItem.Style.plain, target:self, action:nil)
         self.navigationItem.leftBarButtonItem = settingsBarButtonItem
         
-        //IOSM#90 add menu for settings and profile
+        // add menu for settings and profile
         var actions:[UIAction] = []
         let settingsImage = UIImage(systemName: "gearshape")
         let profileImage = UIImage(systemName: "person")
@@ -107,7 +107,6 @@ import SwiftUI
         self.composeBarButtonItem?.tintColor = lblColor
         self.navigationItem.rightBarButtonItems = [self.composeBarButtonItem!]
         
-        //IOSM#60
         self.navigationItem.titleView = self.navTitleView
         self.navTitleView.titleLabel.text = "Chats"
         self.navTitleView.titleLabel.centerXAnchor.constraint(equalTo: self.navTitleView.centerXAnchor).isActive = true
@@ -273,7 +272,6 @@ import SwiftUI
         //[self.tableView reloadData];
         self.tableView.tableHeaderView = nil
         
-        //IOSM#60
         self.resetStatusTimer()
         self.setConnectionStatus()
         
@@ -314,7 +312,6 @@ import SwiftUI
         self.statusCtr = 0
         self.setConnectionStatus()
         
-        //IOSM#60
         self.navTitleView.titleConnectingView.stopAnimating()
         self.navTitleView.titleLabel.text = "Chats"
         self.removeLocalVPNFiles()
@@ -327,7 +324,7 @@ import SwiftUI
 
     @objc override open func viewWillDisappear(_ animated:Bool) {
         super.viewWillDisappear(animated)
-        self.navTitleView.titleConnectingView.stopAnimating() //IOSM#60
+        self.navTitleView.titleConnectingView.stopAnimating()
         self.tableView.tableHeaderView = nil
         
         NotificationCenter.default.removeObserver(self)
@@ -338,7 +335,7 @@ import SwiftUI
         self.statusTimer = nil
         self.setConnectionStatus()
         self.welcoming = false
-        //} //IOSM#60 and below
+        // } // and below
         self.navTitleView.titleLabel.text = "Chats"
         
         self.removeLocalVPNFiles()
@@ -422,7 +419,6 @@ import SwiftUI
         self.delegate?.didSelectCompose(self)
     }
     
-    //IOSM-570
     func doRetryLogin() {
         self.resetStatusTimer()
         self.addStatusGestures(false)
@@ -508,7 +504,7 @@ import SwiftUI
     
     func handleConnectingStatus(_ protocolExists:Bool, accountExists:Bool) {
         //DDLogWarn(@"*** handleConnectingStatus with statusCtr %d", _statusCtr);
-        if self.statusTimer == nil { //IOSM#60
+        if self.statusTimer == nil {
             return
         }
         
@@ -522,7 +518,7 @@ import SwiftUI
             self.tableView.tableHeaderView = nil
         } else if self.statusCtr < 6 {
             self.navTitleView.titleLabel.text = "Chats"
-            self.navTitleView.titleConnectingView.startAnimating() //IOSM#60
+            self.navTitleView.titleConnectingView.startAnimating()
         } else {
             //DDLogWarn(@"*** handleConnectingStatus with _networkStatus connected and statusCtr %d", _statusCtr);
             if (protocolExists) { // network is up, but problems logging into xmpp server
@@ -530,7 +526,7 @@ import SwiftUI
                     self.navTitleView.titleLabel.text = "Waiting for network" //Connecting...
                 } else {
                     self.navTitleView.titleLabel.text = "Trying Again"
-                    self.navTitleView.titleConnectingView.stopAnimating() //IOSM#60
+                    self.navTitleView.titleConnectingView.stopAnimating()
                     self.doRetryLogin()
                 }
                 return
@@ -657,7 +653,6 @@ import SwiftUI
         OTRAppDelegate.appDelegate.smsEnabled = false
         self.tabBar.setSMSEnabled(false)
         
-        //IOSM-538
         //self.tableView.emptyDataSetSource = self.dataSource
         //self.tableView.emptyDataSetDelegate = self.dataSource
         
@@ -843,7 +838,6 @@ import SwiftUI
             }
             account.domain = components.last
             
-            //IOSM#48
             if let org = glacierDefaults?.string(forKey: "orgid") {
                 account.grdbRecord?.org = org
             }
@@ -957,7 +951,7 @@ import SwiftUI
                     }
                 }
                 
-                self.doSecurityCheck(false) //IOSM#48
+                self.doSecurityCheck(false)
                 //OTRAppDelegate.appDelegate.smsViewController.doSMSCheck()
                 TwilioBackendManager.sharedMgr().queryForNumbers()
                 
@@ -975,7 +969,7 @@ import SwiftUI
                         curmgr.serverCheck.pushModule.refresh()
                     }
                     
-                    self.requestCallPermissions() //IOSM-464
+                    self.requestCallPermissions()
                     LocationManager.shared().uiReadyForLocation()
                     
                     OTRProtocolManager.shared.setLoggingOut(false)
@@ -987,7 +981,6 @@ import SwiftUI
         })
     }
     
-    //IOSM#19
     @objc func doSecurityCheck(_ refresh:Bool) {
         if self.getFirstAccount() != nil {
             
@@ -998,7 +991,6 @@ import SwiftUI
                 UIApplication.shared.showLocalNotificationWith(identifier: nil, body: "Warning: Your device may be compromised", badge: 0, userInfo: nil, recurring: false)
             }
                 
-            //IOSM#99
             let securityAwareness = OTRAppDelegate.appDelegate.settingsViewController.needsSecurityAwareness()
             self.tabBar.setSecurityAlert(securityAwareness)*/
         }
@@ -1028,7 +1020,6 @@ import SwiftUI
             }
         }
             
-        //IOSM#99
         let securityAwareness = OTRAppDelegate.appDelegate.settingsViewController.needsSecurityAwareness()
         self.tabBar.setSecurityAlert(securityAwareness)
     }
@@ -1119,7 +1110,6 @@ import SwiftUI
         self.lookForAccountInfoIfNeeded()
     }
     
-    //IOSM#90
     public func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
         self.navigationController?.popToRootViewController(animated: false)
         if let appDelegate = Application.shared.delegate as? OTRAppDelegate {
@@ -1172,7 +1162,7 @@ import SwiftUI
         
         guard let calltitle = calltitle else { return }
         
-        //IOSM-503 concatenate names if needed
+        // concatenate names if needed
         let appDelegate = UIApplication.shared.delegate as? OTRAppDelegate
         appDelegate?.openVideoCallController(calltitle)
         if let callVC = appDelegate?.callWindow?.rootViewController?.presentedViewController as? VideoCallViewController {
@@ -1183,7 +1173,6 @@ import SwiftUI
         
         if let csysMessage = call.systemMessage {
             DispatchQueue.global().async {
-                //IOSM-503
                 var thread:ChatThreadModel?
                 var message:MessageProtocol?
                 

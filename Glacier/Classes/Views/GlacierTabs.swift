@@ -87,7 +87,6 @@ import PureLayout
         smsEnabled = enabled
     }
     
-    //IOSM#99
     @objc func setSecurityAlert(_ alert:Bool) {
         if alert == true {
             showDotBadge(for: hubItem)

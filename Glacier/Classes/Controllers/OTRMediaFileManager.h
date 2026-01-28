@@ -20,7 +20,7 @@ extern NSString *const kOTRRootMediaDirectory;
 // added salt
 - (BOOL)setupWithPath:(NSString *)path password:(NSString *)password salt:(NSString *)salt;
 
-- (void)releaseDBConnection; //IOSM-517
+- (void)releaseDBConnection;
 
 - (void)copyDataFromFilePath:(NSString *)filePath
              toEncryptedPath:(NSString *)path

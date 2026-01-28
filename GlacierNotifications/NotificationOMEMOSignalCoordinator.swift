@@ -135,7 +135,6 @@ import SignalProtocolObjC
         return budjid
     }
     
-    //IOSM-483
     @objc public func processUnencryptedData(_ isIncoming: Bool, message: XMPPMessage, forJID: XMPPJID) {
         var decryptedMsg = NotificationMessage()
         guard let myJID = self.myJID else {
@@ -179,13 +178,12 @@ import SignalProtocolObjC
             if let fromJID = message.from {
                 let roomJID = fromJID.bareJID
                 
-                //IOSM-480
                 let accountId = accountKey
                 let roomUniqueId = ChatRoomModel.createUniqueId(accountId, jid: roomJID.bare)
                 if let xroom = ChatRoomModel.getXMPPRoom(uniqueId: roomUniqueId) {
                     //decryptedMsg.from = "#" + xroom.threadName
                     decryptedMsg.from = xroom.threadName
-                    decryptedMsg.threadId = xroom.threadIdentifier //IOSM#16
+                    decryptedMsg.threadId = xroom.threadIdentifier
                 } else {
                     let namecomponents = roomJID.bare.components(separatedBy: "@")
                     if (namecomponents.count == 2 && namecomponents[0].count > 0) {
@@ -193,10 +191,9 @@ import SignalProtocolObjC
                         decryptedMsg.from = namecomponents[0]
                     }
                 }
-                decryptedMsg.threadCollection = ChatRoomModel.collection() //IOSM#16
+                decryptedMsg.threadCollection = ChatRoomModel.collection()
             }
         } else {
-            //IOSM#16
             decryptedMsg.threadCollection = ChatBuddyModel.collection()
         }
         
@@ -237,13 +234,12 @@ import SignalProtocolObjC
             if let fromJID = message.from {
                 let roomJID = fromJID.bareJID
                 
-                //IOSM-480
                 let accountId = accountKey
                 let roomUniqueId = ChatRoomModel.createUniqueId(accountId, jid: roomJID.bare)
                 if let xroom = ChatRoomModel.getXMPPRoom(uniqueId: roomUniqueId) {
                     //decryptedMsg.from = "#" + xroom.threadName
                     decryptedMsg.from = xroom.threadName
-                    decryptedMsg.threadId = xroom.threadIdentifier //IOSM#16
+                    decryptedMsg.threadId = xroom.threadIdentifier
                 } else {
                     let namecomponents = roomJID.bare.components(separatedBy: "@")
                     if (namecomponents.count == 2 && namecomponents[0].count > 0) {
@@ -251,7 +247,7 @@ import SignalProtocolObjC
                         decryptedMsg.from = namecomponents[0]
                     }
                 }
-                decryptedMsg.threadCollection = ChatRoomModel.collection() //IOSM#16
+                decryptedMsg.threadCollection = ChatRoomModel.collection()
             }
             
             if let groupAddressJID = extractAddressFromGroupMessage(message) {
@@ -375,7 +371,7 @@ import SignalProtocolObjC
         }
     }
     
-    //IOSM#16 gets threadId along with displayName
+    // gets threadId along with displayName
     fileprivate func getBuddyInfo(_ message:NotificationMessage, from: XMPPJID) -> NotificationMessage {
         message.from = from.user
         if let account = ChatAccountModel.getXMPPAccount(uniqueId: self.accountKey), let buddy = ChatBuddyModel.fetchBuddy(jid: from, accountUniqueId: account.uniqueId) {
@@ -544,7 +540,7 @@ extension NotificationOMEMOSignalCoordinator:OMEMOStorageDelegate {
 @objc public class NotificationMessage:NSObject {
     @objc public var from:String?
     @objc public var message:String?
-    @objc public var threadId:String? //IOSM#16 (and following)
+    @objc public var threadId:String? // (and following)
     @objc public var threadCollection:String?
 }
 
@@ -584,7 +580,7 @@ public extension String {
         
         for match in matches where match.resultType == .link {
             if let url = match.url {
-                if (!url.absoluteString.hasPrefix("mailto")) { //IOSM-579
+                if (!url.absoluteString.hasPrefix("mailto")) {
                     urls.append(url)
                     ranges.append(match.range)
                 }

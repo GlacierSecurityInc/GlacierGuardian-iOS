@@ -374,7 +374,7 @@ extension MessageQueueHandler {
                 if message is OutgoingChatMessage {
                     OTRProtocolManager.sharedInstance().send(message as! OutgoingChatMessage)
                 }
-                //IOSM-338 derivative - no longer want to send unencrypted?
+                // derivative - no longer want to send unencrypted?
                 
                 //Something went wrong getting ready to send the message
                 //Save error object to message
@@ -382,7 +382,6 @@ extension MessageQueueHandler {
                     return
                 }
                     
-                //IOSM#75
                 if let message = message as? ChatRoomMessageModel {
                     message.grdbRecord?.state = ChatRoomMessageState.sent.rawValue
                     message.save()

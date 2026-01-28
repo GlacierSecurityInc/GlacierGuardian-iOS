@@ -10,7 +10,7 @@ import Foundation
 import XMPPFramework
 import CocoaLumberjack
 import Alamofire
-import AVFoundation //IOSM-565
+import AVFoundation
 import Kingfisher
 import LinkPresentation
 
@@ -141,8 +141,8 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
     let sessionManager: Session
     let uploadDomain: String
     private var servers: [HTTPServer] = []
-    var uploadCancelled = false //IOSM-477
-    var retryList: [MessageProtocol] = [] //IOSM#57
+    var uploadCancelled = false
+    var retryList: [MessageProtocol] = []
 
     @objc public var canUploadFiles: Bool {
         return self.servers.first != nil
@@ -208,7 +208,7 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
                             } else {
                                 self.downloadMedia(downloadMessage)
                             }
-                        } else if let nsdomain = (downloadMessage.messageError as NSError?)?.domain, nsdomain == "Alamofire.AFError" { //IOSM#57
+                        } else if let nsdomain = (downloadMessage.messageError as NSError?)?.domain, nsdomain == "Alamofire.AFError" {
                             if OTRMediaFileManager.shared.fileExists(forChatMediaItem: mediaItem, buddyUniqueId: downloadMessage.threadId) {
                                 mediaItem.grdbRecord?.transferProgress = 1.0
                                 mediaItem.save()
@@ -221,7 +221,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
             }
         })
         
-        //IOSM#57
         self.internalQueue.async {
             self.retryList.forEach({ (retryMsg) in
                 if let offlineMsg = retryMsg.refetch(), let mediaItem = ChatMediaItemModel.getMediaItem(for: offlineMsg) {
@@ -435,7 +434,7 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
                 self.upload(media: media, data: data, shouldEncrypt: shouldEncrypt, filename: file.lastPathComponent, contentType: mimeType, completion: completion)
             } catch let error {
                 DDLogError("Error sending file URL \(file): \(error)")
-                self.callbackQueue.async { //IOSM-477
+                self.callbackQueue.async {
                     completion(nil, error)
                 }
             }
@@ -503,7 +502,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
                 }
             }
             
-            //IOSM-477
             if (self.uploadCancelled) {
                 self.callbackQueue.async {
                     completion(nil, FileTransferError.userCanceled)
@@ -546,7 +544,7 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
                                 completion(slot.getURL, nil)
                             }
                         case .failure(let error):
-                            if (self.uploadCancelled) { //IOSM-477
+                            if (self.uploadCancelled) {
                                 self.uploadCancelled = false
                                 completion(nil, FileTransferError.userCanceled)
                             } else {
@@ -563,7 +561,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
                             })
                         }
                         
-                        //IOSM-477
                         if (self.uploadCancelled) {
                             self.doCancelUpload(url: slot.putURL)
                         }
@@ -572,7 +569,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
         }
     }
     
-    //IOSM-477
     private func doCancelUpload(url: URL) {
         self.internalQueue.async {
             self.sessionManager.session.getTasksWithCompletionHandler { (_, uploadTasks, _) in
@@ -585,7 +581,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
         }
     }
     
-    //IOSM-565
     private var exporter: AVAssetExportSession? = nil
     private func compressVideo(_ url: URL, thread: ChatThreadModel, label: UILabel?, isPublic:Bool, completion: @escaping (_ success: Bool, _ error: Error?) -> ()) {
         let filename = FileTransferManager.getFileName(url.path)
@@ -699,7 +694,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
         }
     }
     
-    //IOSM-486, IOSM-557
     @objc public func send(htmlURL url: URL, thread: ChatThreadModel, isPublic:Bool, completion: @escaping (_ success: Bool, _ error: Error?) -> ()) {
         internalQueue.async {
             let mediaItem = ChatHTMLItem(filename: url.absoluteString, mimetype: nil, isIncoming: false)
@@ -746,7 +740,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
         }
     }
     
-    //IOSM-486, IOSM-557
     public func sizeOfImageAt(url: URL) -> CGSize? {
         // with CGImageSource we avoid loading the whole image into memory
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else {
@@ -774,7 +767,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
     
     private func send(url: URL, thread: ChatThreadModel, type: MediaURLType, label: UILabel?, isPublic:Bool, completion: @escaping (_ success: Bool, _ error: Error?) -> ()) {
         internalQueue.async {
-            //IOSM-477
             self.uploadCancelled = false
             do {
                 let resources = try url.resourceValues(forKeys:[.fileSizeKey])
@@ -801,7 +793,7 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
             guard let mediaItem = item else {
                 DDLogError("No media item to share for URL: \(url)")
                 self.callbackQueue.async {
-                    completion(false, nil) //IOSM-477
+                    completion(false, nil)
                 }
                 return
             }
@@ -809,7 +801,7 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
             guard let message = self.newOutgoingMessage(to: thread, mediaItem: mediaItem) else {
                 DDLogError("No message could be created for \(thread) \(mediaItem)")
                 self.callbackQueue.async {
-                    completion(false, nil) //IOSM-477
+                    completion(false, nil)
                 }
                 return
             }
@@ -880,16 +872,15 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
     
     @objc public func send(image: UIImage, thread: ChatThreadModel, jpeg:Bool, label: UILabel?, isPublic:Bool, completion: @escaping (_ success: Bool, _ error: Error?) -> ()) {
         internalQueue.async {
-            self.uploadCancelled = false //IOSM-477
+            self.uploadCancelled = false
             guard let service = self.servers.first, service.maxSize > 0 else {
                 DDLogError("No HTTP upload service available!")
-                self.callbackQueue.async { //IOSM-477
+                self.callbackQueue.async {
                     completion(false, nil)
                 }
                 return
             }
             
-            //IOSM#61
             let imageItem:ChatImageItem
             let imageSize = image.size
             var normalSize = imageSize
@@ -910,7 +901,7 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
             guard let message = self.newOutgoingMessage(to: thread, mediaItem: imageItem) else {
                 DDLogError("No message could be created")
                 self.callbackQueue.async {
-                    completion(false, nil) //IOSM-477
+                    completion(false, nil)
                 }
                 return
             }
@@ -926,7 +917,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
             //message.save(withThread: thread)
             imageItem.save(completion: {
                 self.internalQueue.async {
-                    //IOSM#61
                     if !jpeg {
                         if let gifdata = GifHelper.getImageData(image) {
                             OTRMediaFileManager.shared.setData(gifdata, forChatItem: imageItem, buddyUniqueId: message.threadId, completion: { (bytesWritten: Int, error: Error?) in
@@ -951,7 +941,7 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
                         guard let ourImageData = image.jpegData(dataSize: .unlimited, resize: UIImage.Quality.low, jpeg: UIImage.Quality.low, maxTries: 10) else {
                             DDLogError("Could not make JPEG out of image!")
                             self.callbackQueue.async {
-                                completion(false, nil) //IOSM-477
+                                completion(false, nil)
                             }
                             return
                         }
@@ -971,7 +961,7 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
                                 message.messageError = FileTransferError.exceedsMaxSize as NSError
                                 message.save()
                                 self.callbackQueue.async {
-                                    completion(false, nil) //IOSM-477
+                                    completion(false, nil)
                                 }
                             }
                         }, completionQueue: self.internalQueue)
@@ -1028,20 +1018,19 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
         return nil
     }
     
-    //IOSM#33
     @objc public func sendAsync(mediaItem: ChatMediaItemModel, prefetchedData: Data?, message: MessageProtocol, label: UILabel?, completion: @escaping (_ success: Bool, _ error: Error?) -> ()) {
         self.internalQueue.async {
             self.send(mediaItem: mediaItem, prefetchedData: prefetchedData, message: message, label: label, completion: completion)
         }
     }
     
-    //IOSM-477 added progress, completion to ALL send functions
+    // added progress, completion to ALL send functions
     @objc public func send(mediaItem: ChatMediaItemModel, prefetchedData: Data?, message: MessageProtocol, label: UILabel?, completion: @escaping (_ success: Bool, _ error: Error?) -> ()) {
         let shouldEncrypt = message.messageSecurity == .OMEMO//true
         
         //self.copy() as? Self
         
-        //IOSM#57 if not online, put this in a queue
+        // if not online, put this in a queue
         let owner = message.threadOwner()
         if let towner = owner, let account = ChatAccountModel.getChatAccount(towner.threadAccountIdentifier), !OTRProtocolManager.sharedInstance().isAccountIdConnected(account.uniqueId), let offlineMsg = message.copyMessage() {
             
@@ -1052,7 +1041,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
             return
         }
         
-        //IOSM-477
         if (uploadCancelled) {
             self.callbackQueue.async {
                 completion(false, FileTransferError.userCanceled)
@@ -1068,7 +1056,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
             guard let url = _url else {
                 if let error = error {
                     DDLogError("Error uploading: \(error)")
-                    //IOSM#57
                     if error is Alamofire.AFError, let offlineMsg = message.copyMessage() {
                         self.retryList.append(offlineMsg)
                         self.callbackQueue.async {
@@ -1081,7 +1068,7 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
                 message.messageError = error as? NSError
                 message.save()
                 self.callbackQueue.async {
-                    completion(false, error) //IOSM-477
+                    completion(false, error)
                 }
                 return
             }
@@ -1099,18 +1086,17 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
             } else {
                 message.save()
             }
-            //mediaItem.touchParent() //IOSM#33 doesn't make sense because message is being saved
+            // mediaItem.touchParent() // doesn't make sense because message is being saved
             self.callbackQueue.async {
-                completion(true, nil) //IOSM-477 delegate to turn off HUD here
+                completion(true, nil) // delegate to turn off HUD here
             }
             self.queueOutgoingMessage(message: message)
         })
     }
     
-    //IOSM-477
     @objc public func cancelUpload() {
         self.uploadCancelled = true
-        exporter?.cancelExport() //IOSM-565
+        exporter?.cancelExport()
     }
     
     private func queueOutgoingMessage(message: MessageProtocol) {
@@ -1215,13 +1201,13 @@ extension FileTransferManager {
                         self.continueDownloading(downloadMessage: downloadMessage, url: url, contentType: contentType, contentLength: contentLength)
                     }
                 case .failure(let error):
-                    //IOSM-470, IOSM-474 not sure why we need validation
+                    // not sure why we need validation
                     if let headers = response.response?.allHeaderFields, let contentType = headers["Content-Type"] as? String, let contentLength = headers["Content-Length"] as? UInt {
                         if contentType.contains("text/html") {
                             self.continueDownloading(downloadMessage: downloadMessage, url: url, contentType: contentType, contentLength: contentLength)
                             return
                         }
-                    } else { //IOSM#30
+                    } else {
                         DDLogError("HEAD error, but continuing: \(error)")
                         let contentType = "text/html;charset=utf-8" //this is a guess and could backfire
                         self.continueDownloading(downloadMessage: downloadMessage, url: url, contentType: contentType, contentLength: 0)
@@ -1245,7 +1231,7 @@ extension FileTransferManager {
         return components.url
     }
     
-    //IOSM#46 bad link, don't download
+    // bad link, don't download
     @objc public func setOutgoingHtmlError(_ message: MessageProtocol) {
         if let outmessage = message.refetch() {
             outmessage.messageError = FileTransferError.automaticDownloadsDisabled as NSError
@@ -1346,7 +1332,7 @@ extension FileTransferManager {
                         self.finishDownload(downloadMessage: downloadMessage, mediaItem: media, inData: response.data, urlResponse: response.response, error: response.error)
                     }
                 case .failure(let error):
-                    //IOSM#46 //error.isResponseValidationError, error.isSessionTaskError
+                    // //error.isResponseValidationError, error.isSessionTaskError
                     if media is ChatHTMLItem {
                         self.setError(FileTransferError.automaticDownloadsDisabled, onMessage: downloadMessage)
                         DDLogError("Don't download just pass link through \(error)")
@@ -1619,19 +1605,19 @@ extension URL {
     }
 }
 
-@objc public extension NSString { //IOSM-486, IOSM-557 added objc
+@objc public extension NSString { // added objc
     @objc var isSingleURLOnly: Bool {
         return (self as String).isSingleURLOnly
     }
     
-    @objc var urls: [URL] { //IOSM-486, IOSM-557
+    @objc var urls: [URL] {
         return (self as String).urls
     }
 }
 
 public extension String {
     
-    //IOSM-579 check things like espn.com as links
+    // check things like espn.com as links
     private var urlRanges: ([URL], [NSRange]) {
         guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
             return ([], [])
@@ -1643,7 +1629,7 @@ public extension String {
         
         for match in matches where match.resultType == .link {
             if let url = match.url {
-                if (!url.absoluteString.hasPrefix("mailto")) { //IOSM-579
+                if (!url.absoluteString.hasPrefix("mailto")) {
                     urls.append(url)
                     ranges.append(match.range)
                 }
@@ -1717,7 +1703,7 @@ public extension FileTransferManager {
         
         // so media messages don't show as link in group, maybe remove after OMEMO
         /*if messageText.isSingleURLOnly,
-           message.downloads().count > 0, message.isMessageIncomingOrDifferentDevice { //IOSM-474 added incoming
+           message.downloads().count > 0, message.isMessageIncomingOrDifferentDevice { // added incoming
             return false
         }*/
 

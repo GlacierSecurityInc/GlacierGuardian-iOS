@@ -24,7 +24,6 @@ import NetworkExtension
     let secVersionsUrl = "https://tiny.one/5967h5e2"
     var compromisedStatus = false
     
-    //IOSM#48
     let DEVICE_ID = "device"
     let DEVICE = "deviceid"
     let GLACIER_VERSION = "glacier_version"
@@ -38,7 +37,6 @@ import NetworkExtension
     let BIOMETRIC_LOCK = "biometric_lock"
     let CORE_ENABLED = "core_enabled"
     
-    //IOSM#58
     let COMPROMISED_JAILBROKEN = "jailbroken"
     let COMPROMISED_PROXIED = "proxied"
     let COMPROMISED_REVERSE_ENGINEERED = "reverse engineered"
@@ -82,7 +80,7 @@ import NetworkExtension
         if jailStatus.jailbroken {
             compromised = true
             let reason = " with reason: \(jailStatus.failMessage)"
-            self.secInfoUtil.securityInfo.compromised_detail = COMPROMISED_JAILBROKEN + reason //IOSM#58
+            self.secInfoUtil.securityInfo.compromised_detail = COMPROMISED_JAILBROKEN + reason
         } else if IOSSecuritySuite.amIProxied() {
             compromised = true
             self.secInfoUtil.securityInfo.compromised_detail = COMPROMISED_PROXIED
@@ -133,7 +131,7 @@ import NetworkExtension
         return self.compromisedStatus
     }
     
-    //IOSM#58 (next 2)
+    // (next 2)
     @objc public func shouldIgnoreCompromisedAlert() -> Bool {
         return self.ignoreCompromisedAlert
     }
@@ -342,7 +340,6 @@ import NetworkExtension
     }
 }
 
-//IOSM#48
 @objc public class SecurityInfo:NSObject, Codable {
     @objc var deviceid: String?
     @objc var device: String?

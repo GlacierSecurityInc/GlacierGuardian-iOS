@@ -386,7 +386,7 @@ open class OTRRoomOccupantsViewController: UIViewController {
         switch type {
         case CellIdentifier.HeaderCellGroupName:
             if let room = self.room {
-                var roomname = room.roomName//room.subject //IOSM-495
+                var roomname = room.roomName // room.subject //
                 if roomname == nil {
                     roomname = room.roomJID?.user
                 }
@@ -530,12 +530,12 @@ open class OTRRoomOccupantsViewController: UIViewController {
     @objc func didPressEditGroupSubject(_ sender: UIControl!, withEvent: UIEvent!) {
         let alert = UIAlertController(title: NSLocalizedString("Change room name", comment: "Title for change room name"), message: nil, preferredStyle: UIAlertController.Style.alert)
         alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK button"), style: UIAlertAction.Style.default, handler: {(action: UIAlertAction!) in
-            if let newName = alert.textFields?.first?.text { //IOSM-495 subject to name
+            if let newName = alert.textFields?.first?.text { // subject to name
                 self.room?.roomName = newName //subject = newSubject
                 self.refreshNameCell()
                 
                 if let room = self.room, let xmppRoom = self.xmppRoom(for: room), let roomManager = self.xmppRoomManager(for: room) {
-                    //IOSM-495 added roomManager and setRoomName
+                    // added roomManager and setRoomName
                     //xmppRoom.changeSubject(newName)
                     roomManager.setRoomName(xmppRoom, name:newName)
                 }
@@ -543,7 +543,7 @@ open class OTRRoomOccupantsViewController: UIViewController {
         }))
         alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: "Cancel button"), style: UIAlertAction.Style.cancel, handler: nil))
         alert.addTextField(configurationHandler: {(textField: UITextField!) in
-            textField.placeholder = self.room?.roomName //subject //IOSM-495
+            textField.placeholder = self.room?.roomName // subject //
             textField.isSecureTextEntry = false
         })
         self.present(alert, animated: true, completion: nil)

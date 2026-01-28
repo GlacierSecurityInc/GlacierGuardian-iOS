@@ -5,7 +5,6 @@
 //  Created by andyfriedman on 3/1/22.
 //  Copyright © 2022 Glacier. All rights reserved.
 //
-//IOSM#19
 
 import UIKit
 import Alamofire
@@ -71,7 +70,7 @@ open class SecurityCenterTableViewController: UITableViewController {
                     self.latestVersionCell.contentConfiguration = latestContent
                 }
                 
-                OTRAppDelegate.appDelegate.settingsViewController.setVersionIssue(true) //IOSM#58 modified and below
+                OTRAppDelegate.appDelegate.settingsViewController.setVersionIssue(true) // modified and below
                 if self.issuesFound == false {
                     self.issuesFound = true
                 }
@@ -129,7 +128,7 @@ open class SecurityCenterTableViewController: UITableViewController {
         //self.doSecurityChecks() //moved to ViewDidAppear
     }
     
-    open override func viewDidAppear(_ animated: Bool) { //IOSM#99
+    open override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         self.doSecurityChecks()
     }

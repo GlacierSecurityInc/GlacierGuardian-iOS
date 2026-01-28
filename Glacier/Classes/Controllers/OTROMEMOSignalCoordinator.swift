@@ -171,19 +171,19 @@ import GRDB
      */
     private func prepSession(_ key:String, collection:String, transaction:GRDBWriteTransaction?) -> SessionVars {
         var devices:[ChatOmemoDevice] = []
-        var trustedDevices:[ChatOmemoDevice] = [] //IOSM#75
+        var trustedDevices:[ChatOmemoDevice] = []
         var user:String? = nil
         
         //Get all the devices ID's for this buddy as well as their username for use with signal and XMPPFramework.
         if let transaction = transaction {
             devices = ChatOmemoDevice.allOMEMODevices(for: key, collection: collection, transaction: transaction)
-            trustedDevices = ChatOmemoDevice.allOMEMODevices(for: key, collection: collection, transaction: transaction, trusted: true) //IOSM#75
+            trustedDevices = ChatOmemoDevice.allOMEMODevices(for: key, collection: collection, transaction: transaction, trusted: true)
             user = self.fetchUsername(key, collection: collection, transaction:transaction)
         } else {
             do {
                 try DBManager.sharedDB().grdbStorage.read(block: { transaction in
                     devices = ChatOmemoDevice.allOMEMODevices(for: key, collection: collection, transaction: transaction)
-                    trustedDevices = ChatOmemoDevice.allOMEMODevices(for: key, collection: collection, transaction: transaction, trusted: true) //IOSM#75
+                    trustedDevices = ChatOmemoDevice.allOMEMODevices(for: key, collection: collection, transaction: transaction, trusted: true)
                     user = self.fetchUsername(key, collection: collection, transaction:transaction)
                 })
             } catch {
@@ -191,7 +191,6 @@ import GRDB
             }
         }
         
-        //IOSM#75
         if trustedDevices.count == 0, devices.count > 0 {
             //print("***** found devices \(devices)")
             for device in devices {
@@ -335,21 +334,20 @@ import GRDB
      */
     /*open func prepareSession(_ key:String, collection:String, transaction:GRDBWriteTransaction?, completion:@escaping (Bool) -> Void) {
         var devices:[ChatOmemoDevice] = []
-        var trustedDevices:[ChatOmemoDevice] = [] //IOSM#75
+        var trustedDevices:[ChatOmemoDevice] = []
         var user:String? = nil
         
         //Get all the devices ID's for this buddy as well as their username for use with signal and XMPPFramework.
         if let transaction = transaction {
             devices = ChatOmemoDevice.allOMEMODevices(for: key, collection: collection, transaction: transaction)
-            trustedDevices = ChatOmemoDevice.allOMEMODevices(for: key, collection: collection, transaction: transaction, trusted: true) //IOSM#75
+            trustedDevices = ChatOmemoDevice.allOMEMODevices(for: key, collection: collection, transaction: transaction, trusted: true)
             user = self.fetchUsername(key, collection: collection, transaction:transaction)
         } else {
             devices = ChatOmemoDevice.allOMEMODevices(for: key, collection: collection)
-            trustedDevices = ChatOmemoDevice.allOMEMODevices(for: key, collection: collection, trusted: true) //IOSM#75
+            trustedDevices = ChatOmemoDevice.allOMEMODevices(for: key, collection: collection, trusted: true)
             user = self.fetchUsername(key, collection: collection, transaction: nil)
         }
         
-        //IOSM#75
         if trustedDevices.count == 0, devices.count > 0 {
             //print("***** found devices \(devices)")
             for device in devices {
@@ -702,12 +700,12 @@ import GRDB
                         if message is ChatRoomMessageModel {
                             omemoMessage.addAttribute(withName: "type", stringValue: "groupchat")
                             omemoMessage.addReceiptRequest()
-                            omemoMessage.addMarkableChatMarker() //IOSM#8 read receipts
-                            omemoMessage.addBody("Message cannot be decrypted.") //IOSM-605
+                            omemoMessage.addMarkableChatMarker() // read receipts
+                            omemoMessage.addBody("Message cannot be decrypted.")
                             self.sendOnStream(omemoMessage)
                         } else if message is OutgoingChatMessage {
-                            omemoMessage.addMarkableChatMarker() //IOSM#8 read receipts
-                            omemoMessage.addBody("Message cannot be decrypted.") //IOSM-605
+                            omemoMessage.addMarkableChatMarker() // read receipts
+                            omemoMessage.addBody("Message cannot be decrypted.")
                             if let expiration = message.messageExpires {
                                 let expiresElement = XMLElement(name: "x", xmlns: "jabber:x:msgexpire")
                                 expiresElement.addAttribute(withName: "seconds", stringValue: expiration)
@@ -721,8 +719,8 @@ import GRDB
                 {
                     groupMessage.addAttribute(withName: "type", stringValue: "groupchat")
                     groupMessage.addReceiptRequest()
-                    groupMessage.addMarkableChatMarker() //IOSM#8 read receipts
-                    groupMessage.addBody("Message cannot be decrypted.") //IOSM-605
+                    groupMessage.addMarkableChatMarker() // read receipts
+                    groupMessage.addBody("Message cannot be decrypted.")
                     self.sendOnStream(groupMessage)
                 } else if message is OutgoingChatMessage {
                     self.omemoModule?.sendKeyData(keyDataArray, iv: ivData, to: destinationJID, payload: finalPayload, elementId: message.remoteMessageId, expiration: message.messageExpires)
@@ -890,7 +888,7 @@ import GRDB
      - parameter deviceId: The OMEMO device id
      - parameter localOnly: whether to avoid remote update if doing so elsewhere
     */
-    //IOSM-338 added localonly to not update server
+    // added localonly to not update server
     open func removeDevice(_ devices:[ChatOmemoDevice], localOnly:Bool, completion:@escaping ((Bool) -> Void)) {
         
         DBManager.sharedDB().grdbStorage.asyncWrite(block: { transaction in
@@ -1039,14 +1037,14 @@ import GRDB
                     DDLogInfo("Ignoring duplicate OMEMO message: \(message)")
                     return
                 }
-                //var letEmKnow = false  //IOSM-338c
+                // var letEmKnow = false //
                 let buddyAddress = SignalAddress(name: addressJID.bare, deviceId: Int32(senderDeviceId))
                 //print("***** processKeyData failed decrypting from \(addressJID.bare) with deviceId \(senderDeviceId)")
                 
                 var sessionVars: SessionVars?
                 do {
                     try DBManager.sharedDB().grdbStorage.write(block: { transaction in
-                        //IOSM-338c added here and removed letEmKnow
+                        // added here and removed letEmKnow
                         if (incoming) {
                             //self.omemoModule?.fetchBundle(forDeviceId: senderDeviceId, jid: addressJID, elementId: nil)
                             //create session does the above if needed...
@@ -1075,7 +1073,7 @@ import GRDB
             }
         }
                 
-        guard unencryptedKeyData != nil else { //IOSM-338c
+        guard unencryptedKeyData != nil else {
             if (incoming) {
                 var sessionVars: SessionVars?
                 do {
@@ -1100,7 +1098,6 @@ import GRDB
         handleUnencryptedKeyData (unencryptedKeyData: unencryptedKeyData, iv: iv, senderDeviceId: senderDeviceId, forJID: forJID, encryptedPayload: encryptedPayload, delayed: delayed, forwarded: forwarded, isIncoming: incoming, message: message, originalMessage: originalMessage)
     }
     
-    //IOSM-338
     func doGlacierbotGroupAlert(addressJID: XMPPJID, message: XMPPMessage) {
         let lekmessage = ChatRoomMessageModel()
         lekmessage.messageDate = Date()
@@ -1134,7 +1131,6 @@ import GRDB
         }
     }
     
-    //IOSM-338
     func doGlacierbotAlert(addressJID: XMPPJID) {
         let lekMessage = OutgoingChatMessage()
         var lekName = ""
@@ -1166,12 +1162,12 @@ import GRDB
         }
     }
     
-    //IOSM-338 break up function
+    // break up function
     func handleUnencryptedKeyData(unencryptedKeyData: Data?, iv: Data, senderDeviceId: UInt32, forJID: XMPPJID, encryptedPayload: Data, delayed: Date?, forwarded: Bool, isIncoming: Bool, message: XMPPMessage, originalMessage: XMPPMessage) {
         let aesGcmBlockLength = 16
         
         guard var aesKey = unencryptedKeyData else {
-            //handleMissingKeys(message: message, forwarded: forwarded, delayed: delayed) //IOSM-338c
+            // handleMissingKeys(message: message, forwarded: forwarded, delayed: delayed) //
             return
         }
         var authTag: Data?
@@ -1208,14 +1204,14 @@ import GRDB
             // for sending location
             let messageCopy = String(data: messageBody, encoding: String.Encoding.utf8)
             
-            //IOSM-486, IOSM-557 check for links
+            // check for links
             let msgurls = messageString.urls
             if msgurls.count > 0, let msgurl = msgurls.first?.absoluteString, !msgurl.hasPrefix("aesgcm"), messageString.count == msgurl.count {
                 try self.handleDecryptedMessageWithUrls(msgURLs: msgurls, messageString: messageString, messageCopy: messageCopy!, senderDeviceId: senderDeviceId, forJID: forJID, delayed: delayed, forwarded: forwarded, isIncoming: isIncoming, message: message, originalMessage: originalMessage)
                 return
             }
             
-            //IOSM-486, IOSM-557 moved handling code to separate method
+            // moved handling code to separate method
             try self.handleDecryptedMessage(messageString: messageString, messageCopy: messageCopy!, senderDeviceId: senderDeviceId, forJID: forJID, delayed: delayed, forwarded: forwarded, isIncoming: isIncoming, split: false, message: message, originalMessage: originalMessage)
             
         } catch let error {
@@ -1224,10 +1220,9 @@ import GRDB
         }
     }
     
-    //IOSM-486, IOSM-557
     func handleDecryptedMessageWithUrls(msgURLs: [URL], messageString: String, messageCopy: String, senderDeviceId: UInt32, forJID: XMPPJID, delayed: Date?, forwarded: Bool, isIncoming: Bool, message: XMPPMessage, originalMessage: XMPPMessage) throws {
         
-        //IOSM-579 and use of fixedString, msgurls below
+        // and use of fixedString, msgurls below
         let fixedString = try self.convertBadLinksText(text: messageString)
         let msgurls = fixedString.urls
         
@@ -1266,11 +1261,11 @@ import GRDB
         }
     }
     
-    //IOSM-579 //test with espn.com and suntrust.com and let me know
+    // //test with espn.com and suntrust.com and let me know
     func convertBadLinksText(text: String) throws -> String {
         let detector = try! NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
         
-        var newText = text//.lowercased() //IOSM-596
+        var newText = text // .lowercased() //
         var badurls = true
         while (badurls) {
             badurls = false
@@ -1278,7 +1273,7 @@ import GRDB
                 
                 if let match = result, match.resultType == .link, let urlstr = match.url?.absoluteString, let range = Range(match.range, in: newText) {
                     
-                    //IOSM-596 modified
+                    // modified
                     if urlstr.lowercased().hasPrefix("http://"), let schemerange = urlstr.lowercased().range(of: "http:") {
                         badurls = true
                         //let newurl = urlstr.replacingOccurrences(of: "http:", with: "https:")
@@ -1293,7 +1288,7 @@ import GRDB
         return newText;
     }
     
-    //IOSM-486, IOSM-557 moved handling code from above
+    // moved handling code from above
     func handleDecryptedMessage(messageString: String, messageCopy: String, senderDeviceId: UInt32, forJID: XMPPJID, delayed: Date?, forwarded: Bool, isIncoming: Bool, split: Bool, message: XMPPMessage, originalMessage: XMPPMessage) throws {
         
         let preSave: MessageStorage.PreSave = { message, buddyId, transaction in
@@ -1348,7 +1343,6 @@ import GRDB
         }
         
         if message.isGroupChatMessage {
-            //IOSM-371
             var isOutgoingFromOtherDevice = false
             if forwarded, let x = message.element(forName: "x", xmlns: XMPPMUCUserNamespace),
                let item = x.element(forName: "item"),
@@ -1471,8 +1465,8 @@ import GRDB
                     }
                     
                     //self.missingKeysSet.insert(missingFrom)
-                    //self.messageStorage.handleDirectMessage(message, body: "Message cannot be decrypted.", original: nil, accountId: self.accountKey) //IOSM-531
-                    //self.messageStorage.handleDirectMessage(message, body: "Message cannot be decrypted - we are attempting to reset session.", original: nil, accountId: self.accountKey) //IOSM-531
+                    // self.messageStorage.handleDirectMessage(message, body: "Message cannot be decrypted.", original: nil, accountId: self.accountKey) //
+                    // self.messageStorage.handleDirectMessage(message, body: "Message cannot be decrypted - we are attempting to reset session.", original: nil, accountId: self.accountKey) //
                     //self.messageStorage.handleDirectMessage(message, body: "Message(s) cannot be decrypted. For more information visit https://glaciersecurity.zendesk.com/hc/en-us/articles/360027880632", original: nil, accountId: self.accountKey)
                     
                     //put this on a timer. if just published, don't immediately do it again
@@ -1483,7 +1477,7 @@ import GRDB
                         self.publishingMyDevice = false
                     }
                     if self.messageStorage.handleFailedIncomingMessage(message, body: "Message cannot be decrypted", original: nil, accountId: self.accountKey), let myid = self.myJID, !self.publishingMyDevice {
-                        //self.messageStorage.handleDirectMessage(message, body: "Message cannot be decrypted - we are attempting to reset session.", original: nil, accountId: self.accountKey) //IOSM-531
+                        // self.messageStorage.handleDirectMessage(message, body: "Message cannot be decrypted - we are attempting to reset session.", original: nil, accountId: self.accountKey) //
                         
                         self.publishingMyDevice = true
                         let devices = self.fetchDeviceIds(for: myid)

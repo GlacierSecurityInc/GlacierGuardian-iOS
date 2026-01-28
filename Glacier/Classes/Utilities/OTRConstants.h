@@ -39,7 +39,7 @@ extern NSString *const kOTRNotificationAccountCollectionKey;
 extern NSString *const kOTRServiceName;
 extern NSString *const kOTRCertificateServiceName;
 
-extern NSString *const kGlacierServiceName; //IOSM#105
+extern NSString *const kGlacierServiceName;
 extern NSString *const kGlacierKeyGroup;
 extern NSString *const kGlacierAcct;
 extern NSString *const kGlacierGroup;
@@ -64,12 +64,12 @@ extern NSString *const kOTRSettingUserAgreedToEULA;
 extern NSString *const kOTRSettingAccountsKey;
 extern NSString *const kOTRSettingsValueUpdatedNotification;
 extern NSString *const kGlacierCoreConnection;
-extern NSString *const kThreatDetectionKey; //IOSM#58
+extern NSString *const kThreatDetectionKey;
 extern NSString *const kLinkPreviewKey;
 extern NSString *const kReadReceiptsKey;
 extern NSString *const kRebootReminderKey;
 extern NSString *const kTrackingOnKey;
-extern NSString *const kBgTaskId; //IOSM#88
+extern NSString *const kBgTaskId;
 extern NSString *const kBgRebootTaskId;
 
 extern NSString *const kOTRAppVersionKey;
@@ -103,7 +103,7 @@ extern NSString *const kOTRNotificationTypeChatMessage;
 extern NSString *const kNotificationCallIdKey;
 extern NSString *const kNotificationCallerKey;
 extern NSString *const kNotificationRoomnameKey;
-extern NSString *const kNotificationCallStatusKey; //IOSM-569
+extern NSString *const kNotificationCallStatusKey;
 extern NSString *const kNotificationTwilioType;
 extern NSString *const kNotificationTwilioVoiceCall;
 extern NSString *const kNotificationTwilioCallIdKey;

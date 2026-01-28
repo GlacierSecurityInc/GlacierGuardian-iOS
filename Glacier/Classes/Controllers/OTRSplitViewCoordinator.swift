@@ -110,7 +110,6 @@ open class OTRSplitViewCoordinator: NSObject, ConversationViewControllerDelegate
         
         //iPad check where there are two navigation controllers and we want the second one
         if splitVC.viewControllers.count > 1 && ((splitVC.viewControllers[1] as? UINavigationController)?.viewControllers.contains(cvc)) ?? false {
-            //IOSM#20
             //let navController = UINavigationController(rootViewController: cvc)
             //navController.topViewController!.navigationItem.leftBarButtonItem = splitVC.displayModeButtonItem;
             //navController.topViewController!.navigationItem.leftItemsSupplementBackButton = true;

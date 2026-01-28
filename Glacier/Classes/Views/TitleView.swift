@@ -9,7 +9,6 @@
 import UIKit
 import PureLayout
 
-//IOSM#60
 @objc public class TitleView: UIView {
     @objc var titleLabel : UILabel!
     @objc var titleConnectingView : UIActivityIndicatorView!

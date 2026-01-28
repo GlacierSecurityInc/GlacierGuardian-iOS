@@ -131,7 +131,6 @@ public class CallManager: XMPPModule {
     private var pendingAnswerCallActions: [UUID: CXAnswerCallAction] = [:]
     private var retractedCallIds: Set<String> = []
     
-    //IOSM#70
     var retryMessageList: [XMPPElement] = []
     var retryAcceptCallList: [XMPPElement] = []
     var retryRejectCallList: [XMPPElement] = []
@@ -220,7 +219,6 @@ public class CallManager: XMPPModule {
         self.webRtcConnectionDelegate = del
     }
     
-    //IOSM-527b
     @objc public func setCallStatusDelegate(_ del: CallStatusDelegateProtocol) {
         self.statusDelegate = del
     }
@@ -261,7 +259,6 @@ public class CallManager: XMPPModule {
         return jid.user ?? caller
     }
     
-    //IOSM-527
     private func getCallBuddyFromId(_ uniqueid: String) -> ChatBuddyModel? {
         return ChatBuddyModel.getBuddy(uniqueId: uniqueid)
     }
@@ -306,7 +303,7 @@ public class CallManager: XMPPModule {
     // changed to receivers and added name/title
     public func makeCall(_ receivers: [String], name: String, callType:CallType) -> Bool
     {
-        if (self.xmppStream?.isConnected == false) { //IOSM#70
+        if (self.xmppStream?.isConnected == false) {
             self.handleFailedCall(true)
             return false
         }
@@ -479,7 +476,7 @@ public class CallManager: XMPPModule {
         return "+" + digitsOnly
     }
     
-    @objc private func handleFailedCall(_ networkDown: Bool) { //IOSM#70
+    @objc private func handleFailedCall(_ networkDown: Bool) {
         var name = ""
         if let names = self.currentCall?.receiver?.components(separatedBy: ",") {
             for rec in names {
@@ -671,7 +668,7 @@ public class CallManager: XMPPModule {
         
         if let receivers = call.receiver?.components(separatedBy: ","), let call = self.currentCall, let callerjid = call.caller, let callid = call.callid, let acct = self.cAccount, let acctjid = acct.bareJID, let domain = acct.domain {
             DDLogDebug("sendJmiRetract")
-            for receiver in receivers { //IOSM-503 receivers
+            for receiver in receivers { // receivers
                 if let tojid = XMPPJID(string: receiver) {
                     self.performBlock(async: true){
                         let retractElement = XMLElement(name: "retract", xmlns: CallManager.JINGLE_MESSAGE)
@@ -986,7 +983,7 @@ public class CallManager: XMPPModule {
 extension CallManager: XMPPStreamDelegate {
     public func xmppStream(_ sender: XMPPStream, didReceive iq: XMPPIQ)  -> Bool {
         var result = false
-        //IOSM-455 added error type
+        // added error type
         if let type = iq.type, type == XMPPIQ.IQType.result.rawValue || type == XMPPIQ.IQType.error.rawValue {
             self.performBlock(async: true){
                 result = self.tracker?.invoke(for: iq, with: iq) ?? false
@@ -1157,8 +1154,8 @@ public class TwilioCall:AnyObject {
     public var systemMessage:String?
     public var callUuid:UUID?
     public var outgoing:Bool = true
-    public var isGroup:Bool = false //IOSM-545
-    public var isCaller:Bool = false //IOSM-527b
+    public var isGroup:Bool = false
+    public var isCaller:Bool = false
     public var isVoice:Bool = false
     public var audioOnly:Bool = false
     var contact:PhoneContact?
@@ -1327,7 +1324,7 @@ extension CallManager : CXProviderDelegate {
            currentCall.callstatus == .waiting,
            self.receivedRetract == false {
             //DDLogInfo("***** CXProvider:CXEndCallAction: awaitingCallResponse")
-            self.handleRejectCall() //IOSM-515 derivative
+            self.handleRejectCall() // derivative
         }
 
         self.endedCall = false
@@ -1584,7 +1581,7 @@ extension CallManager {
         }
     }
     
-    func handleBusyCall() { //IOSM-515
+    func handleBusyCall() {
         if let acct = self.cAccount, let bid = self.busyId {
             if OTRProtocolManager.sharedInstance().isAccountIdConnected(acct.uniqueId), let bcall = self.alternateCall {
                 //let bcall = TwilioCall()
@@ -1596,7 +1593,7 @@ extension CallManager {
         }
     }
     
-    func handleRejectCall() { //IOSM-515
+    func handleRejectCall() {
         if let acct = self.cAccount, let tcall = self.currentCall {
             if OTRProtocolManager.sharedInstance().isAccountIdConnected(acct.uniqueId) {
                 self.rejectCall(tcall, busy: false)
@@ -1615,9 +1612,9 @@ extension CallManager {
                 //DDLogInfo("***** handleLoginSuccess, still waiting for call info")
                 return
             }
-        } else if (self.waitingToRespondBusy) { //IOSM-515
+        } else if (self.waitingToRespondBusy) {
             handleBusyCall()
-        } else if (self.waitingToRespondReject) { //IOSM-515 derivative
+        } else if (self.waitingToRespondReject) { // derivative
             handleRejectCall()
         }
         self.waitingToAnswerCall = false
@@ -1805,7 +1802,7 @@ extension CallManager {
         let displayCaller = resolveCallerDisplayName(from: caller)
         if (self.currentCall == nil) {
             self.currentUuid = uuid
-            self.lastUuid = uuid //IOSM-569
+            self.lastUuid = uuid
             let call = TwilioCall()
             call.callid = callId
             call.caller = callerJidString
@@ -1958,7 +1955,7 @@ extension CallManager {
         var calltitle = caller
         if (self.currentCall == nil) {
             self.currentUuid = uuid
-            self.lastUuid = uuid //IOSM-569
+            self.lastUuid = uuid
             let call = TwilioCall()
             call.callid = callId
             call.caller = caller
@@ -2040,7 +2037,6 @@ extension CallManager {
         self.sendJmiRinging()
     }
     
-    //IOSM-569
     @objc public func reportMAMCallResponse(callId: String, status: String, completion: ((NSError?) -> Void)? = nil) {
         
         let caller = self.currentCall?.caller ?? "caller"
@@ -2438,9 +2434,9 @@ extension CallManager {
         if let tdel = gcdelegate {
             if (!tdel.isConnected()) {
                 if let uuid = self.currentUuid {
-                    //IOSM-545 if group call just let caller hang up if needed
+                    // if group call just let caller hang up if needed
                     if self.currentCall?.isGroup == true {
-                        /*if let title = self.currentCall?.calltitle { //IOSM-527b
+                        /*if let title = self.currentCall?.calltitle {
                             sendJoinMessage(from, callid: callid, calltitle: title)
                         }*/
                         return
@@ -2451,12 +2447,11 @@ extension CallManager {
                     performEndCallAction(uuid: uuid, userInitiated: false)
                 }
             } else if self.currentCall?.isGroup == true, let title = self.currentCall?.calltitle {
-                //sendJoinMessage(from, callid: callid, calltitle: title) //IOSM-527b
+                // sendJoinMessage(from, callid: callid, calltitle: title) //
             }
         }
     }
     
-    //IOSM-527b
     private func sendJoinMessage(_ to:XMPPJID, callid:String, calltitle:String) {
         self.performBlock(async: true){
             let updateElement = XMLElement(name: "x", xmlns: "jabber:x:callupdate")
@@ -2525,7 +2520,7 @@ extension CallManager {
         }
     }
     
-    //IOSM-527b (next 4)
+    // (next 4)
     @objc public func reportCallEnded() { //non call originators
         callToJoin = nil
         self.statusDelegate?.joinStatusUpdated(false)

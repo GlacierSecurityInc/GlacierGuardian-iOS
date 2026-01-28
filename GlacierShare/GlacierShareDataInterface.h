@@ -22,7 +22,7 @@
 - (NSArray * _Nonnull) getAllConversations;
 //- (void) doShare:(NSString * _Nonnull)text withOwner:(id<OTRThreadOwner>)owner;
 //- (void) doShare:(NSURL * _Nonnull)url withOwner:(id<OTRThreadOwner>)owner withType:(NSInteger)mediaType;
-//- (void) doShareData:(NSData * _Nonnull)data withOwner:(id<OTRThreadOwner>)owner withType:(NSInteger)mediaType; //IOSM-548
+// (void) doShareData:(NSData * _Nonnull)data withOwner:(id<OTRThreadOwner>)owner withType:(NSInteger)mediaType; //
 - (void) setupMediaManager;
-- (void)teardownStream; //IOSM-517
+- (void)teardownStream;
 @end

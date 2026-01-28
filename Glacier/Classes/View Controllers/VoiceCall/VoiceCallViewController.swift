@@ -37,7 +37,7 @@ import TwilioVoice
     @IBOutlet weak var disconnectButton: UIButton!
     @IBOutlet weak var mutedMark: UIButton!
     
-    @IBOutlet weak var bottomView: UIView! //IOSM-532
+    @IBOutlet weak var bottomView: UIView!
     
     var callManager: CallManager?
     
@@ -94,12 +94,11 @@ import TwilioVoice
         minimizedView.addGestureRecognizer(miniTapGesture)
         
         UIApplication.shared.isIdleTimerDisabled = true
-        NotificationCenter.default.addObserver(self, selector: #selector(becameActive), name: UIApplication.didBecomeActiveNotification, object: nil) //IOSM-521
+        NotificationCenter.default.addObserver(self, selector: #selector(becameActive), name: UIApplication.didBecomeActiveNotification, object: nil)
         
         setupViews()
     }
     
-    //IOSM-521
     @objc private func becameActive() {
         UIApplication.shared.isIdleTimerDisabled = true
         if CallManager.sharedCallManager().isSpeakerMode() {
@@ -286,7 +285,7 @@ import TwilioVoice
         appDelegate.callWindow?.frame = CGRect(x: 0, y: 0, width: screenSize.width, height: screenSize.height)
         minimizedView.isHidden = true
         mainView.isHidden = false
-        bottomView.isHidden = false //IOSM-532
+        bottomView.isHidden = false
         
         if appDelegate.isGroupChatController {
             appDelegate.chatRoomViewController.view.endEditing(true)
@@ -341,7 +340,7 @@ import TwilioVoice
         muteButton.isSelected = activeCall.isMuted
         
         self.callManager?.performMuteAction(uuid: uuid, isMuted: activeCall.isMuted)
-        self.viewTapped() //IOSM-475
+        self.viewTapped()
     }
     
     public func muteAudio(_ shouldMute: Bool) {
@@ -406,11 +405,11 @@ import TwilioVoice
             sender.isSelected = !sender.isSelected
             self.callManager?.performSpeakerAction(isSelected: sender.isSelected)
         }
-        self.viewTapped() //IOSM-475
+        self.viewTapped()
     }
     
     @IBAction func closeAction(_ sender: Any) {
-        self.bottomView.isHidden = true //IOSM-532
+        self.bottomView.isHidden = true
         let topSafeArea = view.safeAreaInsets.top
         let screenSize = UIScreen.main.bounds
         let appDelegate = UIApplication.shared.delegate as! OTRAppDelegate

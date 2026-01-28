@@ -35,7 +35,7 @@
 #import "OTRSettingsGroup.h"
 #import "OTRListSetting.h"
 #import "OTRValueSetting.h"
-#import "OTRSettingTableViewCell.h" //IOSM#19
+#import "OTRSettingTableViewCell.h"
 #import "OTRConversationCell.h"
 #import "OTRColors.h"
 #import "OTRAudioControlsView.h"

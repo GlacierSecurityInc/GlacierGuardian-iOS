@@ -54,7 +54,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) connect;
 - (void) connectUserInitiated:(BOOL)userInitiated;
-- (BOOL) connectFromBackground; //IOSM#80
+- (BOOL) connectFromBackground;
 
 - (void) disconnect;
 - (void) disconnectSocketOnly:(BOOL)socketOnly;

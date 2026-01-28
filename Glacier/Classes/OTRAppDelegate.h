@@ -36,14 +36,12 @@ NS_ASSUME_NONNULL_BEGIN
 //@property (nonatomic, strong, readonly) UIViewController *chatRoomViewController;
 @property (nonatomic, strong, readonly) OTRSplitViewCoordinator *splitViewCoordinator;
 
-//IOSM#76
 @property (assign, nonatomic) BOOL smsEnabled;
 @property (nonatomic, strong, readonly) SMSSplitViewCoordinator *smsSplitViewCoordinator;
 @property (nonatomic, strong, readonly) SMSViewController *smsViewController;
 @property (nonatomic, strong, readonly) SMSChatViewController *smsMessagesViewController;
 @property (nonatomic, strong, readonly) OTRSettingsViewController *settingsViewController;
 
-//IOSM#90
 @property (nonatomic, strong, readonly) UINavigationController *securityHubViewController;
 extern NSString *const SMSEnabledNotificationName; 
 extern NSString *const NetworkStatusNotificationName;
@@ -59,8 +57,8 @@ extern NSString *const NewNetworkStatusKey;
 
 // timer flag to handle double notifications
 @property (assign, nonatomic) BOOL doubleDone;
-@property (assign, nonatomic) BOOL groupReadReady; //IOSM#8
-@property (assign, nonatomic) BOOL silentUpdate; //IOSM#80
+@property (assign, nonatomic) BOOL groupReadReady;
+@property (assign, nonatomic) BOOL silentUpdate;
 @property (assign, nonatomic) BOOL voipNotification;
 @property (assign, nonatomic) BOOL amplifyIsConfigured;
 
@@ -77,13 +75,13 @@ extern NSString *const NewNetworkStatusKey;
 - (void)setDomain:(NSString *)address;
 - (void)bypassNetworkCheck:(BOOL)bypass;
 - (void) checkConnectionOrTryLogin;
-- (void) doSettingsController; //IOSM#76 (next 2)
+- (void) doSettingsController; // (next 2)
 - (void) setSMSEnabled:(BOOL)enabled;
 - (void) resetSMS;
-- (void) setSecurityHubEnabled:(BOOL)enabled; //IOSM#88
-//- (OTRNetworkConnectionStatus) getCurrentNetworkStatus; //IOSM-552 commented out
+- (void) setSecurityHubEnabled:(BOOL)enabled;
+// (OTRNetworkConnectionStatus) getCurrentNetworkStatus; // commented out
 - (BOOL) tryOpenURL:(NSURL*)url;
-- (void) goGlacierVoice; //IOSM#90
+- (void) goGlacierVoice;
 - (void) enableRebootReminder:(BOOL)enable;
 - (void)secInfoUpdated:(BOOL)success;
 - (void)setProxyDetected:(BOOL)detected;

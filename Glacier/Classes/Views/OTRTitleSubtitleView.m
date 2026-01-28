@@ -20,7 +20,7 @@ static const CGFloat kOTRMaxImageViewHeight = 6;
 
 @property (nonatomic, strong) UIImageView *titleImageView;
 @property (nonatomic, strong) UIImageView *subtitleImageView;
-@property (nonatomic, strong) UIActivityIndicatorView *dynConnectingView; //IOSM#60 from DGActivityIndicatorView
+@property (nonatomic, strong) UIActivityIndicatorView *dynConnectingView; // from DGActivityIndicatorView
 
 @property (nonatomic) BOOL addedConstraints;
 
@@ -58,7 +58,7 @@ static const CGFloat kOTRMaxImageViewHeight = 6;
         self.titleImageView = [[UIImageView alloc] initForAutoLayout];
         self.subtitleImageView = [[UIImageView alloc] initForAutoLayout];
         
-        self.dynConnectingView = [[UIActivityIndicatorView alloc] initForAutoLayout]; //IOSM#60
+        self.dynConnectingView = [[UIActivityIndicatorView alloc] initForAutoLayout];
         self.dynConnectingView.transform = CGAffineTransformMakeScale(0.75, 0.75);
         
         [self addSubview:self.titleImageView];
@@ -87,7 +87,7 @@ static const CGFloat kOTRMaxImageViewHeight = 6;
     //[backingbar autoAlignAxisToSuperviewAxis:ALAxisVertical].constant = 800;
     [self autoAlignAxisToSuperviewAxis:ALAxisVertical];
         
-    //IOSM-574 test and constant above
+    // test and constant above
     //[backingbar autoAlignAxisToSuperviewAxis:ALAxisHorizontal];
     [self autoAlignAxisToSuperviewAxis:ALAxisHorizontal];
         
@@ -113,11 +113,11 @@ static const CGFloat kOTRMaxImageViewHeight = 6;
     [self.dynConnectingView autoMatchDimension:ALDimensionHeight toDimension:ALDimensionHeight ofView:self.subtitleLabel withMultiplier:1.0 relation:NSLayoutRelationLessThanOrEqual];
 }
 
-//IOSM#60 changed from DGActivityIndicatorView
+// changed from DGActivityIndicatorView
 - (void)setupConstraintsWithDynView:(UIActivityIndicatorView *)imageView withLabel:(UILabel *)label
 {
     //Keeps trailing edge off of leading edge of label by at least 2
-    [imageView autoPinEdge:ALEdgeTrailing toEdge:ALEdgeLeading ofView:label withOffset:0.0]; //-5.0]; //IOSM-574 test
+    [imageView autoPinEdge:ALEdgeTrailing toEdge:ALEdgeLeading ofView:label withOffset:0.0]; // 5.0]; // test
     //Keep centered vertically
     [imageView autoAlignAxis:ALAxisHorizontal toSameAxisOfView:label];
     

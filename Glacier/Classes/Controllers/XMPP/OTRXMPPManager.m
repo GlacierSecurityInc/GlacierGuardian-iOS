@@ -406,7 +406,7 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
         
         /*dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), self.workQueue, ^{
                 [self.xmppStream disconnectAfterSending];
-        });*/ //IOSM-570
+        });*/
     } completionQueue:self.workQueue];
 }
 
@@ -489,7 +489,7 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
 {
     DDLogInfo(@"***** startConnection");
     [self setLoginStatus:OTRLoginStatusConnecting];
-    self.lastConnectAttempt = [NSDate date]; //IOSM-570
+    self.lastConnectAttempt = [NSDate date];
     
     XMPPJID *jid = [XMPPJID jidWithString:self.chatAccount.username resource:self.chatAccount.resource];
     
@@ -549,7 +549,6 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
         return;
     }
     
-    //IOSM-570
     self.loginStatus = OTRLoginStatusDisconnecting;
     __block NSDate *nowdate = [NSDate date];
     self.lastDisconnect = nowdate;
@@ -656,12 +655,11 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
     if (!probe) { return; }
     [self.xmppStream sendElement:probe];
     
-    //IOSM-168 presence probe doesn't work unless they are online
+    // presence probe doesn't work unless they are online
     XMPPIQ *lastActivity = [XMPPIQ lastActivityQueryTo:buddy.bareJID];
     [self.xmppStream sendElement:lastActivity];
 }
 
-//IOSM-168
 - (void) handleLastActivity:(NSString *)lastActivity fromJid:(XMPPJID *)jid {
     [ChatBuddyModel fetchBuddyAsyncWithJid:jid accountUniqueId:self.chatAccount.uniqueId queue:self.workQueue completion:^(ChatBuddyModel *buddy){
         if (!buddy) { return; }
@@ -926,7 +924,7 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
 {
     //DDLogWarn(@"%@: %@ %@", THIS_FILE, THIS_METHOD, error);
     
-    //DDLogWarn(@"Login status: %ld ", (long)self.loginStatus); //IOSM-570
+    // DDLogWarn(@"Login status: %ld ", (long)self.loginStatus); //
     //DDLogWarn(@"Last Connected: %@ ", self.lastConnected);
     //DDLogWarn(@"Last Disconnecting: %@ ", self.lastDisconnect);
     
@@ -981,7 +979,7 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
             //dispatch_async(self.workQueue, ^{
             [self.xmppvCardTempModule forceFetchvCardTempForJID:[sender myJID]];
             [self.fileTransferManager resumeDownloads];
-            //[self.callManager handleAuthentication]; //IOSM#70
+            // [self.callManager handleAuthentication]; //
             //});
         }
     });
@@ -998,7 +996,6 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
 - (BOOL)xmppStream:(XMPPStream *)sender didReceiveIQ:(XMPPIQ *)iq
 {
 	//DDLogVerbose(@"%@: %@ - %@", THIS_FILE, THIS_METHOD, iq);
-    //IOSM-168
     NSString *type = [iq type];
     XMPPJID *fromjid = [iq from];
     
@@ -1053,7 +1050,7 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
             return;
         }
         
-        //IOSM#70 ignore call related messages that arent stored in DB
+        // ignore call related messages that arent stored in DB
         if ([message elementForName:@"x" xmlns:@"jabber:x:callupdate"] || ![message elementForName:@"body"]) {
             return;
         }
@@ -1080,7 +1077,6 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
 
 - (void)finishDisconnectingIfNeeded {
     if (self.loginStatus == OTRLoginStatusDisconnecting) {
-        //IOSM-570
         [self.xmppStream disconnectAfterSending];
         //[self.xmppStream disconnect];
     }
@@ -1095,7 +1091,6 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
         [account saveXMPPAccountAsync];
         self.chatAccount.displayName = vCardTemp.nickname;
         
-        //IOSM-606
         XMPPvCardTemp *realvCardTemp = [self.xmppvCardTempModule.xmppvCardTempModuleStorage vCardTempForJID:self.xmppStream.myJID.bareJID xmppStream:self.xmppStream];
         if (realvCardTemp != nil) {
             realvCardTemp.nickname = vCardTemp.nickname;
@@ -1114,12 +1109,10 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
         [presence addChild:xElement];
         [self.xmppStream sendElement:presence];
         
-        //IOSM-606
         [self setRoomNicknames:vCardTemp.nickname];
     }
 }
 
-//IOSM-606
 - (void) setRoomNicknames:(NSString *)newnick {
     //__weak typeof(self)weakSelf = self;
     //async
@@ -1159,7 +1152,7 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
     // update my vCard to local nickname setting
     // currently this will clobber whatever you have on the server
     if ([self.xmppStream.myJID isEqualToJID:jid options:XMPPJIDCompareBare]) {
-        BOOL updateDisplayName = NO; //IOSM-606 and changes below
+        BOOL updateDisplayName = NO; // and changes below
         if (self.chatAccount.displayName.length &&
             vCardTemp.nickname.length &&
             ![vCardTemp.nickname isEqualToString:self.chatAccount.displayName]) {
@@ -1258,7 +1251,6 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
         //buddy = [ChatBuddyModel getBuddyWithUniqueId:buddy.uniqueId];
         //if (!buddy) { return; }
             
-        //IOSM-452
         NSString *nameStr = [item attributeStringValueForName:@"name"];
         if (![nameStr isEqualToString:vCard.nickname]) {
             vCard.nickname = nameStr;
@@ -1442,7 +1434,7 @@ failedToDisablePushWithErrorIq:(nullable XMPPIQ*)errorIq
         [xmppMessage addMarkableChatMarker];
     }
     
-    if (self.loginStatus == OTRLoginStatusAuthenticated) { //IOSM#70
+    if (self.loginStatus == OTRLoginStatusAuthenticated) {
         [self.xmppStream sendElement:xmppMessage];
     }
 }
@@ -1471,7 +1463,7 @@ failedToDisablePushWithErrorIq:(nullable XMPPIQ*)errorIq
         
         return;
     } else if ([self.xmppStream isConnecting] || [self.xmppStream isAuthenticating]) {
-        //IOSM-570 bypass if connecting already
+        // bypass if connecting already
         return;
     }
     [self startConnection];
@@ -1482,7 +1474,6 @@ failedToDisablePushWithErrorIq:(nullable XMPPIQ*)errorIq
     [self connectUserInitiated:NO];
 }
 
-//IOSM#80
 -(BOOL)connectFromBackground
 {
     if (([self.xmppStream isConnected] && [self.xmppStream isAuthenticated]) || [self.xmppStream isConnecting] || [self.xmppStream isAuthenticating]) {
@@ -1499,7 +1490,6 @@ failedToDisablePushWithErrorIq:(nullable XMPPIQ*)errorIq
         return;
     }
     
-    //IOSM#43
     if (!(self.loginStatus == OTRLoginStatusAuthenticated)) {
         return;
     }
@@ -1515,7 +1505,6 @@ failedToDisablePushWithErrorIq:(nullable XMPPIQ*)errorIq
 
 -(void)sendChatState:(ChatState)chatState withBuddyId:(NSString *)buddyUniqueId
 {
-    //IOSM#43
     if (!(self.loginStatus == OTRLoginStatusAuthenticated)) {
         return;
     }
@@ -1714,12 +1703,11 @@ managedBuddyObjectID
     XMPPMessage *tempMessage = [XMPPMessage messageWithType:@"chat" elementID:message.remoteMessageId];
     [tempMessage addAttributeWithName:@"from" stringValue:buddy.username];
     XMPPMessage *receiptMessage = [tempMessage generateReceiptResponse];
-    if (self.loginStatus == OTRLoginStatusAuthenticated) { //IOSM#43
+    if (self.loginStatus == OTRLoginStatusAuthenticated) {
         [self.xmppStream sendElement:receiptMessage];
     }
 }
 
-//IOSM-443
 -(void)sendReadReceipt:(id<MessageProtocol>)message {
     //if (!thread.isGroupThread) {
     //final boolean markable = packet.hasChild("markable", "urn:xmpp:chat-markers:0");
@@ -1749,7 +1737,7 @@ managedBuddyObjectID
     [receiptMessage addAttributeWithName:@"from" stringValue:jid.full];
     [receiptMessage addStorageHint:XMPPMessageStorageStore];
     
-    if (self.loginStatus == OTRLoginStatusAuthenticated) { //IOSM#70
+    if (self.loginStatus == OTRLoginStatusAuthenticated) {
         [self.xmppStream sendElement:receiptMessage];
     }
 }

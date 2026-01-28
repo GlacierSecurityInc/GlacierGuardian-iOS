@@ -28,7 +28,7 @@ import AVKit
     
     @IBOutlet weak var topView: UIView!
     @IBOutlet weak var closeButton: UIButton!
-    @IBOutlet weak var addButton: UIButton! //IOSM-527
+    @IBOutlet weak var addButton: UIButton!
     @IBOutlet weak var nameLabel: UILabel!
     @IBOutlet weak var progressLabel: UILabel!
     
@@ -42,7 +42,7 @@ import AVKit
     @IBOutlet weak var disconnectButton: UIButton!
     @IBOutlet weak var mutedMark: UIButton!
     
-    @IBOutlet weak var bottomView: UIView! //IOSM-532
+    @IBOutlet weak var bottomView: UIView!
     
     private lazy var routePickerView: AVRoutePickerView = {
         let picker = AVRoutePickerView()
@@ -76,7 +76,7 @@ import AVKit
     }
     
     deinit {
-        NotificationCenter.default.removeObserver(self) //IOSM-521
+        NotificationCenter.default.removeObserver(self)
         // We are done with camera
         self.currentCall?.webrtcClient?.terminateSession() //stopCaptureLocalVideo()
         self.currentCall?.webrtcClient = nil
@@ -109,13 +109,12 @@ import AVKit
         videoButton.isHidden = true
         
         UIApplication.shared.isIdleTimerDisabled = true
-        NotificationCenter.default.addObserver(self, selector: #selector(becameActive), name: UIApplication.didBecomeActiveNotification, object: nil) //IOSM-521
+        NotificationCenter.default.addObserver(self, selector: #selector(becameActive), name: UIApplication.didBecomeActiveNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleRouteChange(_:)), name: AVAudioSession.routeChangeNotification, object: nil)
         
         setupViews()
     }
     
-    //IOSM-521
     @objc private func becameActive() {
         UIApplication.shared.isIdleTimerDisabled = true
     }
@@ -166,7 +165,6 @@ import AVKit
         localRenderer?.translatesAutoresizingMaskIntoConstraints = false
         self.remoteRenderer?.delegate = self
         
-        //IOSM-532
         var localWidth = 63
         var localHeight = 112
         if (self.view.frame.size.width > 750) {
@@ -223,7 +221,6 @@ import AVKit
         let icFlipCameraImage = UIImage(named: "ic-flip-camera", in: GlacierInfo.resourcesBundle, compatibleWith: nil)
         flipButton.setImage(icFlipCameraImage, for: UIControl.State())
         
-        //IOSM-527
         addButton.tintColor = .white
         addButton.setFAIcon(icon: .FAVideoCamera, iconSize: 25, forState: UIControl.State())
         addButton.isHidden = true
@@ -415,7 +412,7 @@ import AVKit
         appDelegate.callWindow?.frame = CGRect(x: 0, y: 0, width: screenSize.width, height: screenSize.height)
         minimizedView.isHidden = true
         mainView.isHidden = false
-        bottomView.isHidden = false //IOSM-532
+        bottomView.isHidden = false
         
         if appDelegate.isGroupChatController {
             appDelegate.chatRoomViewController.view.endEditing(true)
@@ -461,7 +458,7 @@ import AVKit
             DDLogDebug("muteAction \(muteThis)")
             self.callManager?.performMuteAction(uuid: uuid, isMuted: muteThis)
         }
-        self.viewTapped() //IOSM-475
+        self.viewTapped()
     }
     
     public func muteAudio(_ shouldMute: Bool) {
@@ -495,7 +492,7 @@ import AVKit
     }
     
     @IBAction func videoAction(_ sender: UIButton) {
-        //IOSM-464 check permissions
+        // check permissions
         if let mgr = self.callManager, mgr.checkVideoPermissions() == true {
             handleVideoDenied()
             return
@@ -539,7 +536,7 @@ import AVKit
             self.callManager?.performSpeakerAction(isSelected: sender.isSelected)
             speakerButton.isSelected = sender.isSelected
         }
-        self.viewTapped() //IOSM-475
+        self.viewTapped()
         //profileImageView.isHidden = sender.isSelected
     }
     
@@ -558,16 +555,16 @@ import AVKit
         if let internalButton = routePickerView.subviews.compactMap({ $0 as? UIButton }).first {
             internalButton.sendActions(for: .touchUpInside)
         }
-        self.viewTapped() //IOSM-475
+        self.viewTapped()
     }
     
     @IBAction func flipCameraAction(_ sender: UIButton) {
         self.currentCall?.webrtcClient?.switchCamera()
-        self.viewTapped() //IOSM-475
+        self.viewTapped()
     }
     
     @IBAction func closeAction(_ sender: Any) {
-        self.bottomView.isHidden = true //IOSM-532
+        self.bottomView.isHidden = true
         let topSafeArea = view.safeAreaInsets.top
         let screenSize = UIScreen.main.bounds
         let appDelegate = UIApplication.shared.delegate as! OTRAppDelegate

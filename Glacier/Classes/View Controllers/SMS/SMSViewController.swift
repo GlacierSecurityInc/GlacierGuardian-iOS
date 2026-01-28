@@ -53,7 +53,7 @@ import MBProgressHUD
     
     var filteredConversations = [SMSChatConversation]()
     @objc public var delegate: SMSViewControllerDelegate?
-    var tabBar:GlacierTabs? //IOSM#90
+    var tabBar:GlacierTabs?
     
     var vmBtn:UIBarButtonItem?
     var vmBtnNew:UIBarButtonItem?
@@ -175,7 +175,6 @@ import MBProgressHUD
         self.navigationController?.navigationBar.scrollEdgeAppearance = appearance
         self.navigationController?.navigationBar.tintColor = titleColor
         
-        //IOSM#85
         if !self.shouldHaveToolTip && self.settingsButton.menu == nil {
             self.settingsButton.menu = self.smsMenu
         }
@@ -183,7 +182,6 @@ import MBProgressHUD
         self.navigationItem.leftBarButtonItem = self.settingsButton
         self.navigationItem.rightBarButtonItems = [composeBtn]
         
-        //IOSM#90
         self.tabBar = GlacierTabs()
         if let tabs = self.tabBar {
             self.navigationController?.view.addSubview(tabs)
@@ -271,7 +269,6 @@ import MBProgressHUD
         self.tableView.dataSource = self.dataSource
     }
     
-    //IOSM#90
     public func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
         self.navigationController?.popToRootViewController(animated: false)
         if let appDelegate = Application.shared.delegate as? OTRAppDelegate {
@@ -302,7 +299,7 @@ import MBProgressHUD
         //self.tableView.reloadData()
         self.tableView.tableHeaderView = nil
         self.tabBar?.isHidden = false
-        self.tabBar?.selectedItem = self.tabBar?.smsItem //IOSM#90
+        self.tabBar?.selectedItem = self.tabBar?.smsItem
         
         //check vm status
         self.handleVMStatus()
@@ -353,7 +350,7 @@ import MBProgressHUD
                 self.setSelectedAccount(selacct)
             }
             
-            if menuItems.count == 0 && tmgr.glacierSMS?.addUserToPurchaseNumbers == false { //IOSM#85
+            if menuItems.count == 0 && tmgr.glacierSMS?.addUserToPurchaseNumbers == false {
                 self.shouldHaveToolTip = true
                 self.settingsButton.menu = nil
                 self.settingsButton.addToolTip(description: "You are not authorized to add a number. Please contact your administrator.")

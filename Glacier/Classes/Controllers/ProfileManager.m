@@ -44,7 +44,6 @@
         [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://console.glacier.chat/forget-password/"] options:@{} completionHandler:nil];
     };
     
-    //IOSM-338
     OTRViewSetting *resetSecureConnectionsSetting = [[OTRViewSetting alloc] initWithTitle:@"Reset Secure Sessions" description:nil viewControllerClass:nil];
     resetSecureConnectionsSetting.actionBlock = ^void(id sender) {
         ChatProfileViewController *sourceVC = sender;
@@ -74,7 +73,7 @@
     OTRViewSetting *noOtherDevicesSetting = [[OTRViewSetting alloc] initWithTitle:@"No other devices" description:nil viewControllerClass:nil];
     OTRSettingsGroup *otherDevicesGroup = [[OTRSettingsGroup alloc] initWithTitle:@"Other Devices" settings:@[removeOtherDevicesSetting, noOtherDevicesSetting]];
     [settingsGroups addObject:otherDevicesGroup];
-    //end IOSM-479
+    // end
     
     _settingsDictionary = newSettingsDictionary;
     _settingsGroups = settingsGroups;

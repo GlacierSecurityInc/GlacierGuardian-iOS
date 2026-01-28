@@ -53,19 +53,17 @@ abstract_target 'GlacierPods' do
 
   pod 'IOCipher/GCDWebServer', :path => 'Submodules/IOCipher/IOCipher.podspec'
   
-  # GRDB with SQLCipher 4  IOSM#105
+  # GRDB with SQLCipher 4
   pod 'GRDB.swift/SQLCipher'
 
   # Crypto
   pod 'SignalProtocolObjC', :path => 'Submodules/SignalProtocol-ObjC/SignalProtocolObjC.podspec'
 
   # User Interface
-  # IOSM#61
   pod 'Agrume', :git => 'https://github.com/afriedmanGlacier/Agrume.git', :commit => '933d7663f3ece9041b2e39a464ccc9e04cba149a'
   pod 'SwiftyGif', '~> 5.4.5'
   pod 'Kingfisher', '~> 7.12.0'
   
-  # IOSM#69
   pod 'Giphy', '~> 2.2.12'
   pod 'Floaty', '~> 4.2.0'
   
@@ -108,7 +106,7 @@ target 'GlacierNotifications' do
 
   pod 'SQLCipher', '~> 4.10.0'
   
-  # GRDB with SQLCipher 4  IOSM#105
+  # GRDB with SQLCipher 4
   pod 'GRDB.swift/SQLCipher'
   
   pod 'SAMKeychain', :git => 'https://github.com/afriedmanGlacier/SAMKeychain.git'

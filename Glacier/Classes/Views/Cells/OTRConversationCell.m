@@ -149,7 +149,7 @@
     }
     
     if (messageError &&
-        !messageError.isAutomaticDownloadError && !lastMessage.isMessageIncoming && ![messageError.domain isEqualToString:@"Alamofire.AFError"]) { //IOSM#57 !AFError
+        !messageError.isAutomaticDownloadError && !lastMessage.isMessageIncoming && ![messageError.domain isEqualToString:@"Alamofire.AFError"]) { // !AFError
         if (!messageText.length) {
             messageText = ERROR_STRING();
         }
@@ -173,7 +173,6 @@
     self.dateLabel.textColor = lblColor;
     [self updateDateString:lastMessage.messageDate];
     
-    //IOSM#57
     if (messageError && [messageError.domain isEqualToString:@"Alamofire.AFError"]) {
         self.dateLabel.text = [NSString stringWithFormat:@"%@ %@", [NSString fa_stringForFontAwesomeIcon:FAIconClockO], self.dateLabel.text];
     } else if (lastMessage && !lastMessage.isMessageIncoming && !lastMessage.isSystemUpdate && !lastMessage.isMessageSent) {
@@ -246,8 +245,8 @@
                             @"conversationLabel":self.conversationLabel,
                             @"accountLabel":self.accountLabel};
     
-    NSDictionary *metrics = @{@"margin":[NSNumber numberWithFloat:OTRBuddyImageCellPadding],@"unreadMargin":[NSNumber numberWithFloat:5.0],@"conversationMargin":[NSNumber numberWithFloat:18.0]}; //IOSM-574 unreadMargin
-    //IOSM#56 added conversationMargin
+    NSDictionary *metrics = @{@"margin":[NSNumber numberWithFloat:OTRBuddyImageCellPadding],@"unreadMargin":[NSNumber numberWithFloat:5.0],@"conversationMargin":[NSNumber numberWithFloat:18.0]}; // unreadMargin
+    // added conversationMargin
     if (!self.addedConstraints) {
         [self.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:[unreadView]-unreadMargin-[imageView]-margin-[nameLabel]->=0-[dateLabel]-margin-|"
                                                                                  options:0
@@ -289,7 +288,6 @@
     else {
         self.accountHorizontalConstraints = @[];
         
-        //IOSM#56
         self.verticalConstraints = [NSLayoutConstraint constraintsWithVisualFormat:@"V:|-margin-[nameLabel(17)][conversationLabel]-conversationMargin-|"
                                                                            options:0
                                                                            metrics:metrics

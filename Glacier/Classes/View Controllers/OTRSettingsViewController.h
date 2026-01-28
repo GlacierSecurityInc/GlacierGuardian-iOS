@@ -39,14 +39,12 @@ NS_ASSUME_NONNULL_BEGIN
 -(void)changeDisplayName:(id)sender withNewName:(NSString *)newname;
 //-(void) handleLogout;
 
-//IOSM#19
 - (BOOL)needsSecurityAlert;
-- (BOOL)needsSecurityAwareness; //IOSM#99
+- (BOOL)needsSecurityAwareness;
 - (void)checkSecurity;
 - (void)setVersionIssue:(BOOL)versionIssue;
-- (SecurityInfoUtil* _Nullable) getLatestSecurityInfo; //IOSM#110
+- (SecurityInfoUtil* _Nullable) getLatestSecurityInfo;
 
-//IOSM#58
 - (void) setIgnoreCompromisedAlert:(BOOL)ignore;
 - (BOOL) getIgnoreCompromisedAlert; 
 

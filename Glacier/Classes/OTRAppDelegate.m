@@ -42,7 +42,7 @@
 #import "Glacier-Swift.h"
 #import "UITableView+ChatSecure.h"
 @import UserNotifications;
-@import BackgroundTasks; //IOSM#88
+@import BackgroundTasks;
 @import MBProgressHUD;
 
 @interface OTRAppDelegate ()
@@ -56,16 +56,15 @@
 
 @property (assign, nonatomic) BOOL bypass;
 //@property (nonatomic, strong, readwrite) NSDate *lastOnline;
-@property (nonatomic, strong) NSString * domainAddress; //IOSM-552
+@property (nonatomic, strong) NSString * domainAddress;
 
 @property (nonatomic, strong) PKPushRegistry *voipRegistry;
 
-@property UIBackgroundTaskIdentifier backgroundUpdateTask; //IOSM#80
+@property UIBackgroundTaskIdentifier backgroundUpdateTask;
 @property (nonatomic) dispatch_source_t backgroundUpdateTimer;
 @property (assign, nonatomic) BOOL rebootReminder;
 @property (assign, nonatomic) BOOL proxyDetected;
 
-//IOSM#88
 @property BGTask *backgroundRefreshTask;
 @property (assign, nonatomic) BOOL secUpdatesEnabled;
 
@@ -134,7 +133,7 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     self.silentUpdate = NO;
     self.voipNotification = NO;
     self.secUpdatesEnabled = NO;
-    self.smsEnabled = NO; //IOSM#90
+    self.smsEnabled = NO;
     self.isGroupController = NO;
     self.rebootReminder = YES;
     self.backgroundUpdateTask = UIBackgroundTaskInvalid;
@@ -149,10 +148,9 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     if (UIApplication.sharedApplication.isProtectedDataAvailable) {
         [self setDomainIfAvailable];
         [self checkConnectionOrTryLogin];
-        [_conversationViewController doSecurityCheck:NO]; //IOSM#19
+        [_conversationViewController doSecurityCheck:NO];
     }
     
-    //IOSM#90
     UINavigationController *smsNavController = [[UINavigationController alloc] initWithRootViewController:self.smsViewController];
     [self setupSMSSplitViewControllerWithLeadingViewController:smsNavController];
 
@@ -165,7 +163,6 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     [UIDevice currentDevice].batteryMonitoringEnabled = YES;
     [self batteryStateDidChange:nil];
     
-    //IOSM#88
     [[BGTaskScheduler sharedScheduler] registerForTaskWithIdentifier:kBgTaskId usingQueue:nil launchHandler:^(BGTask *task){
         //[self beginScheduledRefresh:task];
     }];
@@ -179,7 +176,7 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     [UNUserNotificationCenter currentNotificationCenter].delegate = self;
     
     [self registerVoIPNotifications];
-    //IOSM-517 derivative commented out
+    // derivative commented out
     //[self performSelector:@selector(migrateAccountPassword:) withObject:nil afterDelay:8.0];
     
     NSDictionary *notification = [launchOptions objectForKey:UIApplicationLaunchOptionsRemoteNotificationKey];
@@ -198,7 +195,7 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
         [DBManager sharedDB];
         [self setDomainIfAvailable];
         [self checkConnectionOrTryLogin];
-        [_conversationViewController doSecurityCheck:NO]; //IOSM#19
+        [_conversationViewController doSecurityCheck:NO];
     }
 }
 
@@ -257,8 +254,8 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     [self setDomainIfAvailable];
     //[self checkConnectionOrTryLogin];
     [_conversationViewController handleDatabaseInitialization];
-    [_conversationViewController doSecurityCheck:NO]; //IOSM#19
-    [[TwilioBackendManager sharedMgr] queryForNumbers]; //IOSM#76
+    [_conversationViewController doSecurityCheck:NO];
+    [[TwilioBackendManager sharedMgr] queryForNumbers];
     [self checkConnectionOrTryLogin];
 }
 
@@ -360,9 +357,7 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     return splitViewController;
 }
 
-//IOSM#76
 - (void) setSMSEnabled:(BOOL)enabled {
-    //IOSM#90
     if ((enabled && !self.smsEnabled) || (!enabled && self.smsEnabled)) {
         //send notification to listeners
         self.smsEnabled = enabled;
@@ -453,7 +448,7 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
 - (void)applicationDidEnterBackground:(UIApplication *)application
 {
     [self updateSharedAppActiveState:NO];
-    [self beginBackgroundUpdateTask]; //IOSM#80
+    [self beginBackgroundUpdateTask];
     
     self.enteringForeground = NO;
     self.doubleDone = NO;
@@ -469,7 +464,7 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     
     // logout when backgrounded. Push notifications should then occur with messages
     //[[OTRProtocolManager sharedInstance] disconnectAllAccounts];
-    [[OTRProtocolManager sharedInstance] goAwayForAllAccounts]; //IOSM#80
+    [[OTRProtocolManager sharedInstance] goAwayForAllAccounts];
 }
 
 // allows us to check if network is available
@@ -500,7 +495,7 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     }
 }
 
-//IOSM-552 commented out
+// commented out
 /*- (OTRNetworkConnectionStatus) getCurrentNetworkStatus {
  return OTRNetworkConnectionStatusConnected;
  //return _networkStatus;
@@ -531,16 +526,16 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     self.enteringForeground = YES;
     //autoLoginFromBackground
     
-    if (self.backgroundUpdateTask != UIBackgroundTaskInvalid) { //IOSM#80
+    if (self.backgroundUpdateTask != UIBackgroundTaskInvalid) {
         DDLogInfo(@"**** Application entering foreground, stopping background task");
         [self cancelBackgroundUpdateTimer];
         [[UIApplication sharedApplication] endBackgroundTask: self.backgroundUpdateTask];
         self.backgroundUpdateTask = UIBackgroundTaskInvalid;
     }
     
-    [_conversationViewController doSecurityCheck:NO]; //IOSM#19
-    [[TwilioBackendManager sharedMgr] queryForNumbers]; //IOSM#76
-    [[TwilioBackendManager sharedMgr] queryForVMInfo]; //IOSM#76
+    [_conversationViewController doSecurityCheck:NO];
+    [[TwilioBackendManager sharedMgr] queryForNumbers];
+    [[TwilioBackendManager sharedMgr] queryForVMInfo];
     [self checkConnectionOrTryLogin];
 }
 
@@ -564,7 +559,7 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     //[self autoLoginFromBackground:NO];
 }
 
-//IOSM-552 (next 2)
+// (next 2)
 - (BOOL)hasAddress {
     if (self.domainAddress) {
         return YES;
@@ -631,7 +626,7 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     [glacierDefaults setBool:isActive forKey:kGlacierAppIsActiveKey];
 }
 
-- (void) handleGroupReadReadyNotification:(id)sender //IOSM#8
+- (void) handleGroupReadReadyNotification:(id)sender
 {
     self.groupReadReady = YES;
 }
@@ -715,7 +710,6 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     DDLogError(@"Error in registration. Error: %@%@", [err localizedDescription], [err userInfo]);
 }
 
-//IOSM#80
 - (void)application:(UIApplication *)application
 didReceiveRemoteNotification:(NSDictionary *)userInfo
 fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler
@@ -739,7 +733,7 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandl
     }
 }
 
-//IOSM#80 (next 2-3)
+// (next 2-3)
 - (void) beginBackgroundUpdateTask
 {
     //NSLog(@"**** Application beginBackgroundUpdateTask com.apple.pushLaunch");
@@ -829,7 +823,7 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandl
     });
 }
 
-//IOSM#88 (next 4)
+// (next 4)
 - (void) beginScheduledRefresh:(BGTask*)task
 {
     //NSLog(@"***** BGTaskScheduler beginScheduledRefresh");
