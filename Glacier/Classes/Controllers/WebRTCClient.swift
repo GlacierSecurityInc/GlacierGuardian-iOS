@@ -1,11 +1,7 @@
-//
-//  WebRTCClient.swift
 //  WebRTC
-//
 //  Created by Stasel on 20/05/2018.
 //  Copyright © 2018 Stasel. All rights reserved.
 //  Copyright © 2025 Glacier. All rights reserved.
-//
 
 import WebRTC
 
@@ -51,9 +47,6 @@ final class WebRTCClient: NSObject {
         fatalError("WebRTCClient:init is unavailable")
     }
     
-    //deinit {
-    //    DDLogDebug("Deinit of webrtc client for delegate: \(String(describing:self.delegate))")
-    //}
     
     @objc
     static func createPeerConnection(iceServers: [RTCIceServer], forceRelay: Bool) -> RTCPeerConnection? {
@@ -71,19 +64,15 @@ final class WebRTCClient: NSObject {
         // gatherContinually will let WebRTC to listen to any network changes and send any new candidates to the other client
         config.continualGatheringPolicy = .gatherContinually
         
-        //config.tcpCandidatePolicy = .disabled       // XEP-0176 doesn't support tcp
         config.rtcpMuxPolicy = .negotiate
         
         //aggressive pings to detect wifi - mobile handoffs better
-        //config.iceConnectionReceivingTimeout = 1000
-        //config.iceBackupCandidatePairPingInterval = 2000
         //Increase timeout to allow more time before an ICE connection is
         //considered lost. The interval for pinging backup candidate pairs is
         //also increased to match the new timeout.
         config.iceConnectionReceivingTimeout = 1000 //0
         config.iceBackupCandidatePairPingInterval = 2000 //0
         
-        //bigger jitter buffer for better audio quality (2s, default: 1s)
         config.audioJitterBufferMaxPackets = 100;
         
         // Define media constraints. DtlsSrtpKeyAgreement is required to be true to be able to connect with web browsers.
@@ -95,7 +84,6 @@ final class WebRTCClient: NSObject {
             "voiceActivityDetection": kRTCMediaConstraintsValueTrue
         ])
         
-        //DDLogInfo("iceConnectionReceivingTimeout=\(config.iceConnectionReceivingTimeout), iceBackupCandidatePairPingInterval=\(config.iceBackupCandidatePairPingInterval)");
         return WebRTCClient.factory.peerConnection(with: config, constraints: constraints, delegate: nil)
     }
     
@@ -118,7 +106,6 @@ final class WebRTCClient: NSObject {
         
         self.createMediaSenders(audioOnly: audioOnly)
         self.peerConnection.delegate = self
-        //self.rtcAudioSession.add(self)
         
         if audioOnly {
             self.mediaConstraints = [
@@ -186,7 +173,6 @@ final class WebRTCClient: NSObject {
     }
     
     func forceSetupPassive(in sdp: String) -> String {
-        // Replace all instances of a=setup:active with a=setup:passive
         return sdp.replacingOccurrences(of: "a=setup:active", with: "a=setup:passive")
     }
     
@@ -287,9 +273,8 @@ final class WebRTCClient: NSObject {
             self.isSwitchingCamera = true
 
             self.isUsingFrontCamera.toggle()
-            //if let safeFormat = findSafeFormat(for: newDevice)
             guard let newDevice = self.getCameraDevice(usingFront: self.isUsingFrontCamera),
-                  let format = findSafeFormat(for: newDevice),//RTCCameraVideoCapturer.supportedFormats(for: newDevice).last,
+                  let format = findSafeFormat(for: newDevice),
                   let fps = format.videoSupportedFrameRateRanges.first?.maxFrameRate else {
                 DDLogWarn("Could not find valid camera device or format.")
                 self.isSwitchingCamera = false
@@ -343,8 +328,6 @@ final class WebRTCClient: NSObject {
     
     @objc
     func renderRemoteVideo(to renderer: RTCVideoRenderer) {
-        //let uhoh = self.remoteVideoTrack == nil
-        //DDLogDebug("***** renderRemoteVideo, with uhoh \(uhoh)")
         self.remoteVideoTrack?.add(renderer)
     }
     
@@ -360,9 +343,6 @@ final class WebRTCClient: NSObject {
         let videoTrack = self.createVideoTrack()
         self.localVideoTrack = videoTrack
         self.peerConnection.add(videoTrack, streamIds: [self.streamId])
-        /*self.remoteVideoTrack = self.peerConnection.transceivers.first {
-            $0.mediaType == .video
-        }?.receiver.track as? RTCVideoTrack*/
     }
     
     @objc
@@ -390,12 +370,10 @@ final class WebRTCClient: NSObject {
             try self.rtcAudioSession.setPreferredIOBufferDuration(0.2)
             try self.rtcAudioSession.setCategory(AVAudioSession.Category.playAndRecord)
             try self.rtcAudioSession.setMode(AVAudioSession.Mode.voiceChat)
-                //try self.rtcAudioSession.setActive(true)
         } catch let error {
             DDLogDebug("Error changeing AVAudioSession category: \(error)")
         }
         self.rtcAudioSession.useManualAudio = true
-        //self.rtcAudioSession.isAudioEnabled = true
         self.rtcAudioSession.unlockForConfiguration()
     }
     
@@ -403,20 +381,14 @@ final class WebRTCClient: NSObject {
         //Audio
         let audioTrack = self.createAudioTrack()
         self.peerConnection.add(audioTrack, streamIds: [self.streamId])
-        //self.rtcAudioSession.isAudioEnabled = true
         
         //Video
         if !audioOnly {
-            // see https://stackoverflow.com/a/43765394
             self.addVideo()
         }
         
         //we don't use any data channels for A/V calls
 //         // Data
-//         if let dataChannel = createDataChannel() {
-//             dataChannel.delegate = self
-//             self.localDataChannel = dataChannel
-//         }
     }
     
     private func createAudioTrack() -> RTCAudioTrack {
@@ -431,7 +403,6 @@ final class WebRTCClient: NSObject {
         
         self.videoCapturer = RTCCameraVideoCapturer(delegate: videoSource)
         
-        //see https://bugs.chromium.org/p/webrtc/issues/detail?id=10006#c2
         let aClass: AnyClass! = object_getClass(self.videoCapturer!)
         let bClass: AnyClass! = object_getClass(self)
         if self.videoCapturer!.responds(to: NSSelectorFromString("updateOrientation")) {
@@ -509,7 +480,6 @@ extension WebRTCClient: RTCPeerConnectionDelegate {
     }
     
     func peerConnection(_ peerConnection: RTCPeerConnection, didGenerate candidate: RTCIceCandidate) {
-        //print("***** Candidate: \(candidate.sdp)")
         self.delegate?.webRTCClient(self, didDiscoverLocalCandidate: candidate)
     }
     
@@ -561,13 +531,11 @@ extension WebRTCClient {
 extension WebRTCClient {
     @objc
     func muteAudio() {
-        //self.rtcAudioSession.isAudioEnabled = false
         self.setAudioEnabled(false)
     }
     
     @objc
     func unmuteAudio() {
-        //self.rtcAudioSession.isAudioEnabled = true
         self.setAudioEnabled(true)
     }
     
@@ -578,7 +546,6 @@ extension WebRTCClient {
             isEnabled = sender.track?.isEnabled ?? true
         }
         return isEnabled
-        //return self.rtcAudioSession.isAudioEnabled
     }
     
     // Fallback to the default playing device: headphones/bluetooth/ear speaker
@@ -593,7 +560,6 @@ extension WebRTCClient {
             self.rtcAudioSession.lockForConfiguration()
             do {
                 try self.rtcAudioSession.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetooth])
-                //try self.rtcAudioSession.setCategory(AVAudioSession.Category.playAndRecord)
                 try self.rtcAudioSession.overrideOutputAudioPort(.none)
             } catch let error {
                 DDLogDebug("Error setting AVAudioSession category: \(error)")
@@ -617,7 +583,6 @@ extension WebRTCClient {
                 try self.rtcAudioSession.setPreferredIOBufferDuration(0.2)
                 try self.rtcAudioSession.setCategory(AVAudioSession.Category.playAndRecord)
                 try self.rtcAudioSession.overrideOutputAudioPort(.speaker)
-                //try self.rtcAudioSession.setActive(true)
             } catch let error {
                 DDLogDebug("Couldn't force audio to speaker: \(error)")
             }
@@ -630,27 +595,14 @@ extension WebRTCClient {
     }
     
     private func setAudioEnabled(_ isEnabled: Bool) {
-        //setTrackEnabled(RTCAudioTrack.self, isEnabled: isEnabled)
         self.audioQueue.async { [weak self] in
             if let sender = self?.peerConnection.senders.first(where: { $0.track is RTCAudioTrack }) {
-                //DDLogInfo("***** setAudioEnabled: \(isEnabled)")
                 sender.track?.isEnabled = isEnabled // mutes the mic
             }
         }
     }
 }
 
-/*extension WebRTCClient: RTCAudioSessionDelegate {
-    func audioSession(_ audioSession: RTCAudioSession, didChangeRoute reason: AVAudioSession.RouteChangeReason) {
-        
-        //let audioSession = RTCAudioSession.sharedInstance()
-        let currentRoute = audioSession.currentRoute
-
-        for output in currentRoute.outputs {
-            print("***** Current audio output port: \(output.portType) (\(output.portName))")
-        }
-    }
-}*/
 
 extension WebRTCClient: RTCDataChannelDelegate {
     func dataChannelDidChangeState(_ dataChannel: RTCDataChannel) {

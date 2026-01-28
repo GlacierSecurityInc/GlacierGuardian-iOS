@@ -1,19 +1,13 @@
-//
-//  DBManager.swift
 //  Glacier
-//
 //  Created by andyfriedman on 12/29/22.
 //  Copyright © 2022 Glacier. All rights reserved.
-//
 
 import GRDB
 import SAMKeychain
 import Foundation
 
 /// DBManager lets the application access the database.
-///
 /// It applies the pratices recommended at
-/// <https://github.com/groue/GRDB.swift/blob/master/Documentation/GoodPracticesForDesigningRecordTypes.md>
 @objc public class DBManager: Transactable {
     
     private static let shared = DBManager()
@@ -21,7 +15,6 @@ import Foundation
     private var _grdbStorage: DBStorageCoordinator?
     private var hasPendingCrossProcessWrite = false
     private var needsDataMigration = false
-    //public var dbStatements = DBStatements()
 #if !TARGET_IS_EXTENSION
     private var mediaServer: OTRMediaServer?
 #endif
@@ -112,9 +105,6 @@ import Foundation
 #if !TARGET_IS_EXTENSION
                 self.verifyMediaSetup()
 #endif
-                /*DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: DBManager.didSetupDatabase, object: self)
-                }*/
             })
         }
     }
@@ -136,8 +126,6 @@ import Foundation
                 if let data = SAMKeychain.passwordData(forService: kGlacierKeySpec, account: GlacierMediaPassphraseName, accessGroup: kGlacierKeyGroup, error: nil) {
                     let datastr = data.hexEncodedString()
                     if datastr.count == DBStorageCoordinator.kSQLCipherKeySpecLength*2 {
-                       // var index = datastr.index(strH.startIndex, offsetBy: 64)
-                        //datastr.substring(from: range.)
                         if password == nil {
                             password = String(datastr.prefix(64))
                             if let passwd = password {
@@ -206,11 +194,6 @@ import Foundation
     
     private func addObservers() {
             // Cross process writes
-        /*crossProcess.callback = { [weak self] in
-            DispatchQueue.main.async {
-                self?.handleCrossProcessWrite()
-            }
-        }*/
         NotificationCenter.default.addObserver(self, selector: #selector(didBecomeActive), name:UIApplication.didBecomeActiveNotification, object: nil)
     }
     
@@ -223,7 +206,6 @@ import Foundation
     }
 
     @objc public func resetAllStorage() {
-        //DBStorageCoordinator.resetAllStorage()
     }
     
     // completion is performed on the main queue.
@@ -235,10 +217,7 @@ import Foundation
                     isMainDatabase: true
                 )
             } catch {
-                //DatabaseCorruptionState.flagDatabaseCorruptionIfNecessary(
-                //    userDefaults: CurrentAppContext().appUserDefaults(),
                 //    error: error
-                //)
                 fatalError("Database migration failed. Error: \(error.grdbErrorForLogging)")
             }
         }()
@@ -254,7 +233,6 @@ import Foundation
     
     public func reopenGRDBStorage(completion: @escaping () -> Void = {}) {
         // There seems to be a rare issue where at least one reader or writer
-        // (e.g. SQLite connection) in the GRDB pool ends up "stale" after
         // a schema migration and does not reflect the migrations.
         grdbStorage.pool.releaseMemory()
         _grdbStorage = createGrdbStorage()
@@ -266,35 +244,22 @@ import Foundation
 
     
     @objc func didBecomeActive() {
-        //AssertIsOnMainThread()
 
-        //guard hasPendingCrossProcessWrite else {
         //    return
-        //}
-        //hasPendingCrossProcessWrite = false
 
-        //postCrossProcessNotificationActiveAsync()
     }
     
     private func handleCrossProcessWrite() {
-        //AssertIsOnMainThread()
 
-        //guard CurrentAppContext().isMainApp else {
         //    return
-        //}
 
         // Post these notifications always, sync.
         NotificationCenter.default.post(name: DBManager.didReceiveCrossProcessNotificationAlwaysSync, object: nil, userInfo: nil)
 
         // Post these notifications async and defer if inactive.
-        //if Application.shared.applicationState == .active {
-        //if CurrentAppContext().isMainAppAndActive {
             // If already active, update immediately.
             postCrossProcessNotificationActiveAsync()
-        //} else {
             // If not active, set flag to update when we become active.
-            //hasPendingCrossProcessWrite = true
-        //}
     }
 
     @objc
@@ -307,8 +272,6 @@ import Foundation
         //       expensive work.  It'd be nice to only fire this event
         //       if this had any effect, if the state of the database
         //       has changed.
-        //
-        //       In the meantime, most (all?) cross process write notifications
         //       will be delivered to the main app while it is inactive. By
         //       de-bouncing notifications while inactive and only updating
         //       once when we become active, we should be able to effectively
@@ -324,7 +287,6 @@ import Foundation
                               function: String = #function,
                               line: Int = #line,
                               block: (GRDBReadTransaction) -> Void) {
-        //InstrumentsMonitor.measure(category: "db", parent: "read", name: Self.owsFormatLogMessage(file: file, function: function, line: line)) {
             do {
                 try grdbStorage.read { transaction in
                     block(transaction)
@@ -332,7 +294,6 @@ import Foundation
             } catch {
                 fatalError("error: \(error.grdbErrorForLogging)")
             }
-        //}
     }
 
     @objc(readWithBlock:)
@@ -345,7 +306,6 @@ import Foundation
         read(file: String(cString: file), function: String(cString: function), line: line, block: block)
     }
 
-    // NOTE: This method is not @objc. See SDSDatabaseStorage+Objc.h.
     public override func write(file: String = #file,
                                function: String = #function,
                                line: Int = #line,
@@ -357,30 +317,19 @@ import Foundation
         }
         #endif
 
-        //let benchTitle = "Slow Write Transaction \(Self.owsFormatLogMessage(file: file, function: function, line: line))"
-        //let timeoutThreshold = DebugFlags.internalLogging ? 0.1 : 0.5
 
-        //InstrumentsMonitor.measure(category: "db", parent: "write", name: Self.owsFormatLogMessage(file: file, function: function, line: line)) {
             do {
                 try grdbStorage.write { transaction in
-                    //Bench(title: benchTitle, logIfLongerThan: timeoutThreshold, logInProduction: true) {
                         block(transaction)
-                    //}
                 }
             } catch {
                 fatalError("error: \(error.grdbErrorForLogging)")
             }
-        //}
-        //crossProcess.notifyChangedAsync()
     }
     
     /// Provides access to the database.
-    ///
     /// Application can use a `DatabasePool`, and tests can use a fast
     /// in-memory `DatabaseQueue`.
-    ///
-    /// See <https://swiftpackageindex.com/groue/grdb.swift/documentation/grdb/databaseconnections>
-    //private let dbWriter: any DatabaseWriter
 }
 
 #if !TARGET_IS_EXTENSION

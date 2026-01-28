@@ -1,7 +1,4 @@
-//
-//  SwiftyToolTip.swift
 //  FBSnapshotTestCase
-//
 //  Created by Bob De Kort on 5/17/18.
 //IOSM#85
 import Foundation
@@ -65,10 +62,6 @@ class TabBarToolTip {
     }
 }
 
-/*
- Possible gestures to activate tooltip
- TODO: Think of clean way to just use UIGestureRecognizer
- */
 public enum ViewDescriptionGestures {
     case doubleTap
     case longPress
@@ -92,12 +85,6 @@ public enum SenderTypes {
 }
 
 // MARK: SwiftyToolTipManager
-/*
- A manager that holds:
- - The presentation window,
- - Preferences for the tooltip appearance
- - All active tooltips
- */
 class SwiftyToolTipManager {
     // Singleton
     static let instance = SwiftyToolTipManager()
@@ -416,9 +403,6 @@ extension String {
 }
 
 // MARK: UIView+Extension
-/*
- This extension is what the developer should interact with.
- */
 public extension UIView {
     /**
      Adds a tooltip to the ToolTipManager and sets up the gesture to activate the tooltip on the view.
@@ -451,18 +435,10 @@ public extension UIView {
         }
     }
     
-    /*
-     Displays the tooltip from self
-     */
     @objc func showToolTip() {
         SwiftyToolTipManager.instance.showToolTip(sender: self)
     }
     
-    /*
-     Removes the tooltip from the Tooltip manager and removes the gesture from the view.
-     
-     - parameter isUserInteractive: Allows you to disable the userinteractivity after removing the gesture. Use this to keep buttons clickable and make sure the view does not contain other gesture recognizers. Default = true
-     */
     func removeToolTip(isUserInteractive: Bool = true) {
         // Remove description from manager return value if there was a tooltip
         if SwiftyToolTipManager.instance.removeToolTip(view: self) != nil {
@@ -524,9 +500,6 @@ extension UIBarButtonItem {
         }
     }
     
-    /*
-     Displays the tooltip from self
-     */
     @objc public func showToolTip() {
         SwiftyToolTipManager.instance.showToolTip(sender: self)
     }
@@ -538,10 +511,6 @@ extension UIBarButtonItem {
         return false
     }
     
-    /*
-     Removes the tooltip from the Tooltip manager and removes the gesture from the view.
-     Make sure the tooltip is called in ViewDidAppear as the BarButtonItem has to be on screen and loaded.
-     */
     public func removeToolTip() {
         // Remove description from manager return value if there was a tooltip
         if SwiftyToolTipManager.instance.removeToolTip(barButton: self) != nil {

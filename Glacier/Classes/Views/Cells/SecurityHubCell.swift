@@ -1,10 +1,6 @@
-//
-//  SecurityHubCell.swift
 //  Glacier
-//
 //  Created by andyfriedman on 3/8/22.
 //  Copyright © 2022 Glacier. All rights reserved.
-//
 
 import UIKit
 import PureLayout;
@@ -42,7 +38,6 @@ import PureLayout;
             let topbottom = (self.bounds.height - 10) / 2
             self.securityAlertView.autoSetDimensions(to: CGSize(width: 10.0, height: 10.0))
             self.securityAlertView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: topbottom, left: 2, bottom: topbottom, right: 2), excludingEdge:ALEdge.trailing)
-            //self.securityAlertView.autoMatch(ALDimension.height, to: ALDimension.width, of: self.securityAlertView)
             
             self.addedConstraints = true;
         }

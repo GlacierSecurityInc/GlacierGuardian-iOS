@@ -37,7 +37,6 @@ extension TunnelConfiguration {
     }
 
     convenience init(fromWgQuickConfig wgQuickConfig: String, called name: String? = nil) throws {
-        //NSLog("***** TunnelConfiguration fromWgQuickConfig")
         var interfaceConfiguration: InterfaceConfiguration?
         var peerConfigurations = [PeerConfiguration]()
 

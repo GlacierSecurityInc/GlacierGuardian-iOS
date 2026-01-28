@@ -1,10 +1,6 @@
-//
-//  OTRComposeGroupViewController.swift
 //  ChatSecure
-//
 //  Created by N-Pex on 2017-08-15.
 //  Copyright © 2017 Chris Ballinger. All rights reserved.
-//
 
 import Foundation
 import UIKit
@@ -33,9 +29,7 @@ open class OTRComposeGroupViewController: UIViewController, UITableViewDelegate,
     var filteredBuddies:[ChatBuddy] = []
     
     var selectedItems:[ChatBuddy] = []
-    //var prototypeCell:OTRComposeGroupBuddyCell?
     var existingItems = Set<String>()
-    //var waitingForExcludedItems = false
     @objc public var groupName:String?
     
     override open func viewDidLoad() {
@@ -68,7 +62,6 @@ open class OTRComposeGroupViewController: UIViewController, UITableViewDelegate,
         self.tableView.register(OTRBuddyInfoCheckableCell.self, forCellReuseIdentifier: OTRBuddyInfoCheckableCell.reuseIdentifier())
     }
     
-    //IOSM#9 (next 7, all search functions)
     func setupSearchController() {
         
         self.tableViewHeader.backgroundColor = UIColor.systemGroupedBackground
@@ -163,7 +156,6 @@ open class OTRComposeGroupViewController: UIViewController, UITableViewDelegate,
     @IBAction open func didPressDone(_ sender: Any) {
         guard selectedItems.count > 0, let delegate = self.delegate else { return }
         var buddyIds:[String] = []
-        //var generatedGroupName = ""
         for buddy in selectedItems {
             buddyIds.append(buddy.uniqueId)
         }
@@ -240,7 +232,6 @@ open class OTRComposeGroupViewController: UIViewController, UITableViewDelegate,
             }
             self.doneButton.isEnabled = (selectedItems.count > 0)
             tableView.reloadRows(at: [indexPath], with: .automatic)
-            //updateFiltering()
         }
     }
     
@@ -248,18 +239,10 @@ open class OTRComposeGroupViewController: UIViewController, UITableViewDelegate,
         if let index = selectedItems.firstIndex(of: buddy) {
             selectedItems.remove(at: index)
             self.doneButton.isEnabled = (selectedItems.count > 0)
-            //updateFiltering()
             tableView.reloadData()
         }
     }
 
-    /*open func updateFiltering() {
-        if (selectedItems.count == 0) {
-            filterOnAccount(accountUniqueId: nil)
-        } else if (selectedItems.count == 1) {
-            filterOnAccount(accountUniqueId: selectedItems[0].accountUniqueId)
-        }
-    }*/
     
     open func setExisting(roomOccupants:Set<String>, room:ChatRoomModel?) {
         self.existingItems = roomOccupants

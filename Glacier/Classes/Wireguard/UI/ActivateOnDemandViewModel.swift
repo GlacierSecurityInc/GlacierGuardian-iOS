@@ -1,10 +1,6 @@
-//
-//  ActivateOnDemandViewModel.swift
 //  Glacier
-//
 //  Created by andyfriedman on 9/16/24.
 //  Copyright © 2024 Glacier. All rights reserved.
-//
 
 import Foundation
 

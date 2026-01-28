@@ -1,10 +1,6 @@
-//
-//  OTRXMPPChangeAvatar.swift
 //  ChatSecure
-//
 //  Created by David Chiles on 1/24/17.
 //  Copyright © 2017 Chris Ballinger. All rights reserved.
-//
 
 import Foundation
 import XMPPFramework

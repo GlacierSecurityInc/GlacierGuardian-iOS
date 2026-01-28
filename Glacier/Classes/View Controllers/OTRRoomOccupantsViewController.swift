@@ -1,10 +1,6 @@
-//
-//  OTRRoomOccupantsViewController.swift
 //  ChatSecure
-//
 //  Created by David Chiles on 10/28/15.
 //  Copyright © 2015 Chris Ballinger. All rights reserved.
-//
 
 import Foundation
 import UIKit
@@ -37,12 +33,11 @@ private enum DynamicCellIdentifier: String {
     case omemoConfig = "cellGroupOMEMOConfig"
 }
 
-/// Cell identifiers from the OTRRoomOccupants.storyboard
 private enum StoryboardCellIdentifier: String {
     case groupName = "cellGroupName"
     case share = "cellGroupShare"
     case addFriends = "cellGroupAddFriends"
-    case pinned = "cellGroupPinned" // (and all pinned below)
+    case pinned = "cellGroupPinned"
     case mute = "cellGroupUnmute"
     case members = "cellGroupMembers"
     case leave = "cellGroupLeave"
@@ -59,19 +54,7 @@ private class GenericHeaderCell: UITableViewCell {
 
 fileprivate let headerSection = 0
 fileprivate let occupantsSection = 0
-//fileprivate let footerSection = 1
 
-/*fileprivate var headerRows:[String] = [
-    CellIdentifier.HeaderCellGroupName,
-    CellIdentifier.HeaderCellAddFriends,
-    CellIdentifier.HeaderCellPinned,
-    CellIdentifier.HeaderCellMute,
-    CellIdentifier.HeaderCellMembers,
-    CellIdentifier.FooterCellLeave
-]*/
-//fileprivate var footerRows:[String] = [
-//    CellIdentifier.FooterCellLeave
-//]
 
 open class OTRRoomOccupantsViewController: UIViewController {
     @objc public weak var delegate:OTRRoomOccupantsViewControllerDelegate? = nil
@@ -86,7 +69,6 @@ open class OTRRoomOccupantsViewController: UIViewController {
         CellIdentifier.HeaderCellAddFriends,
         CellIdentifier.HeaderCellPinned,
         CellIdentifier.HeaderCellMute,
-        //CellIdentifier.HeaderCellMembers,
         CellIdentifier.FooterCellLeave
     ]
     
@@ -125,7 +107,6 @@ open class OTRRoomOccupantsViewController: UIViewController {
         guard let _ = self.room else {
             return
         }
-        //self.fetchMembersList()
     }
     
     required public init?(coder aDecoder: NSCoder) {
@@ -146,10 +127,7 @@ open class OTRRoomOccupantsViewController: UIViewController {
         if let room = self.room {
             if (room.avatarSeedNum < 0) {
                 room.avatarSeedNum = room.nextAvatarNum(with:-1)
-                //room.saveThread()
             }
-            //let seedNum = room.avatarSeedNum
-            //let image = OTRGroupAvatarGenerator.avatarImage(withSeedNum: seedNum, width: Int(largeAvatarView.frame.width), height: Int(largeAvatarView.frame.height))
             largeAvatarView.image = room.avatarImage//image
         }
         
@@ -158,9 +136,7 @@ open class OTRRoomOccupantsViewController: UIViewController {
         self.tableView.dataSource = self
         self.tableView.delegate = self
         self.tableView2.delegate = self
-        //self.configureDataSource()
         self.tableView2.register(OTRBuddyInfoCheckableCell.self, forCellReuseIdentifier: DynamicCellIdentifier.occupant.rawValue)
-        //self.observeRoomOccupants()
         
         let memberLabel = UILabel(frame: CGRectMake(5, 5, 100, 30))
         memberLabel.font = UIFont(name: kFontAwesomeFont, size: 11.0)
@@ -179,12 +155,6 @@ open class OTRRoomOccupantsViewController: UIViewController {
     private func configureDataSource() {
         self.dataSource = RoomOccupantsSource(tableView: self.tableView2, cellProvider: { [weak self] (tableView, indexPath, occupant) ->  UITableViewCell?  in
             guard let self else { return UITableViewCell()}
-            //if indexPath.section == 0 {
-            //    return self.createHeaderCell(type: headerRows[indexPath.row], at: indexPath)
-            //} else if indexPath.section > 1 {
-            //if indexPath.section > 0 {
-            //    return self.createFooterCell(type: footerRows[indexPath.row], at: indexPath)
-            //}
             
             let cell:OTRBuddyInfoCheckableCell = tableView.dequeueReusableCell(withIdentifier: DynamicCellIdentifier.occupant.rawValue, for: indexPath) as! OTRBuddyInfoCheckableCell
             if let crown = self.crownImage {
@@ -218,7 +188,6 @@ open class OTRRoomOccupantsViewController: UIViewController {
             } else if let jid = roomOccupant.realJID ?? roomOccupant.jid {
                 // Create temporary buddy for anonymous room members
                 let buddy = ChatBuddyModel(jid: jid, accountId: account)
-                //buddy.trustLevel = .untrusted
                 var status = ThreadStatus.offline
                 if let jid = roomOccupant.jid,
                    BuddyCache.shared().jidOnline(jid: jid.full, room: room)  {
@@ -263,23 +232,17 @@ open class OTRRoomOccupantsViewController: UIViewController {
         if let ds = self.dataSource {
             ds.itemCnt = snapshot.numberOfItems
             ds.apply(snapshot, animatingDifferences: false)
-        }//, completion: {
+        }
             // Restore selection
-            //if let index = conversations.firstIndex(where: { $0.uniqueId == convId }) {
-            //    self.tableView.selectRow(at: IndexPath(row: index, section: 0), animated: false, scrollPosition: .none)
-            //}
-        //})
         
         self.updateUIBasedOnOwnRole()
-        //self.view.setNeedsLayout()
     }
     
     private func observeRoomOccupants() {
         let request: QueryInterfaceRequest<ChatRoomOccupant>
         
-        //self.roomUniqueId
         guard let roomId = self.roomUniqueId else { return }
-        request = ChatRoomOccupant.all().filter(Column("roomUniqueId") == roomId)//.group(Column("realJid")) //.order(Column("realJid"))
+        request = ChatRoomOccupant.all().filter(Column("roomUniqueId") == roomId)
             
         occCancellable = ValueObservation
             .tracking(request.fetchAll(_:))
@@ -308,13 +271,6 @@ open class OTRRoomOccupantsViewController: UIViewController {
         let set = IndexSet(integer: headerSection)
         self.tableView.reloadSections(set, with: .none)
         
-        /*DispatchQueue.main.async {
-            if let headerSecId = self.dataSource.sectionIdentifier(for: headerSection) {
-                var snap = self.dataSource.snapshot()
-                snap.reloadSections([headerSecId])
-                self.dataSource.apply(snap, animatingDifferences: false)
-            }
-        }*/
     }
     
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
@@ -342,13 +298,6 @@ open class OTRRoomOccupantsViewController: UIViewController {
             
             // Create a view for the bounce background, with same color as the topmost
             // avatar color.
-            /*if self.topBounceView == nil {
-                self.topBounceView = UIView()
-                if let view = self.topBounceView {
-                    view.backgroundColor = UIColor.white
-                    self.tableView.addSubview(view)
-                }
-            }*/
         }
         
         self.getPins()
@@ -386,11 +335,10 @@ open class OTRRoomOccupantsViewController: UIViewController {
         switch type {
         case CellIdentifier.HeaderCellGroupName:
             if let room = self.room {
-                var roomname = room.roomName//room.subject //IOSM-495
+                var roomname = room.roomName
                 if roomname == nil {
                     roomname = room.roomJID?.user
                 }
-                //cell.textLabel?.text = "#" + (roomname ?? "") + " (Invite Only Group)"
                 cell.textLabel?.text = (roomname ?? "") + " (Invite Only Group)"
                 if room.grdbRecord?.isPublic == true {
                     cell.textLabel?.text = (roomname ?? "") + " (Open Group)"
@@ -445,16 +393,10 @@ open class OTRRoomOccupantsViewController: UIViewController {
         }
         
         // only changes group name size for some reason
-        //let userFont = UIFontDescriptor.preferredFontDescriptor(withTextStyle: UIFontTextStyle.body, compatibleWith: nil)
-        //let fontSize = userFont.pointSize-1
-        //cell.textLabel?.font = UIFont.systemFont(ofSize: fontSize)
         
         return cell
     }
     
-    //open func createFooterCell(type:String, at indexPath: IndexPath) -> UITableViewCell {
-    //    return tableView.dequeueReusableCell(withIdentifier:type) ?? UITableViewCell()
-    //}
     
     open func didSelectHeaderCell(type:String) {
         switch type {
@@ -531,12 +473,11 @@ open class OTRRoomOccupantsViewController: UIViewController {
         let alert = UIAlertController(title: NSLocalizedString("Change room name", comment: "Title for change room name"), message: nil, preferredStyle: UIAlertController.Style.alert)
         alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK button"), style: UIAlertAction.Style.default, handler: {(action: UIAlertAction!) in
             if let newName = alert.textFields?.first?.text { //IOSM-495 subject to name
-                self.room?.roomName = newName //subject = newSubject
+                self.room?.roomName = newName
                 self.refreshNameCell()
                 
                 if let room = self.room, let xmppRoom = self.xmppRoom(for: room), let roomManager = self.xmppRoomManager(for: room) {
                     //IOSM-495 added roomManager and setRoomName
-                    //xmppRoom.changeSubject(newName)
                     roomManager.setRoomName(xmppRoom, name:newName)
                 }
             }
@@ -696,12 +637,6 @@ extension OTRRoomOccupantsViewController:UITableViewDelegate {
             return GenericHeaderCell.cellHeight
         }
         
-        //if indexPath.section == headerSection {
-        //    return GenericHeaderCell.cellHeight
-        //} else
-        //if indexPath.section == footerSection {
-        //    return GenericHeaderCell.cellHeight
-        //}
         return OTRBuddyInfoCellHeight
     }
     
@@ -710,12 +645,6 @@ extension OTRRoomOccupantsViewController:UITableViewDelegate {
             return GenericHeaderCell.cellHeight
         }
         
-        //if indexPath.section == headerSection {
-        //    return GenericHeaderCell.cellHeight
-        //} else
-        //if indexPath.section == footerSection {
-        //    return GenericHeaderCell.cellHeight
-        //}
         return OTRBuddyInfoCellHeight
     }
     
@@ -727,14 +656,8 @@ extension OTRRoomOccupantsViewController:UITableViewDelegate {
             return
         }
         
-        //if indexPath.section == headerSection {
-        //    didSelectHeaderCell(type: headerRows[indexPath.row])
         //    return
-        //} else
-        //if indexPath.section == footerSection {
-        //    didSelectFooterCell(type: footerRows[indexPath.row])
         //    return
-        //}
         
         if let cRoomOccupant = self.dataSource.itemIdentifier(for: indexPath) {
             let roomOccupant = ChatRoomOccupantModel(occupant: cRoomOccupant)
@@ -782,7 +705,6 @@ extension OTRRoomOccupantsViewController: OTRComposeGroupViewControllerDelegate 
             let xmppRoom = self.xmppRoom(for: room),
             let xmppRoomManager = self.xmppRoomManager(for: room) {
             xmppRoomManager.inviteBuddies(buddyUniqueIds, to: xmppRoom)
-            //xmppRoom.fetchMembersList() //done in invite buddies
         }
         self.navigationController?.popToViewController(self, animated: true)
     }
@@ -800,20 +722,8 @@ private class RoomOccupantsSource: UITableViewDiffableDataSource<Int, ChatRoomOc
     
     override public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        //if section == headerSection {
-        //    return headerRows.count
-        //} else
-        //if section == footerSection {
-        //    return footerRows.count
-        //}
         
         return itemCnt
         
-        /*if let roomId = roomId {
-            let num = ChatRoomOccupantModel.numberOfOccupants(for: roomId)
-            return num
-        }
-        
-        return 0*/
     }
 }

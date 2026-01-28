@@ -1,10 +1,6 @@
-//
-//  ContextMenuView.swift
 //  Glacier
-//
 //  Created by Prem Pratap Singh on 17/10/25.
 //  Copyright © 2025 Glacier. All rights reserved.
-//
 
 import UIKit
 import MessageKit
@@ -137,7 +133,7 @@ class ContextMenuView: UIView {
         }
         
         // Position near the long press location
-        let menuHeight = (actions.count + 1) * 40 // + 1 is for emoji bar view
+        let menuHeight = (actions.count + 1) * 40
         let menuSize = CGSize(width: 300, height: CGFloat(menuHeight))
         var menuFrame = CGRect(origin: location, size: menuSize)
         let containerBounds = UIScreen.main.bounds

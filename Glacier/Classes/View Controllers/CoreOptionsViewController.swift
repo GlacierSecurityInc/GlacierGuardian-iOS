@@ -1,5 +1,3 @@
-//
-//  CoreDetailsViewController.swift
 //  Created by Andy Friedman on 1/28/20.
 //  Copyright © 2020 Glacier Security. All rights reserved.
 
@@ -45,14 +43,12 @@ open class CoreOptionsViewController: UITableViewController, TunnelsManagerStatu
     
     override open func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        //NotificationCenter.default.addObserver(self, selector: #selector(coreUpdate), name: NSNotification.Name.NEVPNStatusDidChange, object: nil)
         
         self.updateCoreDetails()
     }
     
     override open func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        //NotificationCenter.default.removeObserver(self)
     }
     
     public func setCoreConnectionDelegate(delegate: CoreConnectionDelegate) {
@@ -205,6 +201,5 @@ open class CoreOptionsViewController: UITableViewController, TunnelsManagerStatu
         }
         
         self.coreDelegate?.coreSettingChanged()
-        //tableView.reloadData()
     }
 }

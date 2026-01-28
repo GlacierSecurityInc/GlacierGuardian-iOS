@@ -1,10 +1,6 @@
-//
-//  SMSChatConversation.swift
 //  Glacier
-//
 //  Created by andyfriedman on 8/22/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 import TwilioConversationsClient
@@ -97,9 +93,8 @@ extension SMSChatConversationModel {
     }
 
 #if !TARGET_IS_EXTENSION
-    func lastMessage(completion: @escaping (_ msg: SMSChatMessageModel?) -> ()) //-> SMSMessage?
+    func lastMessage(completion: @escaping (_ msg: SMSChatMessageModel?) -> ())
     {
-        //let sql = "SELECT * FROM \(CodableSMSMessage.databaseTableName) WHERE conversationId == ? ORDER BY messageDate DESC LIMIT 1"
         
         do {
             try DBManager.sharedDB().grdbStorage.read(block: { transaction in
@@ -193,11 +188,10 @@ extension SMSChatConversationModel {
     @objc public static func existingConversation(localPhone:String, remotePhone:String) -> SMSChatConversationModel? {
         var conversation:SMSChatConversationModel?
         // can we do a like here?
-        //Player.filter(emailColumn.like("%@example.com"))
         do {
             try DBManager.sharedDB().grdbStorage.read(block: { transaction in
                 if let record = try SMSChatConversation
-                    .filter(Column("localNumber") == localPhone && Column("remoteNumber").like("%\(remotePhone)"))// == remotePhone)
+                    .filter(Column("localNumber") == localPhone && Column("remoteNumber").like("%\(remotePhone)"))
                     .fetchOne(transaction.database) {
                     conversation = SMSChatConversationModel(conversation: record)
                 }
@@ -271,7 +265,6 @@ struct SMSChatConversation: GRDBRecord, TableRecord {
     }
     
     public init(uniqueId:String, smsAccountId:String?, firstName:String?, lastName:String?, preferredName:String?, avatarData:Data?, remoteNumber:String?, localNumber:String?, latestMessage:String?, latestMessageId:String?, latestMessageDate:Date?, isRead:Bool?, isNew:Bool?, twilioId:String?) {
-        //self.id = conversation.grdbId?.int64Value
         self.uniqueId = uniqueId
         self.smsAccountId = smsAccountId
         self.firstName = firstName
@@ -326,16 +319,8 @@ public extension UIColor {
             green: (rgb >> 8) & 0xFF,
             blue: rgb & 0xFF
         )
-    } //UIColor(rgb: 0xFFFFFF)
+    }
     
-    /*
-     #FE6550 red
-     #FE8747 orange
-     #34C986 green
-     #3352C6 blue UIColor(rgb: 0x3352C6)
-     #472CB6 violet (dark)
-     #8228ED purple
-     */
     
     static let solids = [UIColor(rgb: 0x34C986), UIColor(rgb: 0xFE8747), UIColor(rgb: 0x8228ED), UIColor(rgb: 0xFE6550), UIColor(rgb: 0x3352C6), UIColor(rgb: 0x472CB6)]
     

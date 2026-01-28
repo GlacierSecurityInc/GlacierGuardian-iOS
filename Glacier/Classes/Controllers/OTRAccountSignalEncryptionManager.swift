@@ -1,10 +1,6 @@
-//
-//  OTRSignalEncryptionManager.swift
 //  ChatSecure
-//
 //  Created by David Chiles on 7/27/16.
 //  Copyright © 2016 Chris Ballinger. All rights reserved.
-//
 
 import UIKit
 import SignalProtocolObjC
@@ -14,7 +10,6 @@ public enum SignalEncryptionError:Error {
     case unableToCreateSignalContext
 }
 
-/* Performs any Signal operations: creating bundle, decryption, encryption. Use one OTRAccountSignalEncryptionManager per account **/
 open class OTRAccountSignalEncryptionManager {
     
     let storage:OTRSignalStorageManager
@@ -103,7 +98,6 @@ extension OTRAccountSignalEncryptionManager {
             signalSignedPreKey = self.generateRandomSignedPreKey()
             newkey = true
         }
-        //else { throw OMEMOBundleError.notFound }
         guard let signedPreKey = signalSignedPreKey, let data = signedPreKey.serializedData() else {
             throw OMEMOBundleError.keyGeneration
         }
@@ -111,7 +105,7 @@ extension OTRAccountSignalEncryptionManager {
             throw OMEMOBundleError.keyGeneration
         }
         let bundle = try OMEMOBundle(deviceId: deviceId, identity: identityKeyPair, signedPreKey: signedPreKey, preKeys: preKeys)
-        if newkey == true {//false {
+        if newkey == true {
             _ = self.storage.storeSignedPreKey(data, signedPreKeyId: signedPreKey.preKeyId)
         }
         return bundle
@@ -143,7 +137,6 @@ extension OTRAccountSignalEncryptionManager {
             signalSignedPreKey = self.generateRandomSignedPreKey(transaction)
             newkey = true
         }
-        //else { throw OMEMOBundleError.notFound }
         guard let signedPreKey = signalSignedPreKey, let data = signedPreKey.serializedData() else {
             throw OMEMOBundleError.keyGeneration
         }
@@ -151,7 +144,7 @@ extension OTRAccountSignalEncryptionManager {
             throw OMEMOBundleError.keyGeneration
         }
         let bundle = try OMEMOBundle(deviceId: deviceId, identity: identityKeyPair, signedPreKey: signedPreKey, preKeys: preKeys)
-        if newkey == true {//false {
+        if newkey == true {
             _ = self.storage.storeSignedPreKey(data, signedPreKeyId: signedPreKey.preKeyId, transaction: transaction)
         }
         return bundle

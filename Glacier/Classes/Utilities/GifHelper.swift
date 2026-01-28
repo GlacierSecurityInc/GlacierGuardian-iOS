@@ -1,10 +1,6 @@
-//
-//  GifHelper.swift
 //  Glacier
-//
 //  Created by andyfriedman on 7/5/22.
 //  Copyright © 2022 Glacier. All rights reserved.
-//
 
 import Foundation
 import SwiftyGif
@@ -18,12 +14,6 @@ import SwiftyGif
         return false
     }
     
-    /*@objc public static func isGifImage(_ filepath: String)->Bool {
-        if (filepath.lowercased().hasSuffix("gif")) {
-            return true
-        }
-        return false
-    }*/
     
     @objc public static func getGifImageView(_ gif: UIImage)->UIImageView {
         return UIImageView(gifImage: gif, loopCount: -1)
@@ -53,19 +43,4 @@ import SwiftyGif
         return image.imageData
     }
     
-    /*@objc public func getResizedImage(_ gif: UIImage, maxSize: CGRect) -> UIImage {
-        gif.size.width
-        if gif.size.width > size.width || gif.size.height > size.height {
-            let availableRect = AVFoundation.AVMakeRect(aspectRatio: gif.size, insideRect: .init(origin: .zero, size: maxSize))
-            let targetSize = availableRect.size
-
-            let format = UIGraphicsImageRendererFormat()
-            format.scale = 1
-            let renderer = UIGraphicsImageRenderer(size: targetSize, format: format)
-
-            let resized = renderer.image { (context) in
-                image.draw(in: CGRect(origin: .zero, size: targetSize))
-            }
-        }
-    }*/
 }

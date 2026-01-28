@@ -1,10 +1,5 @@
-//
-//  PushController.swift
 //  ChatSecure
-//
 //  Created by David Chiles on 9/3/15.
-//  Copyright (c) 2015 Chris Ballinger. All rights reserved.
-//
 
 import Foundation
 import UserNotifications

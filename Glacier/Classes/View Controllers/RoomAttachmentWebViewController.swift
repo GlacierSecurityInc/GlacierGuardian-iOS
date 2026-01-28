@@ -1,7 +1,4 @@
-//
-//  RoomAttachmentWebViewController.swift
 //  ChatSecureCore
-//
 //  Created by Andy Friedman on 5/13/19.
 //  Copyright © 2019 GlacierSecurity. All rights reserved.
 
@@ -137,7 +134,7 @@ open class RoomAttachmentWebViewController: UIViewController, WKUIDelegate {
         let fileurl = paths[0].appendingPathComponent(attachUrl.lastPathComponent)
         
         do {
-            try attachData!.write(to: fileurl, options: .atomic)//, encoding: String.Encoding.utf8)
+            try attachData!.write(to: fileurl, options: .atomic)
         } catch {
             // failed to write file – bad permissions, bad filename, missing permissions, or more likely it can't be converted to the encoding
             DDLogError("Something went wrong storing data locally")
@@ -173,7 +170,6 @@ extension RoomAttachmentWebViewController: WKNavigationDelegate {
             decisionHandler(.allow)
         } else {
             decisionHandler(.cancel)
-            // do something else with `navigationResponse.response`
             let alert = UIAlertController(title: "Cannot Open", message: "Unable to open attachment", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK button"), style: .default, handler: { (action: UIAlertAction) -> Void in
                 self.navigationController?.popViewController(animated: true);

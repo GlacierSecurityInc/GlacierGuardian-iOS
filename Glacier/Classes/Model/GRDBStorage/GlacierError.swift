@@ -1,10 +1,6 @@
-//
-//  GlacierError.swift
 //  Glacier
-//
 //  Created by andyfriedman on 2/27/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 

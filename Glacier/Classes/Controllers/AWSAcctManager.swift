@@ -1,10 +1,6 @@
-//
-//  AWSAcctManager.swift
 //  Glacier
-//
 //  Created by andyfriedman on 11/27/24.
 //  Copyright © 2024 Glacier. All rights reserved.
-//
 
 import Foundation
 import Amplify
@@ -52,7 +48,6 @@ public protocol VPNStorageListener {
     public let userData = UserData()
     private var unsubscribeToken:UnsubscribeToken?
     
-    //private var user:AWSCognitoIdentityUser?
     
     @objc public class func sharedMgr() -> AWSAcctManager {
         return shared
@@ -61,8 +56,6 @@ public protocol VPNStorageListener {
     @objc override public init() {
         super.init()
         self.setupDownloadDirectory()
-        //self.initAWSConnection()
-        //self.getOrgData()
         
         unsubscribeToken = Amplify.Hub.listen(to: .auth) { payload in
             switch payload.eventName {
@@ -114,8 +107,8 @@ public protocol VPNStorageListener {
             if session.isSignedIn {
                 await self.fetchAttributes()
                 return true
-            }  else { //else call authenticator? Or try to sign in?
-                print("Not signed in")  //if userexists, get pass and autologin?
+            }  else {
+                print("Not signed in")
             }
             
         } catch let error as AuthError {
@@ -141,14 +134,12 @@ public protocol VPNStorageListener {
             
             if let orgattr = attributes.first(where: { $0.key.rawValue == "custom:organization" }) {
                 self.bucketOrg = orgattr.value
-                //self.getAppSyncData()
             }
             
             if self.userName != nil, self.bucketOrg != nil {
                 self.getAppSyncData()
             }
             
-            //print("User attributes - \(attributes)")
         } catch let error as AuthError{
             print("*** Fetching user attributes failed with error \(error)")
             self.endLogin()
@@ -178,9 +169,6 @@ public protocol VPNStorageListener {
         if glacierDefaults?.string(forKey: "orgid") == nil {
             glacierDefaults?.set(org, forKey: "orgid")
         }
-        //if glacierDefaults?.string(forKey: "username") == nil {
-        //    glacierDefaults?.set(name, forKey: "username")
-        //}
         
         self.appSyncMgr.getUserInfo(username: name, org: org, completion: { (guser:GlacierUser?) in
             
@@ -188,14 +176,6 @@ public protocol VPNStorageListener {
                 self.endLogin()
                 return
             }
-            /*if (guser == nil) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self.awspauth stopSpinner];
-                    [self alertWithTitle:@"No user info" message:@"Problems logging in."];
-                    [self endLogin];
-                });
-                return
-            }*/
             
             glacierDefaults?.set(guser.displayName, forKey: "displayname")
             glacierDefaults?.set("none", forKey: "connection")
@@ -219,10 +199,8 @@ public protocol VPNStorageListener {
     
     func endLogin() {
         if vpnOnly {
-            //vpnOnly = false
             self.vpnStorageListener?.endLogin()
             self.getS3Files()
-            //self.vpnStorageListener = nil
         } else {
             DispatchQueue.main.async {
                 OTRAppDelegate.appDelegate.conversationViewController.endAuthLogin()
@@ -245,7 +223,6 @@ public protocol VPNStorageListener {
     
     public func teardownCognito() {
         Task {
-            //let options = AuthSignOutRequest.Options()
             let _ = await Amplify.Auth.signOut()
         }
     }
@@ -422,12 +399,10 @@ public protocol VPNStorageListener {
             if coreList.count > 0 {
                 self.wgProfiles.removeAll()
                 self.coreGroup = DispatchGroup()
-                //var accessAvailable = true
                 
                 for coreinfo in coreList {
                     self.coreGroup?.enter()
                     let keyName = (account.bareJID?.user)! + ".conf"
-                    //organizationconfigurations/org/region_core/user.conf
                     let s3path = org.appendingPathComponent(coreinfo).appendingPathComponent(keyName)
                     
                     let downloadingFilePath = NSTemporaryDirectory().appendingPathComponent("download").appendingPathComponent(coreinfo)
@@ -445,7 +420,6 @@ public protocol VPNStorageListener {
                             options: nil
                         )
                         
-                        //organizationconfigurations/org/region_core/user.conf
                         Task {
                             do {
                                 try await downloadTask.value
@@ -454,8 +428,6 @@ public protocol VPNStorageListener {
                                 self.coreGroup?.leave()
                             } catch {
                                 DDLogWarn("s3 download failed: \(error)")
-                                //[self.awspauth stopSpinner];
-                                //accessAvailable = false
                                 self.coreGroup?.leave()
                             }
                         }
@@ -465,12 +437,8 @@ public protocol VPNStorageListener {
                 self.coreGroup?.notify(queue: DispatchQueue.main) {
                     self.vpnStorageListener?.endLogin()
                     if self.wgProfiles.count == 0 {
-                        //if accessAvailable == false {
-                        //    self.vpnStorageListener?.handleNoStorageAccess()
-                        //} else {
                             self.vpnOnly = false
                             self.vpnStorageListener?.handleNoCoreProfiles()
-                        //}
                     } else {
                         self.vpnOnly = false
                         WireGuardManager.shared().handleWireguardProfiles(self.wgProfiles)
@@ -504,7 +472,6 @@ public protocol VPNStorageListener {
                     self.getS3Files()
                 } else {
                     self.vpnStorageListener?.handleNoStorageAccess()
-                    //self.vpnOnly = false
                 }
             }
         } else {

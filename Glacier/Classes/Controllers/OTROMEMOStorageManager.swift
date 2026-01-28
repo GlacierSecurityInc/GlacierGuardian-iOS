@@ -1,10 +1,6 @@
-//
-//  OTROMEMOStorageCoordinator.swift
 //  ChatSecure
-//
 //  Created by David Chiles on 9/15/16.
 //  Copyright © 2016 Chris Ballinger. All rights reserved.
-//
 
 import Foundation
 import XMPPFramework
@@ -106,7 +102,6 @@ open class OTROMEMOStorageManager {
                 DDLogError("storeDevices.previouslyStoredDevices error: \(error)")
             }
             
-            //ChatOmemoDevice.allOMEMODevices(for: parentKey, collection: parentCollection)
             let previouslyStoredDevicesIds = previouslyStoredDevices.map({ (device) -> NSNumber in
                 return NSNumber(value:device.deviceId)
             })
@@ -151,7 +146,6 @@ open class OTROMEMOStorageManager {
                 let devicesToRemove:Set<NSNumber> = previouslyStoredDevicesIdSet.subtracting(newDeviceSet)
                 let devicesToAdd:Set<NSNumber> = newDeviceSet.subtracting(previouslyStoredDevicesIdSet)
                 
-                // (see https://github.com/ChatSecure/ChatSecure-iOS/issues/1006
                 var mostRecentDevice:String?
                 var mostRecentDate:Date?
                 previouslyStoredDevicesIdSet.forEach({ (deviceId) in
@@ -191,7 +185,6 @@ open class OTROMEMOStorageManager {
                     // if device last seen 45+ days ago AND removed from list
                     // AND not most recent
                     if (device.isExpired() && deviceKey != mostRecentDevice) {
-                        //device = device.copy() as! ChatOmemoDevice
                         device.trustLevel = OMEMOTrustLevel.removed.rawValue
                         device.grdbSave(transaction: transaction)
                     }

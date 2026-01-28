@@ -1,10 +1,6 @@
-//
-//  VoicemailViewController.swift
 //  Glacier
-//
 //  Created by andyfriedman on 3/3/25.
 //  Copyright © 2025 Glacier. All rights reserved.
-//
 
 import Foundation
 import MBProgressHUD
@@ -23,13 +19,7 @@ open class VoicemailViewController: UITableViewController, UITabBarDelegate {
     let inputFormatter = DateFormatter()
     var emptySet = false
     
-    /*public init() {
-        super.init(nibName:nil, bundle:nil)
-    }*/
     
-    /*required public init(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }*/
     
     override open func viewDidLoad() {
         super.viewDidLoad()
@@ -95,14 +85,9 @@ open class VoicemailViewController: UITableViewController, UITabBarDelegate {
     
     func initData() {
         let tmgr = TwilioBackendManager.sharedMgr()
-        //self.vmRecords = tmgr.selectedRecordings
         tmgr.queryForVMInfo()
-        //if self.vmRecords.count == 0 {
-        //    self.addSpinnerHUD("Retrieving voicemail (be patient)...")
-        //}
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            //self.removeSpinnerHUD()
             self.vmRecords = tmgr.selectedRecordings
             self.tableView.reloadData()
         }
@@ -143,7 +128,6 @@ open class VoicemailViewController: UITableViewController, UITabBarDelegate {
 
         cell.contentView.setNeedsUpdateConstraints()
         
-        //cell.accountLabel.text = self.callRecords[indexPath.row].contact.phoneNumber
         let rec = self.vmRecords[indexPath.row]
         let from = rec.contact?.name ?? rec.from
         cell.nameLabel.text = from

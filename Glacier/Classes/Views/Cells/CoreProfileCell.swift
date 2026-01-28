@@ -1,10 +1,6 @@
-//
-//  ProfileCell.swift
 //  Glacier
-//
 //  Created by andyfriedman on 9/10/24.
 //  Copyright © 2024 Glacier. All rights reserved.
-//
 
 import UIKit
 
@@ -38,15 +34,12 @@ public class CoreProfileCell: UITableViewCell {
                         tunnelMgr.startActivation(of: tunnel)
                     })
                 }
-                //WireGuardManager.shared().tunnelsManager?.startActivation(of: tunnel)
             }
         } else {
             if let tname = profileName.text, let tunnel = tunnelMgr.tunnel(named: tname), (tunnel.status == .active || tunnel.status == .activating || tunnel.status == .restarting || tunnel.isActivateOnDemandEnabled == true) {
                 tunnelMgr.setOnDemandEnabled(false, on: tunnel, completionHandler: { _ in
-                    //if status already == inactive, disable and save
                     tunnelMgr.startDeactivation(of: tunnel)
                 })
-                //WireGuardManager.shared().tunnelsManager?.startDeactivation(of: tunnel)
             }
         }
     }

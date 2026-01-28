@@ -1,10 +1,6 @@
-//
-//  GlacierAPIHeaders.swift
 //  Glacier
-//
 //  Created by OpenAI on 3/14/25.
 //  Copyright © 2025 Glacier. All rights reserved.
-//
 
 import Alamofire
 import Amplify

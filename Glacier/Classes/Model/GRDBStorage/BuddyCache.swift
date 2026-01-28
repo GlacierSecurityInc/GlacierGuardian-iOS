@@ -1,10 +1,6 @@
-//
-//  BuddyCache.swift
 //  Glacier
-//
 //  Created by andyfriedman on 9/14/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 
@@ -24,9 +20,6 @@ import Foundation
         return sharedBuddyCache
     }
     
-    /*public init() {
-        
-    }*/
 
     //#pragma mark Setters/Getters
 
@@ -92,7 +85,6 @@ import Foundation
             buddyDict = [:]
         }
         
-        //var rsrc = resource
         queue.async(flags: .barrier) {
             if let resource = resource {
                 buddyDict?.updateValue(NSNumber(value: status.rawValue), forKey: resource)
@@ -121,8 +113,6 @@ import Foundation
         if resourceInfo != nil, let resInfo = resourceInfo{
             for info in resInfo {
                 if let resourceStatus = ThreadStatus(rawValue: info.value.intValue) {
-                    // Check if it less than becauase ThreadStatusAvailable == 0 and the closer you are to ThreadStatusAvailable the more 'real' it is.
-                    //IOSM#56 added && resourceStatus != Unknown
                     if (resourceStatus.rawValue < status.rawValue && resourceStatus != ThreadStatus.unknown) {
                         status = resourceStatus
                     }
@@ -165,7 +155,7 @@ import Foundation
     #endif
 
     /**
-     * Last Seen is associated with querying a presence with delayed delivery. See https://xmpp.org/extensions/xep-0318.html
+     * Last Seen is associated with querying a presence with delayed delivery. See https:
      */
     func lastSeenDate(buddy: ChatBuddy) -> Date? {
         
@@ -196,7 +186,6 @@ import Foundation
     @objc func runtimePropertiesFor(room: ChatRoomModel) -> RoomRuntimeProperties? {
         
         var properties:RoomRuntimeProperties?
-        //queue.sync(flags: .barrier) {
         queue.sync {
             properties = self.roomProperties[room.uniqueId]
             if properties == nil {

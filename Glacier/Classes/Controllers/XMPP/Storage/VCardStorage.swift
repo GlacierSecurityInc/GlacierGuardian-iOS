@@ -1,19 +1,12 @@
-//
-//  VCardStorage.swift
 //  ChatSecureCore
-//
 //  Created by Chris Ballinger on 3/3/18.
 //  Copyright © 2018 Chris Ballinger. All rights reserved.
-//
 
 import Foundation
 import XMPPFramework
 
 public class VCardStorage: NSObject {
     
-    /*@objc public init() {
-        
-    }*/
     
     /// nil jid returns account's vCard
     /// Opens implicit background read transaction
@@ -100,7 +93,7 @@ extension VCardStorage: XMPPvCardTempModuleStorage {
                 return
         }
         
-        guard let vCard = self.vCard(jid: jid, myJID: myJID, accountId: accountId) else { //?.copyAsSelf() else {
+        guard let vCard = self.vCard(jid: jid, myJID: myJID, accountId: accountId) else {
             DDLogError("No vCard found for \(jid)")
             return
         }

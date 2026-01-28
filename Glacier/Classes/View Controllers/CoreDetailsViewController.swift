@@ -1,11 +1,8 @@
-//
-//  CoreDetailsViewController.swift
 //  Created by Andy Friedman on 1/28/20.
 //  Copyright © 2020 Glacier Security. All rights reserved.
 
 import UIKit
 import NetworkExtension
-//import SystemConfiguration.CaptiveNetwork
 
 open class CoreDetailsViewController: UITableViewController {
     
@@ -113,24 +110,6 @@ open class CoreDetailsViewController: UITableViewController {
     }
     
     /// retrieve the current SSID from a connected Wifi network
-    /*private func retrieveCurrentSSID() -> String? {
-        let interfaces = CNCopySupportedInterfaces() as? [String]
-        let interface = interfaces?
-            .compactMap { [weak self] in self?.retrieveInterfaceInfo(from: $0) }
-            .first
-
-        return interface
-    }
-
-    /// Retrieve information about a specific network interface
-    private func retrieveInterfaceInfo(from interface: String) -> String? {
-        guard let interfaceInfo = CNCopyCurrentNetworkInfo(interface as CFString) as? [String: AnyObject],
-            let ssid = interfaceInfo[kCNNetworkInfoKeySSID as String] as? String
-            else {
-                return nil
-        }
-        return ssid
-    }*/
     
     override open func numberOfSections(in tableView: UITableView) -> Int
     {
@@ -184,7 +163,6 @@ open class CoreDetailsViewController: UITableViewController {
             selectedRow = indexPath.row
             
             if selectedRow == 0 {
-                //hidden = true
                 handleHideSelection(indexPath)
             } else {
                 hidden = false
@@ -276,8 +254,6 @@ open class CoreDetailsViewController: UITableViewController {
             if let error = error {
                 ErrorPresenter.showErrorAlert(error: error, from: self)
             }
-            //self?.ssids.removeAll()
-            //self?.tableView.reloadData()
         }
     }
     
@@ -295,7 +271,6 @@ open class CoreDetailsViewController: UITableViewController {
             if let error = error {
                 ErrorPresenter.showErrorAlert(error: error, from: self)
             }
-            //self?.tableView.reloadData()
         }
     }
 }

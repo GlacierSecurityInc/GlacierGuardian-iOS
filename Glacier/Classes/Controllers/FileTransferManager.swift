@@ -1,10 +1,6 @@
-//
-//  FileTransferManager.swift
 //  ChatSecure
-//
 //  Created by Chris Ballinger on 3/28/17.
 //  Copyright © 2017 Chris Ballinger. All rights reserved.
-//
 
 import Foundation
 import XMPPFramework
@@ -28,8 +24,6 @@ extension UIImage {
         }
     }
      struct Quality {
-        //static let low = Quality(initial: 0.4, decrementFactor: 0.65)
-        //static let medium = Quality(initial: 0.65, decrementFactor: 0.65)
         static let low = Quality(initial: 0.3, decrementFactor: 0.3)
         static let medium = Quality(initial: 0.5, decrementFactor: 0.5)
         static let high = Quality(initial: 0.75, decrementFactor: 0.75)
@@ -44,7 +38,6 @@ extension UIImage {
                   jpeg: Quality = Quality.low,
                   maxTries: UInt = 10) -> Data? {
         let image = self
-        //scaledImageData = UIImageJPEGRepresentation(image, 0.5)
         var sizeInBytes: UInt = 0
         var scaleFactor: CGFloat = resize.initial
         var jpegQuality: CGFloat = jpeg.initial
@@ -193,7 +186,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
     }
     
     // MARK: - Public Methods
-    // Resume downloads, i.e. look for media items that are partially downloaded and retry getting them. TODO - use ranges
     @objc public func resumeDownloads() {
         //resumeDownloads should track messages not media because messages are what matters for the UI.
         ChatMediaItemModel.processUnfinishedDownloads(completion: { [weak self] (mediaItems) in
@@ -225,7 +217,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
         self.internalQueue.async {
             self.retryList.forEach({ (retryMsg) in
                 if let offlineMsg = retryMsg.refetch(), let mediaItem = ChatMediaItemModel.getMediaItem(for: offlineMsg) {
-                    //if let owner = offlineMsg.threadOwner() {
                         do {
                             let data = try OTRMediaFileManager.shared.data(forChatItem: mediaItem, buddyUniqueId: offlineMsg.threadId)
                             self.internalQueue.async {
@@ -236,7 +227,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
                         } catch let error {
                             DDLogError("Error doing stuff: \(error)")
                         }
-                    //}
                 }
             })
             self.retryList.removeAll()
@@ -301,19 +291,16 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
                                 return
                             }
                             
-                            //DDLogVerbose("Received response \(response)")
                             let authTagSize = 16
                             if data.count > authTagSize {
                                 DDLogVerbose("Received encrypted response, attempting decryption...")
                                 
                                 let authTag = Data(base64Encoded: tag, options: Data.Base64DecodingOptions.ignoreUnknownCharacters)!
-                                //let cryptoData = CryptoData(data: data, authTag: authTag)
                                 
                                 do {
                                     let keydata = Data(base64Encoded: key, options: Data.Base64DecodingOptions.ignoreUnknownCharacters)!
                                     let ivdata = Data(base64Encoded: iv, options: Data.Base64DecodingOptions.ignoreUnknownCharacters)!
                                     let decdata = try OTRSignalEncryptionHelper.decryptData(data, key: keydata, iv: ivdata, authTag: authTag)
-                                    //let data = try CryptoUtility.decryptAESGCMData(cryptoData, key: keydata, iv: ivdata)
                                     completion(decdata, nil)
                                 } catch let error {
                                     DDLogError("Error decrypting data: \(error)")
@@ -482,7 +469,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
             var outKeyIv: Data? = nil
             if shouldEncrypt {
                 guard let key = OTRPasswordGenerator.randomData(withLength: 32), let iv = OTRSignalEncryptionHelper.generateIV() else {
-                //guard let key = OTRPasswordGenerator.randomData(withLength: 32), let iv = OTRPasswordGenerator.randomData(withLength: 16) else {
                     DDLogError("Could not generate key/iv")
                     self.callbackQueue.async {
                         completion(nil, FileTransferError.keyGenerationError)
@@ -555,7 +541,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
                             DDLogError("Upload error: \(error)")
                         }
                     }.uploadProgress(queue: self.internalQueue) { progress in
-                        //DDLogVerbose("Upload progress \(progress.fractionCompleted)")
                         if let media = ChatMediaItemModel.getMediaItem(with: media.uniqueId) {
                             media.grdbRecord?.transferProgress = progress.fractionCompleted
                             media.save(completion: {
@@ -683,7 +668,7 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
     }
         
     static func excludeFileProtocol(_ path: String)->String {
-        return path.replacingOccurrences(of: "file://", with: "")
+        return path.replacingOccurrences(of: "file:
     }
     
     static func deleteFile(_ path: String) {
@@ -727,17 +712,8 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
             message.messageModified = Date()
             mediaItem.save(completion: {
                 mediaItem.removeFromCache()
-                /*mediaItem.setThumbnail(url)
-                mediaItem.getMetadata(url, completion: { (metadata:LPLinkMetadata?, error:Error?) in
-                    DispatchQueue.main.async { [weak self] in
-                        guard let _ = self, let metadata = metadata else {
-                            return
-                        }
-                    
-                })*/
             })
             message.save(withThread: thread)
-            //thread.saveThread()
             
             self.callbackQueue.async {
                 completion(true, nil)
@@ -923,19 +899,16 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
             imageItem.grdbRecord?.parentObjectCollection = message.messageCollection
             
             message.mediaType = (ChatMediaType.imageItem.rawValue) as NSNumber
-            //message.save(withThread: thread)
             imageItem.save(completion: {
                 self.internalQueue.async {
                     //IOSM#61
                     if !jpeg {
                         if let gifdata = GifHelper.getImageData(image) {
                             OTRMediaFileManager.shared.setData(gifdata, forChatItem: imageItem, buddyUniqueId: message.threadId, completion: { (bytesWritten: Int, error: Error?) in
-                                //imageItem.touchParent()
                                 if let error = error as? NSError {
                                     message.messageError = error
                                 }
                                 
-                                //imageItem.setThumbnail(image, data: gifdata)
                                 //Not setting thumbnail because it doesn't show up if do it here
                                 
                                 message.save(withThread: thread)
@@ -956,7 +929,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
                             return
                         }
                         OTRMediaFileManager.shared.setData(ourImageData, forChatItem: imageItem, buddyUniqueId: message.threadId, completion: { (bytesWritten: Int, error: Error?) in
-                            //imageItem.touchParent()
                             if let error = error { //sync?
                                 message.messageError = error as NSError
                             }
@@ -1039,7 +1011,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
     @objc public func send(mediaItem: ChatMediaItemModel, prefetchedData: Data?, message: MessageProtocol, label: UILabel?, completion: @escaping (_ success: Bool, _ error: Error?) -> ()) {
         let shouldEncrypt = message.messageSecurity == .OMEMO//true
         
-        //self.copy() as? Self
         
         //IOSM#57 if not online, put this in a queue
         let owner = message.threadOwner()
@@ -1099,7 +1070,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
             } else {
                 message.save()
             }
-            //mediaItem.touchParent() //IOSM#33 doesn't make sense because message is being saved
             self.callbackQueue.async {
                 completion(true, nil) //IOSM-477 delegate to turn off HUD here
             }
@@ -1126,7 +1096,6 @@ public class FileTransferManager: NSObject, OTRServerCapabilitiesDelegate {
             thread.lastMessageIdentifier = message.uid
             thread.threadDate = message.messageDate
             thread.saveThread()
-            //ChatThread.touch(uniqueId: buddy.uniqueId)
         }
     }
     
@@ -1158,14 +1127,12 @@ extension FileTransferManager {
     /** creates downloadmessages and then downloads if needed. parent message should already be saved! @warn Do not call from within an existing db transaction! */
     @objc public func createAndDownloadItemsIfNeeded(message: MessageProtocol, force: Bool) {
         if message.messageMediaItemKey != nil || message.messageText?.count == 0 || message.downloadableURLs.count == 0 {
-            //DDLogVerbose("Download of message not needed \(message.messageKey)")
             return
         } else if let thread = message.threadOwner(), let account = thread.getChatAccount(), account.disableLinkFetching {
             if let firsturl = message.downloadableURLs.first?.absoluteString, !firsturl.hasPrefix("aesgcm") {
                 return
             }
         } else if let firsturl = message.downloadableURLs.first?.absoluteString, !firsturl.hasPrefix("aesgcm"), message.messageText?.count != firsturl.count {
-            // if it's text with a link. Only download for preview if its just a link
             return
         }
 
@@ -1177,7 +1144,6 @@ extension FileTransferManager {
         // Bail out if we've already downloaded the media
         if downloadMessage.messageMediaItemKey != nil &&
             downloadMessage.messageError == nil {
-            // DDLogWarn("Already downloaded media for this item")
             return
         }
         downloadMedia(downloadMessage)
@@ -1278,7 +1244,6 @@ extension FileTransferManager {
     private func continueDownloading(downloadMessage: MessageProtocol, url: URL, contentType: String?, contentLength: UInt) {
         // Remove placeholder media item
         var mediaItem = ChatMediaItemModel.getMediaItem(for: downloadMessage)
-        //mediaItem?.remove(completion: {})
             
         if mediaItem != nil {
             //do nothing, keep exiting just redownload
@@ -1295,11 +1260,6 @@ extension FileTransferManager {
         }
             // cherry picked update, why is this needed?
             // If the file is encrypted, the server might not know its type
-            /*if url.aesGcmKey != nil && contentType == "application/octet-stream" {
-                mediaItem = ChatMediaItemModel.incomingItem(withFilename: url.lastPathComponent, mimeType: nil)
-            } else {
-                mediaItem = ChatMediaItemModel.incomingItem(withFilename: url.lastPathComponent, mimeType: contentType)
-            }*/
             
         if let mitem = mediaItem {
             if mitem is ChatAudioItem {
@@ -1338,7 +1298,6 @@ extension FileTransferManager {
         self.sessionManager.request(url)
             .validate()
             .responseData(queue: self.internalQueue) { response in
-                //self.finishDownload(downloadMessage: downloadMessage, mediaItem: media, inData: response.data, urlResponse: response.response, error: response.error)
                 switch response.result {
                 case .success:
                     DDLogVerbose("Download Successful")
@@ -1346,7 +1305,6 @@ extension FileTransferManager {
                         self.finishDownload(downloadMessage: downloadMessage, mediaItem: media, inData: response.data, urlResponse: response.response, error: response.error)
                     }
                 case .failure(let error):
-                    //IOSM#46 //error.isResponseValidationError, error.isSessionTaskError
                     if media is ChatHTMLItem {
                         self.setError(FileTransferError.automaticDownloadsDisabled, onMessage: downloadMessage)
                         DDLogError("Don't download just pass link through \(error)")
@@ -1356,7 +1314,6 @@ extension FileTransferManager {
                     DDLogError("Download Error \(error)")
                 }
             }.downloadProgress(queue: self.internalQueue) { progress in
-                //DDLogVerbose("Download progress \(progress.fractionCompleted)")
                 let prog = progress.fractionCompleted
                 let newModified = Date()
                 if prog < 1.0, newModified > downloadMessage.messageModified.addingTimeInterval(0.3) {
@@ -1370,7 +1327,6 @@ extension FileTransferManager {
     private func finishHTML(downloadMessage: MessageProtocol, mediaItem: ChatMediaItemModel?, url: URL) {
         guard let media = mediaItem else {
             DDLogError("Could not unwrap media item")
-            //self.setError(FileTransferError.fileNotFound, onMessage: downloadMessage)
             return
         }
         
@@ -1439,24 +1395,19 @@ extension FileTransferManager {
             DDLogError("No data or response \(error)")
             return
         }
-        //DDLogVerbose("Received response \(response)")
-        let authTagSize = 16 // i'm not sure if this can be assumed, but how else would we know the size?
+        let authTagSize = 16
         var decryptedData:Data?
         if let (key, iv) = url.aesGcmKey, data.count > authTagSize {
-            //DDLogVerbose("Received encrypted response, attempting decryption...")
             
             let cryptedData = data.subdata(in: 0..<data.count - authTagSize)
             let authTag = data.subdata(in: data.count - authTagSize..<data.count)
-            //let cryptoData = CryptoData(data: cryptedData, authTag: authTag)
             do {
                 decryptedData = try OTRSignalEncryptionHelper.decryptData(cryptedData, key: key, iv: iv, authTag: authTag)
-                //data = try CryptoUtility.decryptAESGCMData(cryptoData, key: key, iv: iv)
             } catch let error {
                 self.setError(error, onMessage: downloadMessage)
                 DDLogError("Error decrypting data: \(error)")
                 return
             }
-            //DDLogVerbose("Decrpytion successful")
         } else if url.anchorData == nil, data.count > 0 {
             decryptedData = data
         }
@@ -1631,7 +1582,6 @@ extension URL {
 
 public extension String {
     
-    //IOSM-579 check things like espn.com as links
     private var urlRanges: ([URL], [NSRange]) {
         guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
             return ([], [])
@@ -1716,10 +1666,6 @@ public extension FileTransferManager {
         }
         
         // so media messages don't show as link in group, maybe remove after OMEMO
-        /*if messageText.isSingleURLOnly,
-           message.downloads().count > 0, message.isMessageIncomingOrDifferentDevice { //IOSM-474 added incoming
-            return false
-        }*/
 
         return true
     }

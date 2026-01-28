@@ -10,8 +10,8 @@ import NetworkExtension
     case active
     case deactivating
     case reasserting // Not a possible state at present
-    case restarting // Restarting tunnel (done after saving modifications to an active tunnel)
-    case waiting    // Waiting for another tunnel to be brought down
+    case restarting
+    case waiting
 
     init(from systemStatus: NEVPNStatus) {
         switch systemStatus {

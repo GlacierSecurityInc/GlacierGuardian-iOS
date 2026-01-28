@@ -1,10 +1,6 @@
-//
-//  ChatRoomViewControllerExt.swift
 //  Glacier
-//
 //  Created by andyfriedman on 11/6/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 import Foundation
 import MapKit
 import PureLayout
@@ -56,7 +52,6 @@ import MessageKit
         self.microphoneButton.addTarget(self, action: #selector(microphoneButtonTouched), for: UIControl.Event.touchUpInside)
         
         // share location
-        //self.locReady = false;
         self.btnMapShare = UIBarButtonItem(title: "Locating...", style: .plain, target: self, action: #selector(shareLocation))
         self.lastLoc = kCLLocationCoordinate2DInvalid
         self.initMapStuff()
@@ -71,8 +66,6 @@ import MessageKit
     private func initMapStuff() {
         self.mapView = MKMapView(frame: self.view.bounds)
         self.mapView?.overrideUserInterfaceStyle = .dark
-        //self.mapView?.delegate = self
-        //LocationManager.shared().addLocationDelegate(self)
         self.mapView?.userTrackingMode = .follow
         self.mapView?.showsUserLocation = true
         self.locationManager.delegate = self
@@ -104,11 +97,9 @@ import MessageKit
             }
         } else {
             self.locationManager.stopUpdatingLocation()
-            //LocationManager.shared().toggleLocationUpdates(false)
             if self.locbar != nil {
                 self.cancelLocation()
             }
-            //print("***** Turned OFF location I think")
         }
     }
 
@@ -220,23 +211,11 @@ import MessageKit
         self.trashView = nil
     }
 
-    /*override func isTyping() {
-        if let xmgr = self.xmppManager(), let threadKey = self.threadKey {
-            xmgr.send(OTRChatState.composing, withBuddyID: threadKey)
-        }
-    }
-
-    override func didFinishTyping() {
-        if let xmgr = self.xmppManager(), let threadKey = self.threadKey {
-            xmgr.send(OTRChatState.active, withBuddyID: threadKey)
-        }
-    }*/
 
     func removeMediaButtons() {
         self.removePush2TalkButton()
         self.removeRecordingBackgroundView()
         self.removeTrashViewItems()
-        //self.messageInputBar.contentView.leftBarButtonItem = nil
     }
 
     // MARK: OTRHoldToTalkViewStateDelegate
@@ -320,7 +299,6 @@ import MessageKit
                     do {
                         try FileManager.default.removeItem(atPath: urlpath)
                     } catch {
-                        //
                     }
                 }
             } else {
@@ -362,7 +340,6 @@ import MessageKit
             do {
                 try FileManager.default.removeItem(atPath: urlpath)
             } catch {
-                //
             }
         }
         self.removeTrashViewItems()
@@ -435,20 +412,12 @@ import MessageKit
     }
 
     //IOSM-464
-    /*func handleLocationNotReady() {
-        let alert = UIAlertController(title: "Location Not Available", message: "Still determining location. Try again in a few seconds.", preferredStyle: .alert)
-        let ok = UIAlertAction(title: "OK", style: .cancel)
-        alert.addAction(ok)
-        self.present(alert, animated: true, completion: nil)
-    }*/
 
     // MARK: Share Location
     func attachmentPicker(_ attachmentPicker:OTRAttachmentPicker, shareLocationButtonPressed locationURL:URL)
     {
         self.dsQueue.async {
-            //if self.locationTrackingCancellation == nil {
                 self.turnOnOffLocation(true)
-            //}
             
             if self.needsLocationPermission() {
                 self.awaitingLocationPermission = true //IOSM#26
@@ -476,7 +445,7 @@ import MessageKit
         self.view.insertSubview(mapView, belowSubview:locbar)
         mapView.autoPinEdgesToSuperviewEdges(with: .zero)
         
-        if let latestLoc = self.lastLoc {//self.mapView?.location.latestLocation {
+        if let latestLoc = self.lastLoc {
             self.btnMapShare?.title = "Share Location"
         }
     }
@@ -484,7 +453,6 @@ import MessageKit
     func addLocationViewBtns(_ shareable:Bool) {
         self.locbar = UIToolbar.init(forAutoLayout: ())
         guard let locbar = self.locbar else {return}
-        //locbar.sizeToFit()
         var barItems:[UIBarButtonItem] = []
         
         let btnCancel = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(cancelLocation))
@@ -524,7 +492,6 @@ import MessageKit
 
     @objc func cancelLocation() {
         self.mapView?.userTrackingMode = .none
-        //mapView?.removeAnnotation(annotation)
         
         self.awaitingLocationPermission = false
         self.locbar?.removeFromSuperview()
@@ -542,9 +509,6 @@ import MessageKit
         }
     }
 
-    /*public func mapView(_ mapView: MapView, didUpdate userLocation:MGLUserLocation?) {
-        self.btnMapShare?.title = "Share Location"
-    }*/
 
     override func findBuddyLocation(_ buddyloc:String, with message:ChatRoomMessage) {
         let buddycomponents = buddyloc.replacingOccurrences(of: "geo:", with: "")
@@ -570,11 +534,9 @@ import MessageKit
         mapView.userTrackingMode = .none
         
         let coordinate = CLLocationCoordinate2DMake(latd, lond)
-        //mapView.setCenter(coordinate, animated: true)
         
         mapView.removeAnnotation(annotation)
         
-        //var annotation = PointAnnotation(coordinate: coordinate)
         annotation.coordinate = coordinate
         
         var text = self.getThreadName()
@@ -587,12 +549,9 @@ import MessageKit
         }
 
         mapView.addAnnotation(annotation)
-        //self.mapView?.camera.centerCoordinate = coordinate
         var region = MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 2, longitudeDelta: 2))
         self.mapView?.region = region
         
-        //let camera = MKMapCamera(lookingAtCenter: coordinate, fromDistance: 1000, pitch: 0, heading: 0)
-        //mapView.setCamera(camera, animated: true)
     }
     //END share location functions
 
@@ -603,8 +562,8 @@ import MessageKit
         messageInputBar.inputTextView.text = nil
         
         let keyboardImg = UIImage(systemName: "keyboard")?.withRenderingMode(.alwaysTemplate)
-        messageInputBar.sendButton.image = keyboardImg// setImage(keyboardImg, for: .normal)
-        messageInputBar.sendButton.title = nil// setTitle(nil, for: .normal)
+        messageInputBar.sendButton.image = keyboardImg
+        messageInputBar.sendButton.title = nil
         messageInputBar.sendButton.tintColor = UIColor.bubbleBlue()
         messageInputBar.sendButton.isEnabled = true
         self.addPush2TalkButton()
@@ -631,9 +590,7 @@ extension ChatRoomViewControllerExt : CLLocationManagerDelegate {
             if let last = self.lastLoc, CLLocationCoordinate2DIsValid(last) {
                 self.mapView?.camera.centerCoordinate = last
             }
-            //if let account = self.getAccount(), account.trackingOn == false {
                 self.locationManager.startUpdatingLocation()
-            //}
         }
     }
 }

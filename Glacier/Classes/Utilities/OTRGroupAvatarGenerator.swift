@@ -1,10 +1,6 @@
-//
-//  OTRGroupAvatarGenerator.swift
 //  ChatSecure
-//
 //  Created by N-Pex on 2017-07-20.
 //  Copyright © 2017 Chris Ballinger. All rights reserved.
-//
 
 import Foundation
 
@@ -94,7 +90,6 @@ open class OTRGroupAvatarGenerator {
         
         UIGraphicsBeginImageContext(CGSize(width: width, height: height))
         if let ctx = UIGraphicsGetCurrentContext() {
-            // Middle part (just fill all)
             ctx.setFillColor(colorMiddle)
             ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
 
@@ -141,9 +136,6 @@ open class OTRGroupAvatarGenerator {
         return UIColor(red: r, green: g, blue: b, alpha: a)
     }
     
-    // A LCG to create pseudo-random numbers (using a seed)
-    //
-    // Inspired by: https://stackoverflow.com/questions/24027216/how-do-you-generate-a-random-number-in-swift
     class LinearCongruentialGenerator {
         var lastRandom = 0.0
         let m = 139968.0
@@ -171,7 +163,6 @@ open class OTRGroupAvatarGenerator {
 }
 
 // An extension to return a java-compatible hash of a string
-// See for example: http://grepcode.com/file/repository.grepcode.com/java/root/jdk/openjdk/6-b14/java/lang/String.java#String.hashCode%28%29
 extension String {
     func javaHash() -> Int {
         var hash:Int32 = 0

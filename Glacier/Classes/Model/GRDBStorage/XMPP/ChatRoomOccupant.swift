@@ -1,10 +1,6 @@
-//
-//  ChatRoomOccupant.swift
 //  Glacier
-//
 //  Created by andyfriedman on 9/20/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 import GRDB
@@ -45,11 +41,7 @@ import XMPPFramework
     case admin = 3
     case owner = 4
     /// Value used when updating the DB. This enables us to remove occupants that used to be
-    /// members, admins or owners, but are no longer that (e.g. they may have been kicked).
-    /// Before fetching the lists for room [members, admins, owners] we mark all existing
-    /// [members, admins, owners] as 'transient'. We then update the database from the lists.
     /// After this, we remove all occupants with affiliation 'transient', since they are no
-    /// longer in the lists (or their affiliation would have been updated).
     case transient = 99
     
     public func isOwner() -> Bool {
@@ -152,7 +144,7 @@ extension ChatRoomOccupantModel {
     /** When given by the server we get the room participants real JID*/
     @objc open var realJID:XMPPJID? {
         get {
-            guard let jidString = self.grdbRecord?.realJid else {  //_realJID else {
+            guard let jidString = self.grdbRecord?.realJid else {
                 return nil
             }
             return XMPPJID(string: jidString)?.bareJID
@@ -189,7 +181,6 @@ extension ChatRoomOccupantModel {
         return self.role == .moderator || [RoomOccupantAffiliation.owner, RoomOccupantAffiliation.admin].contains(self.affiliation)
     }
     
-    //https://xmpp.org/extensions/xep-0045.html#grantadmin
     //An owner can grant admin status to a member or an unaffiliated user; this is done by changing the user's affiliation to "admin":
     public func canGrantAdmin(_ occupant:ChatRoomOccupantModel) -> Bool {
         let ownerAffiliation = (self.affiliation == .owner)
@@ -209,7 +200,6 @@ extension ChatRoomOccupantModel {
         return false
     }
 
-    //https://xmpp.org/extensions/xep-0045.html#ban
     //An admin or owner can ban one or more users from a room. The ban MUST be performed based on the occupant's bare JID. In order to ban a user, an admin MUST change the user's affiliation to "outcast".
     //As with Kicking an Occupant, a user cannot be banned by an admin with a lower affiliation. Therefore, if an admin attempts to ban an owner, the service MUST deny the request and return a <not-allowed/> error to the sender
     public func canBan(_ occupant:ChatRoomOccupantModel) -> Bool {
@@ -223,7 +213,6 @@ extension ChatRoomOccupantModel {
         self.grdbRecord = ChatRoomOccupant(uniqueId: self.uniqueId, roomId: nil, jid: jid?.full, roomUniqueId: roomUniqueId, buddyUniqueId: nil, realJid: nil, role: nil, affiliation: nil)
     }
     
-    // jid is the full JID of the room participant e.g. groupchat@conference.domain.com/user123
     @objc public convenience init(jid: XMPPJID?, roomUniqueId: String) {
         self.init()
         self.grdbRecord = ChatRoomOccupant(uniqueId: self.uniqueId, roomId: nil, jid: jid?.full, roomUniqueId: roomUniqueId, buddyUniqueId: nil, realJid: nil, role: nil, affiliation: nil)
@@ -335,9 +324,7 @@ extension ChatRoomOccupantModel {
             }
         } else {
 //#if !TARGET_IS_EXTENSION
-//            _occupant = _occupant?.copyAsSelf()
 //#else
-//            _occupant = _occupant?.copy() as? Self
 //#endif
         }
         guard let occupant = _occupant else {
@@ -406,9 +393,6 @@ extension ChatRoomOccupantModel {
         return occupant
     }
     
-    /*public func copyAsSelf() -> Self? {
-        return self.copy() as? Self
-    }*/
     
     @objc public static func allXMPPRoomOccupants(for roomId: String) -> [ChatRoomOccupantModel] {
         var occupants:[ChatRoomOccupantModel] = []
@@ -478,7 +462,6 @@ struct ChatRoomOccupant: GRDBRecord {
     var chatRoomId: Int64
     var buddyUniqueId: String?
     var realJid: String?
-    //var roomName: String?
     var role: Int?
     var affiliation: Int?
     
@@ -493,7 +476,6 @@ struct ChatRoomOccupant: GRDBRecord {
         self.roomUniqueId = roomUniqueId
         self.buddyUniqueId = buddyUniqueId
         self.realJid = realJid
-        //self.roomName = occupant.roomName
         self.role = role
         self.affiliation = affiliation
     }

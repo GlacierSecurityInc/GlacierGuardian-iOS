@@ -1,10 +1,6 @@
-//
-//  RoomStorage.swift
 //  ChatSecureCore
-//
 //  Created by Chris Ballinger on 12/7/17.
 //  Copyright © 2017 Chris Ballinger. All rights reserved.
-//
 
 import Foundation
 import XMPPFramework
@@ -56,7 +52,6 @@ import GRDB
                                transaction: GRDBWriteTransaction? = nil,
                                preSave: MessageStorage.PreSave? = nil) {
         
-        // Don't process incoming message with reactions. Reactions are processed under MessageStorage.handleMessageReaction() method.
         if let reactions = xmppMessage.chatMessageReactions as? [String: Any], !reactions.isEmpty {
             return
         }
@@ -92,7 +87,7 @@ import GRDB
         }
         //IOSM#8 if this is a displayed, we are done
         if self.handleDisplayedResponse(message: xmppMessage, xmppRoom: xmppRoom, transaction: transaction) {
-            return //if this is a displayed, we are done
+            return
         }
             
         // If this is a receipt, we are done
@@ -106,7 +101,6 @@ import GRDB
         var cmessage:ChatRoomMessageModel?
         DBManager.sharedDB().grdbStorage.asyncWrite(block: { transaction in
             if let _ = self.existingSentMessage(xmppMessage: xmppMessage, stanzaId: stanzaId, originId: originId, transaction: transaction) {
-                // DDLogVerbose("Discarding duplicate MUC message: \(duplicate) \(xmppMessage)")
                 if (!split) { //IOSM-486, IOSM-557
                     return
                 }
@@ -127,8 +121,7 @@ import GRDB
                 _room?.roomJID = xmppRoom.roomJID
                 newroom = true
             }
-            //self.copy() as? Self
-            guard let room = _room, //.copy() as? ChatRoomModel,
+            guard let room = _room,
                   let roomJID = room.roomJID else {
                 DDLogError("Could not find or create room for \(xmppRoom)")
                 return
@@ -147,7 +140,6 @@ import GRDB
                 message.senderId = account.uniqueId
                 message.senderDisplayName = account.displayName
             }
-            // override body if this was an encrypted message
             if let body = body {
                 message.messageText = body
             }
@@ -163,12 +155,6 @@ import GRDB
                 message.grdbRecord?.originalText = original
             }
             
-            //if (!message.isMessageIncoming && message.isMessageIncomingOrDifferentDevice) {
-            /*if (isOutgoingFromOtherDevice) { //IOSM-371
-             if (original?.hasPrefix("geo:") ?? false) {
-             message.messageText = original ?? body
-             }
-             }*/
             
             message.grdbRecord?.originId = originId
             message.grdbRecord?.stanzaId = stanzaId
@@ -181,7 +167,6 @@ import GRDB
                 message.grdbRecord?.buddyUniqueId = occupant?.buddyUniqueId
             }
             
-            //occupant?.grdbRecord?.storeInGRDB(completion: {})
             
             room.grdbRecord?.lastRoomMessageId = message.uniqueId
             
@@ -196,7 +181,6 @@ import GRDB
                 if let aid = account.grdbRecord?.id {
                     thread.accountUniqueId = aid
                 }
-                //let threadModel = ChatThreadModel(thread: thread)
                 thread.messageDate = message.messageDate
                 thread.isGroupThread = true
                 thread.modified = Date()
@@ -239,7 +223,6 @@ import GRDB
                 room.grdbRecord?.grdbSave(transaction: transaction)
                 occupant?.grdbRecord?.grdbSave(transaction: transaction)
                                     
-                //if var mrec = message.grdbRecord {
                 message.grdbRecord?.chatRoomId = room.grdbRecord!.id!
                 if let preSave = preSave {
                     preSave(message, room.uniqueId, transaction)
@@ -258,23 +241,6 @@ import GRDB
                     DDLogDebug("ChatRoomMessage.threadOwner with error: \(error)")
                 }
                 
-                /*room.saveThread()
-                occupant?.grdbRecord?.storeInGRDB()
-                message.grdbRecord?.chatRoomId = room.grdbRecord!.id!
-                if let preSave = preSave {
-                    preSave(message)
-                } else {
-                    message.grdbRecord?.storeInGRDB(completion: {
-                        DispatchQueue.global().async {
-                            if let threadOwner = message.threadOwner() {
-                                threadOwner.lastMessageIdentifier = message.uid
-                                threadOwner.threadDate = message.messageDate
-                                threadOwner.grdbRecord?.modified = Date()
-                                threadOwner.saveThread()
-                            }
-                        }
-                    })
-                }*/
             }
             
             if room.grdbRecord?.isArchived == false {
@@ -295,15 +261,6 @@ import GRDB
             }
         })
             
-        /*self.fileTransfer.createAndDownloadItemsIfNeeded(message: message, force: false)
-            
-        if room.grdbRecord?.isArchived == false {
-            DispatchQueue.main.async {
-                Application.shared.showLocalNotification(message)
-            }
-        }
-  
-        MessageStorage.markAsReadIfVisible(message: message, account: account)*/
     }
     
     /// Marks a previously sent outgoing message as read.
@@ -330,7 +287,6 @@ import GRDB
         
         guard let displayedMessage = roomMessage else {return true }
         
-        //if displayedMessage.grdbRecord?.isDisplayed != true {
             displayedMessage.grdbRecord?.isDisplayed = true
             displayedMessage.grdbRecord?.read = true
             displayedMessage.grdbRecord?.modified = Date()
@@ -341,20 +297,8 @@ import GRDB
             } else {
                 displayedMessage.save()
             }
-                /*if let thread = displayedMessage.threadOwner() {
-                    thread.saveThread()
-                    //let tkey = displayedMessage.threadId
-                    /*DispatchQueue.main.async {
-                        let messagesVC = OTRAppDelegate.appDelegate.chatRoomViewController
-                        if messagesVC.isViewLoaded, messagesVC.view.window != nil,
-                           let key = messagesVC.threadKey, tkey == key
-                        {
-                            messagesVC.updateDisplayedMessage()
-                        }
-                    }*/
                 }*/
             }
-        //}
         return true
     }
     
@@ -392,7 +336,6 @@ import GRDB
             occupants.forEach({ (occupantInfo) in
                 let presenceJID = occupantInfo.jid
                 let item = occupantInfo.item
-                // Will be nil in anonymous rooms (and semi-anonymous rooms if we are not moderators)
                 var realJID: XMPPJID? = nil
                 if let buddyJidString = item?.attributeStringValue(forName: "jid") {
                     realJID = XMPPJID(string: buddyJidString)
@@ -433,16 +376,13 @@ import GRDB
                     var buddy = ChatBuddyModel.fetchBuddy(jid: realJID, accountUniqueId: accountId, transaction: transaction)
                     if buddy == nil {
                         // if an existing buddy is not found
-                        // let's create an 'untrusted' room buddy,
                         // this facilitates vCard fetch and OMEMO key fetch
                         // this buddy is not considered on the user's roster
                         //create ChatThread first, on completion create Buddy
                             
                         if account?.bareJID == realJID {
-                            //print("***** found my own account")
                         } else {
                             let buddyModel = ChatBuddyModel(jid: realJID, accountId: accountId)
-                            //buddyModel.trustLevel = .untrusted
                             buddyModel.grdbRecord?.grdbSave(transaction: transaction)
                             DDLogInfo("Created non-roster buddy for room \(realJID) \(room)")
                             buddy = buddyModel.grdbRecord
@@ -450,7 +390,6 @@ import GRDB
                     }
                     occupant.grdbRecord?.buddyUniqueId = buddy?.uniqueId
                     /// Fetch vCard for avatar
-                    //self.vCardModule.fetchvCardTemp(for: realJID, ignoreStorage: false)
                     //get this manually if possible...below
                         
                     /// Fetch DeviceIds for prepping future OMEMO sessions
@@ -530,7 +469,6 @@ extension RoomStorage: XMPPRoomStorage {
         }
         if myRoomJID.isEqual(to: messageJID),
            !message.wasDelayed {
-            // DDLogVerbose("Discarding duplicate outgoing MUC message \(message)")
             // this can happen with MAM messages if both devices open
         }
         
@@ -558,7 +496,6 @@ extension RoomStorage: XMPPRoomStorage {
                     let stanzaId = message.extractStanzaId(chatAccount: account)
                     let originId = message.originId
                     if let _ = self.existingSentMessage(xmppMessage: message, stanzaId: stanzaId, originId: originId, transaction: transaction) {
-                        // DDLogVerbose("Discarding duplicate MUC message: \(duplicate) \(xmppMessage)")
                         insert = false
                     }
                 }
@@ -574,42 +511,14 @@ extension RoomStorage: XMPPRoomStorage {
     static var failedMsgNum:Int = -1
     public func getFailedDecryptMessage() -> String {
         return "Message cannot be decrypted" //IOSM-531
-        //For more information visit https://glaciersecurity.zendesk.com/hc/en-us/articles/360027880632"
-        /*RoomStorage.failedMsgNum = RoomStorage.failedMsgNum+1
-        if (RoomStorage.failedMsgNum > 9) {
-            RoomStorage.failedMsgNum = 0
-        }
-        switch RoomStorage.failedMsgNum {
-            case 0:
-                return "Couldn't decrypt, restarting flux capacitor"
-            case 1:
-                return "Couldn't decrypt, recalibrating earth's orbit"
-            case 2:
-                return "Couldn't decrypt, starting particle accelerator"
-            case 3:
-                return "Couldn't decrypt, initiating ludicrous speed"
-            case 4:
-                return "Couldn't decrypt, turning on anti-gravity mode"
-            case 5:
-                return "Couldn't decrypt, entering subatomic realm"
-            case 6:
-                return "Couldn't decrypt, mapping human genome"
-            case 7:
-                return "Couldn't decrypt, negotiating peace treaty"
-            case 8:
-                return "Couldn't decrypt, hunting for Red October"
-            default:
-                return "Couldn't decrypt message(s), re-syncing Glacier keys"
-        }*/
     }
     
     public func handleOutgoingMessage(_ message: XMPPMessage, room: XMPPRoom) {
-        // DDLogVerbose("Handle outgoing group message \(message) \(room)")
     }
     
     public func handleDidLeave(_ xmppRoom: XMPPRoom) {
         //handled in XMPPManager if is stream disconnect
-        guard let room = ChatRoomModel.fetch(xmppRoom: xmppRoom) else { //?.copyAsSelf() else {
+        guard let room = ChatRoomModel.fetch(xmppRoom: xmppRoom) else {
             return
         }
         room.joined = false
@@ -617,7 +526,7 @@ extension RoomStorage: XMPPRoomStorage {
     }
     
     public func handleDidJoin(_ xmppRoom: XMPPRoom, withNickname nickname: String) {
-        guard let room = ChatRoomModel.fetch(xmppRoom: xmppRoom) else { //?.copyAsSelf() else {
+        guard let room = ChatRoomModel.fetch(xmppRoom: xmppRoom) else {
             return
         }
         room.joined = true
@@ -640,14 +549,12 @@ extension RoomStorage: XMPPRoomStorage {
 // MARK: - XEP-0380: Explicit Message Encryption
 // TODO: Move me somewhere else
 /// XEP-0380: Explicit Message Encryption
-/// https://xmpp.org/extensions/xep-0380.html
 public extension XMPPMessage {
     /// XEP-0380: Explicit Message Encryption
     static let emeXmlns = "urn:xmpp:eme:0"
     
     enum EncryptionNamespace: String {
         case otr = "urn:xmpp:otr:0"
-        //case omemo = "eu.siacs.conversations.axolotl"
         case omemo = "com.glaciersecurity.glaciermessenger.axolotl"
         case pgp = "urn:xmpp:openpgp:0"
     }

@@ -1,10 +1,6 @@
-//
-//  PhoneContactCell.swift
 //  Glacier
-//
 //  Created by andyfriedman on 1/20/25.
 //  Copyright © 2025 Glacier. All rights reserved.
-//
 
 import UIKit
 import XLForm
@@ -18,7 +14,6 @@ protocol PhoneContactDelegateProtocol:AnyObject {
 @objc(PhoneContactCell)
 open class PhoneContactCell: OTRBuddyImageCell {
 
-    //static let checkViewSize:CGFloat = 20.0
     var buttonsView: UIStackView!
     var nameLabel:UILabel!
     var accountLabel:UILabel!
@@ -44,15 +39,12 @@ open class PhoneContactCell: OTRBuddyImageCell {
         smsBtn.addTarget(self, action: #selector(smsTapped(_:)), for: .touchUpInside)
         phoneBtn.addTarget(self, action: #selector(phoneTapped(_:)), for: .touchUpInside)
         
-        //smsBtn.backgroundColor = UIColor.bubbleBlue()
-        //phoneBtn.backgroundColor = #colorLiteral(red: 0.297358036, green: 0.8514089584, blue: 0.389008224, alpha: 1)
         
         phoneBtn.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 4.0, leading: 8.0, bottom: 4.0, trailing: 8.0)
         self.phoneBtn.titleLabel?.font = UIFont(name: kFontAwesomeFont, size: 22)
         self.phoneBtn.titleLabel?.textAlignment = NSTextAlignment.center
         self.phoneBtn.tintColor = .lightGray//.label
         self.phoneBtn.setTitleColor(.label, for: UIControl.State.normal)
-        //self.phoneBtn.setTitleColor(UIColor.lightGray, for: UIControl.State.highlighted)
         let phoneIconChar: UniChar = 0xf095
         self.phoneBtn.setTitle(String(format: "%C", phoneIconChar), for: .normal)
         self.phoneBtn.layer.borderWidth = 1
@@ -63,7 +55,6 @@ open class PhoneContactCell: OTRBuddyImageCell {
         self.smsBtn.titleLabel?.textAlignment = NSTextAlignment.center
         self.smsBtn.tintColor = .lightGray//.label
         self.smsBtn.setTitleColor(.label, for: UIControl.State.normal)
-        //self.smsBtn.setTitleColor(UIColor.lightGray, for: UIControl.State.highlighted)
         let smsIconChar: UniChar = 0xf27a
         self.smsBtn.setTitle(String(format: "%C", smsIconChar), for: .normal)
         self.smsBtn.layer.borderWidth = 1
@@ -79,8 +70,6 @@ open class PhoneContactCell: OTRBuddyImageCell {
         // Add stack view to the main view
         buttonsView.translatesAutoresizingMaskIntoConstraints = false
         
-        //buttonsView.addSubview(smsBtn)
-        //buttonsView.addSubview(phoneBtn)
         
         self.contentView.addSubview(buttonsView)
     }

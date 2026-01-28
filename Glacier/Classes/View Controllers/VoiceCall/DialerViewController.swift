@@ -1,11 +1,7 @@
-//
-//  DialerViewController.swift
 //  Glacier
 //  from NumPadLBTA
-//
 //  Created by Brian Voong on 3/19/19.
 //  Copyright © 2019 Brian Voong. All rights reserved.
-//
 
 import UIKit
 import MBProgressHUD
@@ -119,8 +115,7 @@ import MBProgressHUD
         self.navigationController?.navigationBar.scrollEdgeAppearance = appearance
         self.navigationController?.navigationBar.tintColor = titleColor
         
-        //collectionView.backgroundColor = .white
-        collectionView.backgroundColor = .systemBackground//GlobalTheme.shared.lightThemeColor
+        collectionView.backgroundColor = .systemBackground
         collectionView.register(KeyPadCell.self, forCellWithReuseIdentifier: cellId)
         collectionView.register(GreenCallButtonCell.self, forCellWithReuseIdentifier: greenButtonCellId)
         collectionView.register(BackspaceCell.self, forCellWithReuseIdentifier: backspaceCellId)
@@ -131,12 +126,11 @@ import MBProgressHUD
             self.settingsButton?.menu = self.smsMenu
         }
         
-        //self.settingsButton?.menu = self.smsMenu
         self.navigationItem.leftBarButtonItem = self.settingsButton
         
         self.tabBar = GlacierTabs()
         if let tabs = self.tabBar {
-            self.navigationController?.view.addSubview(tabs) //self.view.addSubview(tabs) 
+            self.navigationController?.view.addSubview(tabs)
             tabs.delegate = self
             tabs.setPhoneModule()
         }
@@ -157,13 +151,11 @@ import MBProgressHUD
         blueDot.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(blueDot)
             
-        // Constraints for imageView (optional: adjust size/spacing)
         NSLayoutConstraint.activate([
             imageView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
             imageView.centerYAnchor.constraint(equalTo: containerView.centerYAnchor)
         ])
             
-        // Constraints for blue dot (position it at the bottom-right corner of the image)
         NSLayoutConstraint.activate([
             blueDot.widthAnchor.constraint(equalToConstant: 8), // Size of the blue dot
             blueDot.heightAnchor.constraint(equalToConstant: 8), // Size of the blue dot
@@ -226,7 +218,6 @@ import MBProgressHUD
                 appDelegate.window?.rootViewController = appDelegate.smsSplitViewCoordinator.splitViewController
                 break
             case GlacierTabs.Screen.contacts.rawValue:
-                //appDelegate.goGlacierVoice()
                 appDelegate.window?.rootViewController = appDelegate.contactsViewController
                 break
             case GlacierTabs.Screen.history.rawValue:
@@ -277,7 +268,7 @@ import MBProgressHUD
         self.addRemoveMenu = UIMenu(title: "", options: .displayInline, children: bottomActions)
     }
     
-    func setNumbersWithAction(_ action:SMSNumbersAction) {//name:Bool, copy:Bool) {
+    func setNumbersWithAction(_ action:SMSNumbersAction) {
         self.numAction = action
         
         let tmgr = TwilioBackendManager.sharedMgr()
@@ -293,7 +284,7 @@ import MBProgressHUD
                 }
             }
         }
-        smsNumbersViewController.setNumbers(currentNumbers, names: currentNames, action: action) //release: self.releasing, name: self.naming)
+        smsNumbersViewController.setNumbers(currentNumbers, names: currentNames, action: action)
         let modalNavigationController = UINavigationController(rootViewController: smsNumbersViewController)
         modalNavigationController.modalPresentationStyle = .formSheet
         
@@ -643,7 +634,6 @@ extension DialerViewController : TwilioAccountDelegateProtocol {
         
         DispatchQueue.main.async {
             if (accounts.count == 0) {
-                //selectedAccount = nil
                 self.navigationItem.title = "No account"
             } else {
                 if let selacct = selected {

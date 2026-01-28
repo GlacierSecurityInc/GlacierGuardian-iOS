@@ -1,10 +1,6 @@
-//
-//  UIAlertController+ChatSecure.swift
 //  ChatSecureCore
-//
 //  Created by Chris Ballinger on 8/1/17.
 //  Copyright © 2017 Chris Ballinger. All rights reserved.
-//
 
 import UIKit
 

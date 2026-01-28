@@ -1,5 +1,3 @@
-//
-//  CoreConnectionViewController.swift
 //  Created by Andy Friedman on 10/25/19.
 //  Copyright © 2019 Glacier Security. All rights reserved.
 
@@ -29,7 +27,7 @@ import Authenticator
     var vSpinner : UIView?
     var coreOptionsController: CoreOptionsViewController?
     var refreshButton:UIButton = UIButton(type: .custom)
-    var amplifyAuth:UIHostingController<AuthView>? // for refreshing profiles when auth expired
+    var amplifyAuth:UIHostingController<AuthView>?
     
     var tunnelsManager: TunnelsManager?
     var onTunnelsManagerReady: ((TunnelsManager) -> Void)?
@@ -40,15 +38,11 @@ import Authenticator
     
     override open func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        /*NotificationCenter.default.addObserver(forName: NSNotification.Name.NEVPNStatusDidChange, object: self.targetManager.connection, queue: OperationQueue.main, using: { notification in
-            self.coreConnectionSwitch.isOn = (self.targetManager.isEnabled && self.targetManager.connection.status != .disconnected && self.targetManager.connection.status != .disconnecting && self.targetManager.connection.status != .invalid)
-        })*/
     }
     
     override open func viewWillDisappear(_ animated: Bool) {
         self.stopSpinner()
         super.viewWillDisappear(animated)
-        //NotificationCenter.default.removeObserver(self)
     }
     
     override open func viewDidAppear(_ animated: Bool) {
@@ -62,12 +56,10 @@ import Authenticator
         let coreDescription = "Enabling Core adds an additional layer of encryption and anonymitity to all data exiting your device.\n\nLearn more how Glacier protects you."
         
         let attributedString = NSMutableAttributedString(string: coreDescription)
-        attributedString.addAttribute(.link, value: "https://glacier.chat/core", range: NSRange(location: 126, length: 12))
+        attributedString.addAttribute(.link, value: "https:
         let textRange = NSMakeRange(0, coreDescription.count)
         
         // might need to put everything inside a scroll view
-        //let userFont = UIFontDescriptor.preferredFontDescriptor(withTextStyle: UIFontTextStyle.body, compatibleWith: nil)
-        //let fontSize = userFont.pointSize-3
         
         attributedString.addAttribute(.font, value: UIFont.systemFont(ofSize: 14), range: textRange)
         let tcolor = UIColor.label
@@ -81,7 +73,7 @@ import Authenticator
         let profilenib = UINib(nibName: CoreProfileCell.cellIdentifier(), bundle: Bundle.main)
         self.profilesTable.register(profilenib, forCellReuseIdentifier: CoreProfileCell.cellIdentifier())
         
-        WireGuardManager.shared().setUIDelegate(self) //tunnelsManager.tunnelsListDelegate = self
+        WireGuardManager.shared().setUIDelegate(self)
         
         self.setupRefreshButton()
     }
@@ -111,7 +103,7 @@ import Authenticator
             numTunnels = 1
         }
         let contentSize = self.profilesTable.contentSize
-        profilesHeightConstraint.constant = contentSize.height //CGFloat(48 + (44*numTunnels))
+        profilesHeightConstraint.constant = contentSize.height
         
         if let coreOpSize = coreOptionsController?.coreOptionsTableView.contentSize, coreOptionsHeight != nil {
             coreOptionsHeight.constant = coreOpSize.height
@@ -258,7 +250,6 @@ extension CoreConnectionViewController: TunnelsManagerActivationDelegate {
     }
 
     func tunnelActivationFailed(tunnel: TunnelContainer, error: TunnelsManagerActivationError) {
-        //ErrorPresenter.showErrorAlert(error: error, from: self)
         NSLog("Tunnel activation failed: Likely just due to On Demand rules")
         self.profilesTable.reloadData()
     }

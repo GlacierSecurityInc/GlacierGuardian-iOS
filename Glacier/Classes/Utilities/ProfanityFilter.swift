@@ -1,10 +1,6 @@
-//
-//  ProfanityFilter.swift
 //  Glacier
-//
 //  Created by andyfriedman on 10/10/25.
 //  Copyright © 2025 Glacier. All rights reserved.
-//
 
 
 import Foundation

@@ -1,23 +1,17 @@
-//
-//  ChatSignalSession.swift
 //  Glacier
-//
 //  Created by andyfriedman on 12/13/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 import GRDB
 
 public struct ChatSignalSession: GRDBRecord, TableRecord {
-    //public protocol ChatThread: AnyObject {
     public var id: Int64?
     public var uniqueId: String
     var accountKey: String
     var name: String
     var deviceId: Int32
     var sessionData: Data
-    //var modified: Date?
     
     public init(accountKey:String, name:String, deviceId:Int32, sessionData: Data) {
         self.uniqueId = Self.uniqueKey(for: accountKey, name: name, deviceId: deviceId)

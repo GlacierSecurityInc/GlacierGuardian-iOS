@@ -1,10 +1,6 @@
-//
-//  RoomManager.swift
 //  ChatSecureCore
-//
 //  Created by Chris Ballinger on 11/17/17.
 //  Copyright © 2017 Chris Ballinger. All rights reserved.
-//
 
 import Foundation
 import GRDB
@@ -53,7 +49,6 @@ public extension OTRXMPPRoomManager {
                         if let accountId = self.accountId, let acct = try ChatAccountModel.getXMPPAccount(uniqueId: accountId, transaction: transaction), let aid = acct.grdbRecord?.id {
                             thread.accountUniqueId = aid
                         }
-                        //let threadModel = ChatThreadModel(thread: thread)
                         thread.grdbSave(transaction: transaction)
                     
                         if let rethread = try ChatThread.getChatThread(uniqueId: room.uniqueId, transaction: transaction) {
@@ -61,9 +56,6 @@ public extension OTRXMPPRoomManager {
                             room.grdbRecord?.grdbSave(transaction: transaction)
                             rethread.touch(transaction: transaction)
                             rooms.append(room)
-                            //self.performBlock(async: true) {
-                            //    self.join(room: room)
-                            //}
                         }
                     }
                 } catch {
@@ -76,7 +68,6 @@ public extension OTRXMPPRoomManager {
             }
         })
         
-        //self.joinRooms(rooms)
     }
     
     @objc func createRoomIfNeeded(_ jid:XMPPJID, accountId: String, isPublic: Bool, seedNum: Int, completion: @escaping ((_ xRoom: ChatRoomModel?)->Void)) {
@@ -164,15 +155,12 @@ public extension OTRXMPPRoomManager {
     @objc func fetchHistory(for xmppRoom: XMPPRoom) {
         if let room = ChatRoomModel.fetch(xmppRoom: xmppRoom) {
             if let dateToFetch = room.grdbRecord?.lastHistoryFetch {
-                //NSLog("***** fetchHistory for \(xmppRoom.roomJID) from \(dateToFetch)")
                 self.archiving.fetchHistory(archiveJID: xmppRoom.roomJID, userJID: nil, since: dateToFetch)
             } else {
-                //NSLog("***** did not find lastHistoryFetchDate for \(xmppRoom.roomJID)")
                 let currentDate = Date()
                 var dateComponents = DateComponents()
                 dateComponents.day = -7
                 let lastWeek = Calendar.current.date(byAdding: dateComponents, to: currentDate)!
-                //dateToFetch = lastWeek
                 //IOSM-541 - archiveJID was nil. Which means this was being queried numerous times?
                 self.archiving.fetchHistory(archiveJID: xmppRoom.roomJID, userJID: nil, since: lastWeek)
             }

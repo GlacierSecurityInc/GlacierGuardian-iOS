@@ -1,10 +1,6 @@
-//
-//  IncomingChatMessage.swift
 //  Glacier
-//
 //  Created by andyfriedman on 9/13/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 

@@ -1,5 +1,3 @@
-//
-//  GlacierLog.swift
 //  Created on 12/18/19.
 //  Copyright © 2019 Glacier Security. All rights reserved.
 

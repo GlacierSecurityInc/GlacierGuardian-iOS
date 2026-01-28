@@ -1,10 +1,6 @@
-//
-//  MessageProtocol.swift
 //  Glacier
-//
 //  Created by andyfriedman on 9/5/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 
@@ -29,7 +25,6 @@ import Foundation
 }
 
 @objc public protocol MessageProtocol: DownloadMessageProtocol {
-    //var uniqueId: String { get }
     var dbId: NSNumber? { get set }
     var uid: String { get }  //uniqueId
     var messageKey: String { get }
@@ -81,7 +76,6 @@ import Foundation
     /** This is always a ChatBuddyModel associated with the message */
     func xmppBuddy() -> ChatBuddyModel?
     func save()
-    //func saveWithThread:(nonnull id<ThreadOwner>)thread; //used for share
     func save(completion: @escaping () -> Void)
     func save(withThread thread:ChatThreadModel?)
     func touch()

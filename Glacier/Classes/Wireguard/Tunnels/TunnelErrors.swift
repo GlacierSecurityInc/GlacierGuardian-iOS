@@ -31,7 +31,7 @@ enum TunnelsManagerError: WireGuardAppError {
 
 enum TunnelsManagerActivationAttemptError: WireGuardAppError {
     case tunnelIsNotInactive
-    case failedWhileStarting(systemError: Error) // startTunnel() throwed
+    case failedWhileStarting(systemError: Error)
     case failedWhileSaving(systemError: Error) // save config after re-enabling throwed
     case failedWhileLoading(systemError: Error) // reloading config throwed
     case failedBecauseOfTooManyErrors(lastSystemError: Error) // recursion limit reached

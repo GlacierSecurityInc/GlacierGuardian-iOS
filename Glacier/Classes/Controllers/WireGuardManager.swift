@@ -1,10 +1,6 @@
-//
-//  WireGuardManager.swift
 //  Glacier
-//
 //  Created by andyfriedman on 8/13/24.
 //  Copyright © 2024 Glacier. All rights reserved.
-//
 
 import Foundation
 import WireGuardKit
@@ -28,7 +24,6 @@ public protocol TunnelListDelegate {
     @objc private override init() {
         super.init()
         self.initWGClient()
-        //setVpnIsActive()
     }
     
     func initWGClient() {
@@ -42,7 +37,6 @@ public protocol TunnelListDelegate {
                 }
             case .success(let tunnelsManager):
                 self.tunnelsManager = tunnelsManager
-                //self.tunnelsListVC?.setTunnelsManager(tunnelsManager: tunnelsManager)
 
                 if let uiDel = self.uiDelegate as? CoreConnectionViewController {
                     tunnelsManager.activationDelegate = uiDel
@@ -87,12 +81,6 @@ public protocol TunnelListDelegate {
                     _ = FileManager.deleteFile(at: url)
                 }
                 self.refreshTunnelConnectionStatuses()
-                /*if tunnelsManager.numberOfTunnels() > 0 {
-                    let tunnel = tunnelsManager.tunnel(at: 0)
-                    if tunnel.status == .inactive {
-                        //tunnelsManager.startActivation(of: tunnel)
-                    }
-                }*/
             }
         }
         if let tunnelsManager = tunnelsManager {

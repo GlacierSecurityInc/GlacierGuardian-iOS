@@ -1,10 +1,6 @@
-//
-//  OTROTRSignalEncryptionHelper.swift
 //  ChatSecure
-//
 //  Created by David Chiles on 10/3/16.
 //  Copyright © 2016 Chris Ballinger. All rights reserved.
-//
 
 import UIKit
 import CryptoKit
@@ -20,9 +16,6 @@ class OTRSignalEncryptionHelper {
      
      returns: The encrypted data
      */
-    /*class func encryptData(_ data:Data, key:Data, iv:Data) throws -> CryptoData? {
-        return try CryptoUtility.encryptAESGCMData(data, key: key, iv: iv)
-    }*/
     
     class func encryptData(_ data:Data, key:Data, iv:Data) throws -> CryptoData {
         let nonce = try AES.GCM.Nonce(data: iv)
@@ -57,29 +50,15 @@ class OTRSignalEncryptionHelper {
     }
     
     /** Generates random data of length 16 bytes */
-    /*fileprivate class func randomDataOfBlockLength() -> Data? {
-        return OTRPasswordGenerator.randomData(withLength: 16)
-    }*/
     
     /** Generates random key of length 16 bytes*/
     class func generateSymmetricKey() -> Data? {
-        //return self.randomDataOfBlockLength()
         return OTRPasswordGenerator.randomData(withLength: 16)
     }
     /** Generates random iv of length 12 bytes */
     class func generateIV() -> Data? {
-        //return self.randomDataOfBlockLength()
         return Data(AES.GCM.Nonce())
     }
     
 }
 
-/*class CryptoData:NSObject {
-    var data: Data
-    var authTag: Data
-    
-    public init(data: Data, authTag: Data) {
-        self.data = data
-        self.authTag = authTag
-    }
-}*/

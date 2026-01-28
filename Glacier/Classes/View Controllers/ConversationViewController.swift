@@ -1,10 +1,6 @@
-//
-//  ConversationViewController.swift
 //  Glacier
-//
 //  Created by andyfriedman on 5/4/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 import GRDB
@@ -13,7 +9,6 @@ import SAMKeychain
 import XMPPFramework
 import Kingfisher
 import SwiftUI
-//import Authenticator
 
 @objc public protocol ConversationViewControllerDelegate {
     func didSelectThread(_ threadOwner:ChatThreadModel, conversationViewController: ConversationViewController)
@@ -22,12 +17,10 @@ import SwiftUI
 
 @objc public class ConversationViewController: UIViewController, UITableViewDelegate, UIGestureRecognizerDelegate, UITabBarDelegate, LocationManagerDelegate {
     
-    //let tableView = UITableView(frame: .zero, style: .plain)
     let tableView = EmptyStateTableView(frame: .zero, style: .plain)
     
     private var dataSource: ConversationDataSource!
     private var convCancellable: DatabaseCancellable?
-    //var curSnapshot = NSDiffableDataSourceSnapshot<Int, ChatThread>()
     
     static let kOTRConversationCellHeight:CGFloat = 80.0
     
@@ -113,8 +106,6 @@ import SwiftUI
         self.navTitleView.titleLabel.centerXAnchor.constraint(equalTo: self.navTitleView.centerXAnchor).isActive = true
         
         self.resetStatusTimer()
-        //let redoIconChar: UniChar = 0xf01e
-        //self.repeatStr = String(format: "%C", redoIconChar)
         
         self.statusTapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleStatusGesture))
         self.statusTapGestureRecognizer?.numberOfTapsRequired = 1
@@ -151,17 +142,13 @@ import SwiftUI
         self.tabBar.selectedItem = self.tabBar.chatsItem
         
         let tabBarHeight = self.tabBar.frame.height
-        //let bottomSafeArea = self.view.safeAreaInsets.bottom
         self.tableView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor).isActive = true
         self.tableView.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor, constant: -tabBarHeight).isActive = true
         if let navwidth = self.navigationController?.view.frame.size.width {
             self.tableView.widthAnchor.constraint(equalToConstant: CGFloat(navwidth)).isActive = true
         }
         
-        //self.tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: tabBarHeight, right: 0)
-        //self.tableView.scrollIndicatorInsets = tableView.contentInset
         
-        //[self.tableView reloadData];
         
         if let account = self.getFirstAccount() {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
@@ -180,7 +167,6 @@ import SwiftUI
         }
         
         self.setupLongAndTapPress()
-        //self.view.addSubview(self.tabBar)
         
         AWSAcctManager.sharedMgr().addOrgDelegate(LocationManager.shared())
         LocationManager.shared().setLocationManagerDelegate(self)
@@ -260,7 +246,6 @@ import SwiftUI
             return bcell ?? UITableViewCell()
         })
         
-        //self.dataSource.accountId = self.selectedAccount?.uniqueId
         self.dataSource.waitingForMigration = self.waitingForMigration
         self.tableView.dataSource = self.dataSource
     }
@@ -270,7 +255,6 @@ import SwiftUI
         self.tabBar.selectedItem = self.tabBar.chatsItem
         self.tabBar.isHidden = false
         
-        //[self.tableView reloadData];
         self.tableView.tableHeaderView = nil
         
         //IOSM#60
@@ -287,7 +271,6 @@ import SwiftUI
         
         NotificationCenter.default.addObserver(self, selector: #selector(connectionStateDidChange), name: NSNotification.Name(rawValue: NetworkStatusNotificationName), object: nil)
         
-        //NotificationCenter.default.addObserver(self, selector: #selector(reloadData), name: NSNotification.Name(rawValue: ReloadDataNotificationName), object: nil)
         
         NotificationCenter.default.addObserver(self, selector: #selector(handleCompromisedStatus), name: SecurityCenter.didCheckCompromised, object: nil)
         
@@ -332,20 +315,17 @@ import SwiftUI
         
         NotificationCenter.default.removeObserver(self)
         
-        //if (_welcoming) {
         self.statusCtr = 0
         self.statusTimer?.invalidate()
         self.statusTimer = nil
         self.setConnectionStatus()
         self.welcoming = false
-        //} //IOSM#60 and below
         self.navTitleView.titleLabel.text = "Chats"
         
         self.removeLocalVPNFiles()
     }
     
     func removeLocalVPNFiles() {
-        //AWSAcctManager.sharedMgr().removeLocalVPNFiles()
     }
     
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
@@ -438,7 +418,6 @@ import SwiftUI
 
     @objc func updateStatusTimer()
     {
-        //DDLogWarn(@"*** statusCtr %d", _statusCtr);
         if (self.statusCtr < 22) {
             self.statusCtr+=1
         } else {
@@ -500,14 +479,12 @@ import SwiftUI
                     self.handleConnectingStatus(false, accountExists:true)
                 }
             } else {
-                //DDLogWarn(@"*** no account yet with statusCtr %d", _statusCtr);
                 self.handleConnectingStatus(false, accountExists:false)
             }
         }
     }
     
     func handleConnectingStatus(_ protocolExists:Bool, accountExists:Bool) {
-        //DDLogWarn(@"*** handleConnectingStatus with statusCtr %d", _statusCtr);
         if self.statusTimer == nil { //IOSM#60
             return
         }
@@ -524,7 +501,6 @@ import SwiftUI
             self.navTitleView.titleLabel.text = "Chats"
             self.navTitleView.titleConnectingView.startAnimating() //IOSM#60
         } else {
-            //DDLogWarn(@"*** handleConnectingStatus with _networkStatus connected and statusCtr %d", _statusCtr);
             if (protocolExists) { // network is up, but problems logging into xmpp server
                 if self.statusCtr < 14 {
                     self.navTitleView.titleLabel.text = "Waiting for network" //Connecting...
@@ -619,7 +595,6 @@ import SwiftUI
             DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) {
                 DBManager.deleteAll()
                 DDLogWarn("*** Cleared DB")
-                //[GlacierLog glogWithLogMsg:@"*** Cleared DB" detail:@"all"];
             }
         }
         
@@ -658,12 +633,9 @@ import SwiftUI
         self.tabBar.setSMSEnabled(false)
         
         //IOSM-538
-        //self.tableView.emptyDataSetSource = self.dataSource
-        //self.tableView.emptyDataSetDelegate = self.dataSource
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             if let account = account {
-                //[GlacierLog glogWithLogMsg:@"resetAfterLogout removing account" detail:account.uniqueId];
                 OTRProtocolManager.shared.setLoggingOut(true)
             
                 OTRProtocolManager.shared.removeProtocol(forAccount: account)
@@ -694,14 +666,11 @@ import SwiftUI
                 }
                 self.currentacct = nil
                 DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) {
-                    //DBStorageCoordinator.removeAllFiles()
                     DBManager.sharedDB().resetDB()
                     DispatchQueue.main.async {
                         OTRAppDelegate.appDelegate.resetSMS()
                     }
-                    //DBManager.deleteAll()
                     DDLogWarn("*** Cleared DB")
-                    //[GlacierLog glogWithLogMsg:@"*** Cleared DB" detail:@"all"];
                 }
             }
         }
@@ -807,7 +776,7 @@ import SwiftUI
     // user account info can be shared among Glacier apps. Check for existing account info.
     func tryGlacierGroupAccount(_ altroute:Bool) -> Bool {
         if (self.tryingGlacierAcct) {
-            return true // let the process finish
+            return true
         }
         
         let glacierDefaults = UserDefaults(suiteName: kGlacierGroup)
@@ -860,7 +829,6 @@ import SwiftUI
             
             if (account.password == nil) {
                 DDLogError("Password nil, how is this possible?");
-                //[GlacierLog glogWithLogMsg:@"Error logging in, Password in account is nil" detail:account.uniqueId];
             }
             DispatchQueue.main.async {
                 OTRAppDelegate.appDelegate.setDomain(account.domain!)
@@ -893,7 +861,6 @@ import SwiftUI
                     } catch {
                         DDLogDebug("doLogin, removeKeychainPassword with error: \(error)")
                     }
-                    //[GlacierLog glogWithLogMsg:@"doLogin, Removed password" detail:account.uniqueId];
                 
                     OTRProtocolManager.shared.removeProtocol(forAccount: account)
                     if let logHandle = self.aloginHandler {
@@ -958,7 +925,6 @@ import SwiftUI
                 }
                 
                 self.doSecurityCheck(false) //IOSM#48
-                //OTRAppDelegate.appDelegate.smsViewController.doSMSCheck()
                 TwilioBackendManager.sharedMgr().queryForNumbers()
                 
                 self.convCancellable?.cancel()
@@ -992,15 +958,7 @@ import SwiftUI
         if self.getFirstAccount() != nil {
             
             OTRAppDelegate.appDelegate.doSettingsController()
-            //if not on login screen. Determine if authView is around
             OTRAppDelegate.appDelegate.settingsViewController.checkSecurity()
-            /*if !refresh && OTRAppDelegate.appDelegate.settingsViewController.needsSecurityAlert() {
-                UIApplication.shared.showLocalNotificationWith(identifier: nil, body: "Warning: Your device may be compromised", badge: 0, userInfo: nil, recurring: false)
-            }
-                
-            //IOSM#99
-            let securityAwareness = OTRAppDelegate.appDelegate.settingsViewController.needsSecurityAwareness()
-            self.tabBar.setSecurityAlert(securityAwareness)*/
         }
     }
     
@@ -1036,13 +994,11 @@ import SwiftUI
     func requestCallPermissions() {
         if AVAudioSession.sharedInstance().recordPermission != .granted {
             AVAudioSession.sharedInstance().requestRecordPermission( {(granted:Bool) in
-                //
             })
         }
                                                  
         if AVCaptureDevice.authorizationStatus(for: .video) != .authorized {
             AVCaptureDevice.requestAccess(for: .video, completionHandler: { (granted:Bool) in
-                //
             })
         }
     }
@@ -1128,14 +1084,12 @@ import SwiftUI
                 appDelegate.window?.rootViewController = appDelegate.smsSplitViewCoordinator.splitViewController
                 break
             case GlacierTabs.Screen.dial.rawValue:
-                //appDelegate.goGlacierVoice()
                 appDelegate.window?.rootViewController = appDelegate.dialerViewController
                 break
             case GlacierTabs.Screen.security.rawValue:
                 appDelegate.window?.rootViewController = appDelegate.securityHubViewController
                 break
             case GlacierTabs.Screen.settings.rawValue:
-                //appDelegate.window?.rootViewController = appDelegate.settingsViewController
                 self.navigationController?.pushViewController(appDelegate.settingsViewController, animated: true)
                 break
             default:
@@ -1145,7 +1099,6 @@ import SwiftUI
     }
 
     @objc func smsNotified() {
-        //NSLog("***** smsNotified")
         self.tabBar.setSMSEnabled(OTRAppDelegate.appDelegate.smsEnabled)
         self.tabBar.selectedItem = self.tabBar.chatsItem
     }
@@ -1161,7 +1114,6 @@ import SwiftUI
         if calltitle == nil {
             var jid = XMPPJID(string: call.caller!)
             if (call.outgoing) {
-                //NSArray *receivers = [call.receiver componentsSeparatedByString:@","];
                 jid = XMPPJID(string: call.receiver!)
             }
             buddy = ChatBuddyModel.fetchBuddyModel(jid: jid!, accountUniqueId: account.uniqueId)
@@ -1177,9 +1129,6 @@ import SwiftUI
         appDelegate?.openVideoCallController(calltitle)
         if let callVC = appDelegate?.callWindow?.rootViewController?.presentedViewController as? VideoCallViewController {
             callVC.doConnectCall(call, with:calltitle)
-        } /*else {
-            appDelegate?.openVideoCallController(calltitle)
-        }*/
         
         if let csysMessage = call.systemMessage {
             DispatchQueue.global().async {
@@ -1192,7 +1141,6 @@ import SwiftUI
                     message = buddy.outgoingMessage(text: csysMessage)
                 } else {
                     let after = "conference.\(account.domain!)"
-                    //let groupname = calltitle.suffix(calltitle.count-1)
                     let groupjid = "\(calltitle)@\(after)"
                     let databaseRoomKey = ChatRoomModel.createUniqueId(account.uniqueId, jid: groupjid)
                     if let room = ChatRoomModel.getXMPPRoom(uniqueId: databaseRoomKey) {
@@ -1216,7 +1164,6 @@ import SwiftUI
                         systemMsg.grdbRecord?.originalText = csysMessage
                         systemMsg.save(withThread: thread)
                     }
-                    //thread.saveThread()
                 }
             }
         }
@@ -1232,7 +1179,6 @@ import SwiftUI
         DispatchQueue.global().async {
             guard let account = self.getFirstAccount(), let jid = XMPPJID(string: callerJid), let buddy = ChatBuddyModel.fetchBuddyModel(jid: jid, accountUniqueId: account.uniqueId), let cthread = ChatThreadModel.getChatThread(uniqueId: buddy.uniqueId), let systemMsg = buddy.outgoingMessage(text: message) as? OutgoingChatMessage else { return }
             
-            //let systemMsg = buddy.outgoingMessage(text: message) as? OutgoingChatMessage
             systemMsg.messageSecurity = .plaintext
             systemMsg.grdbRecord?.systemUpdate = true
             systemMsg.grdbRecord?.dateSent = Date()
@@ -1241,8 +1187,6 @@ import SwiftUI
             cthread.lastMessageIdentifier = systemMsg.messageKey
             cthread.grdbRecord?.modified = Date()
             systemMsg.save(withThread: cthread)
-            //buddy.saveThread()
-            //ChatThread.touch(uniqueId: buddy.uniqueId)
         }
     }
 
@@ -1256,7 +1200,6 @@ import SwiftUI
         let groupjid = "\(groupTitle)@\(after)"
         let databaseRoomKey = ChatRoomModel.createUniqueId(xacct.uniqueId, jid: groupjid)
         if let room = ChatRoomModel.getXMPPRoom(uniqueId: databaseRoomKey), let systemMsg = room.outgoingMessage(text: messagetext) as? ChatRoomMessageModel, let cthread = ChatThreadModel.getChatThread(uniqueId: databaseRoomKey) {
-            //let systemMsg = room.outgoingMessage(text: messagetext) as? ChatRoomMessageModel
             systemMsg.messageSecurity = .plaintext
             cthread.lastMessageIdentifier = systemMsg.messageKey
             cthread.grdbRecord?.modified = Date()
@@ -1265,7 +1208,6 @@ import SwiftUI
             systemMsg.grdbRecord?.systemUpdate = true
             systemMsg.grdbRecord?.originalText = messagetext
             systemMsg.save(withThread: cthread)
-            //room.saveThread()
         }
     }
     
@@ -1288,13 +1230,8 @@ import SwiftUI
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if let thread = self.threadFor(indexPath: indexPath) {
             // Bail out if it's a subscription request
-            //if let bthread = thread as? ChatBuddyModel, bthread.askingForApproval {
             //    return
-            //}
             
-            //if let cell = self.tableView.cellForRow(at: indexPath) as? OTRConversationCell {
-            //    cell.markRead()
-            //}
             
             self.delegate?.didSelectThread(thread, conversationViewController: self)
             if ChatViewController.IS_IPHONE {
@@ -1332,9 +1269,6 @@ import SwiftUI
         snapshot.reloadItems(conversations)
             
         if let ds = self.dataSource {
-            //if numrows == 0, conversations.count > 0 {
-            //    ds.applySnapshotUsingReloadData(snapshot, completion: nil)
-            //} else {
             ds.itemCnt = snapshot.numberOfItems
             ds.apply(snapshot, animatingDifferences: false, completion: {
                 if ChatViewController.IS_IPHONE == false {
@@ -1381,19 +1315,14 @@ import SwiftUI
 /// Subclass of UITableViewDiffableDataSource that supports row deletion
 class ConversationDataSource: UITableViewDiffableDataSource<Int, ChatThread> {
     
-    //var accountId:String?
     var waitingForMigration = false
     var emptySet = false
     var itemCnt = 0
     
     override public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        //if let acctid = accountId {
-        //let numRows = self.curSnapshot.numberOfItems //  ChatThread.countConversations()
             if section == 0 {
-                if itemCnt == 0 && emptySet == false {//!waitingForMigration && emptySet == false {
+                if itemCnt == 0 && emptySet == false {
                     DispatchQueue.main.async {
-                        //tableView.emptyDataSetSource = self
-                        //tableView.emptyDataSetDelegate = self
                         self.emptySet = true
                         if let emptyView = tableView as? EmptyStateTableView {
                             let img = UIImage.init(named: "glacier", in: GlacierInfo.resourcesBundle, with: nil)
@@ -1405,8 +1334,6 @@ class ConversationDataSource: UITableViewDiffableDataSource<Int, ChatThread> {
                     }
                 } else if itemCnt != 0 && emptySet == true {
                     DispatchQueue.main.async {
-                        //tableView.emptyDataSetSource = nil
-                        //tableView.emptyDataSetDelegate = nil
                         self.emptySet = false
                         if let emptyView = tableView as? EmptyStateTableView {
                             emptyView.setState(.dataAvailable)
@@ -1417,7 +1344,6 @@ class ConversationDataSource: UITableViewDiffableDataSource<Int, ChatThread> {
             }
             
             return itemCnt
-        //}
         //return 0
     }
     
@@ -1425,38 +1351,7 @@ class ConversationDataSource: UITableViewDiffableDataSource<Int, ChatThread> {
         return 1
     }
     
-    /*override open func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        return true
-    }*/
     
     /// Asks the data source for the title of the dataset.
     /// The dataset uses a fixed font style by default, if no attributes are set. If you want a different font style, return a attributed string.
-    /*public func title(forEmptyDataSet scrollView: UIScrollView) -> NSAttributedString? {
-        let text = "No Conversations"
-        
-        let attributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18.0), NSAttributedString.Key.foregroundColor: UIColor.darkGray]
-        
-        return NSAttributedString(string: text, attributes: attributes)
-    }
-    
-    /// Asks the data source for the description of the dataset.
-    /// The dataset uses a fixed font style by default, if no attributes are set. If you want a different font style, return a attributed string.
-    public func description(forEmptyDataSet scrollView: UIScrollView) -> NSAttributedString? {
-        let text = "When you have conversations, you'll see them here."
-        
-        let paragraph = NSMutableParagraphStyle()
-        paragraph.lineBreakMode = NSLineBreakMode.byWordWrapping
-        paragraph.alignment = NSTextAlignment.center
-        
-        let attributes = [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14.0),
-                          NSAttributedString.Key.foregroundColor: UIColor.lightGray,
-                          NSAttributedString.Key.paragraphStyle: paragraph]
-        
-        return NSAttributedString(string: text, attributes: attributes)
-    }
-    
-    /// Asks the data source for the image of the dataset.
-    public func image(forEmptyDataSet scrollView: UIScrollView) -> UIImage? {
-        return UIImage.init(named: "glacier", in: GlacierInfo.resourcesBundle, with: nil)
-    }*/
 }

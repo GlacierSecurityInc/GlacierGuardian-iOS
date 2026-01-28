@@ -1,22 +1,16 @@
-//
-//  ChatPreKey.swift
 //  Glacier
-//
 //  Created by andyfriedman on 12/12/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 import GRDB
 
 public struct ChatPreKey: GRDBRecord, TableRecord {
-    //public protocol ChatThread: AnyObject {
     public var id: Int64?
     public var uniqueId: String
     var accountKey: String
     var keyId: UInt32
     var keyData: Data?
-    //var modified: Date?
     
     public init(accountKey:String, keyId:UInt32, keyData:Data) {
         self.uniqueId = ChatPreKey.uniqueKey(for: accountKey, keyId: keyId)

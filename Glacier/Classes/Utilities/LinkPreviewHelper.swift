@@ -1,9 +1,5 @@
-//
-//  LinkPreviewHelper.swift
 //  Glacier
-//
 //  Added for URL validation in link previews.
-//
 
 import Foundation
 

@@ -1,7 +1,4 @@
-//
-//  RoomAttachmentsViewController.swift
 //  ChatSecureCore
-//
 //  Created by Andy Friedman on 5/8/19.
 //  Copyright © 2019 Glacier Security. All rights reserved.
 
@@ -24,7 +21,6 @@ private enum DynamicCellIdentifier: String {
     case attachment = "attachment"
 }
 
-/// Cell identifiers from the RoomAttachments.storyboard
 private enum StoryboardCellIdentifier: String {
     case groupName = "cellGroupName"
     case addAttachments = "cellGroupAddAttachments"
@@ -61,7 +57,6 @@ open class RoomAttachmentsViewController: UIViewController {
     var roomAttachments:[String] = []
     open var roomUniqueId: String?
     open var pins: XMPPPinned?
-    //var vSpinner : UIView?
     
     /// opens implicit db transaction
     open var room:ChatRoomModel? {
@@ -108,8 +103,6 @@ open class RoomAttachmentsViewController: UIViewController {
         ]
         
         if let room = self.room {
-            //let seedNum = room.avatarSeedNum
-            //let image = OTRGroupAvatarGenerator.avatarImage(withSeedNum: seedNum, width: Int(largeAvatarView.frame.width), height: Int(largeAvatarView.frame.height))
             largeAvatarView.image = room.avatarImage 
         }
         
@@ -190,7 +183,6 @@ open class RoomAttachmentsViewController: UIViewController {
             cell.selectionStyle = .none
             break
         case CellIdentifier.HeaderCellAddAttachment:
-            //
             break
         case CellIdentifier.HeaderCellAttachments:
             //probably open another viewController
@@ -212,14 +204,8 @@ open class RoomAttachmentsViewController: UIViewController {
     
     func addAttachmentSelected(){
         
-        //let documentPicker = UIDocumentPickerViewController(documentTypes: [String(kUTTypePDF)], in: .import)
-        //let documentPicker = UIDocumentPickerViewController(documentTypes: ["com.apple.iwork.pages.pages", "com.apple.iwork.numbers.numbers", "com.apple.iwork.keynote.key","public.image", "com.apple.application", "public.item","public.data", "public.content", "public.audiovisual-content", "public.movie", "public.audiovisual-content", "public.video", "public.audio", "public.text", "public.data", "public.zip-archive", "com.pkware.zip-archive", "public.composite-content", "public.text"], in: .import)
-        //let supportedTypes: [UTType] = [UTType.image, UTType.zip, UTType.text, UTType.data, UTType.video, UTType.compositeContent, UTType.movie, UTType.audio, UTType.audiovisualContent, UTType.content, UTType.item, UTType.application]
-        //documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: supportedTypes)
         let documentPicker = UIDocumentPickerViewController(documentTypes: ["com.apple.iwork.pages.pages", "com.apple.iwork.numbers.numbers", "com.apple.iwork.keynote.key","public.image", "com.apple.application", "public.item","public.data", "public.content", "public.audiovisual-content", "public.movie", "public.audiovisual-content", "public.video", "public.text", "public.data", "public.composite-content", "public.text"], in: .import)
         
-            //UTI: com.adobe.pdf
-            //conforms to: public.data, public.composite-content
         
         documentPicker.delegate = self
         present(documentPicker, animated: true, completion: nil)
@@ -231,7 +217,6 @@ open class RoomAttachmentsViewController: UIViewController {
         hud.mode = MBProgressHUDMode.annularDeterminate
         let hudprogress = Progress.init(totalUnitCount: 100)
         hud.progressObject = hudprogress;
-        //self.startSpinner()
         
         xmpp.fileTransferManager.uploadAttachment(file: attachUrl, mucname: mucname, hudprogress: hudprogress, completion: { (_url: URL?, error: Error?) in
             DispatchQueue.main.async {
@@ -246,8 +231,6 @@ open class RoomAttachmentsViewController: UIViewController {
                 }
                 return
             }
-            //self.roomAttachments.append(url.absoluteString)
-            //self.tableView.reloadData()
             // do query and reload data
             self.refreshList()
         })
@@ -275,12 +258,6 @@ open class RoomAttachmentsViewController: UIViewController {
     }
     
     func doDownload(url: URL, key: String, iv: String, tag: String, xmpp: XMPPManager) {
-        /*var prefetchedData:Data
-        do {
-            prefetchedData = try Data(contentsOf: url)
-        } catch let error {
-            DDLogError("Error prefetching data: \(error)")
-        }*/
         
         let hud = MBProgressHUD.showAdded(to: self.view, animated: true)
         hud.label.text = "Downloading..."
@@ -289,7 +266,6 @@ open class RoomAttachmentsViewController: UIViewController {
         hud.progressObject = hudprogress;
         
         xmpp.fileTransferManager.downloadAttachment(url: url, key: key, iv: iv, tag: tag, hudprogress: hudprogress, completion: { (_data: Data?, error: Error?) in
-            //self.removeSpinner()
             DispatchQueue.main.async {
                 hud.hide(animated: true)
                 guard let data = _data else {
@@ -302,7 +278,7 @@ open class RoomAttachmentsViewController: UIViewController {
                     return
                 }
                 //Change this to data instead of url
-                let baseurl = URL(string: "https://" + xmpp.fileTransferManager.uploadDomain)
+                let baseurl = URL(string: "https:
                 if let localUrl = self.tryStoreLocal(data: data, url: url) {
                     let webview = RoomAttachmentWebViewController(url: localUrl, data: nil, baseurl: baseurl!)
                     self.navigationController?.pushViewController(webview, animated: true)
@@ -320,7 +296,7 @@ open class RoomAttachmentsViewController: UIViewController {
         let fileurl = paths[0].appendingPathComponent(url.lastPathComponent)
         
         do {
-            try data.write(to: fileurl, options: .atomic)//, encoding: String.Encoding.utf8)
+            try data.write(to: fileurl, options: .atomic)
         } catch {
             // failed to write file – bad permissions, bad filename, missing permissions, or more likely it can't be converted to the encoding
             DDLogError("Something went wrong storing data locally")
@@ -396,8 +372,6 @@ extension RoomAttachmentsViewController:UITableViewDelegate {
             }
         }
         
-        //let webview = RoomAttachmentWebViewController(url: url)
-        //self.navigationController?.pushViewController(webview, animated: true)
     }
 }
 

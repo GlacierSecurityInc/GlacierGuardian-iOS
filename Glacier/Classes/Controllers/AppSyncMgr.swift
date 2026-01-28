@@ -1,5 +1,3 @@
-//
-//  AppSyncMgr.swift
 //  Copyright © 2019 Glacier Security. All rights reserved.
 
 import Foundation
@@ -81,7 +79,6 @@ import AWSAPIPlugin
                 variables: goquery.variables?.jsonObject,
                 responseType: GetGlacierOrganizationQuery.Data.self)
             
-            //client.fetch(query: goquery, cachePolicy: CachePolicy.fetchIgnoringCacheData)  { (result, error) in
             do {
                 let result = try await Amplify.API.query(request: request)
                 
@@ -220,7 +217,6 @@ import AWSAPIPlugin
                 switch result {
                 case .success(let updateGlacierUsers):
                     completion(true)
-                    //print("Successfully updated Glacier user: \(updateGlacierUsers)")
                     return
                 case .failure(let error):
                     print("Got failed result with \(error.errorDescription)")

@@ -1,10 +1,6 @@
-//
-//  SMSSplitViewCoordinator.swift
 //  Glacier
-//
 //  Created by andyfriedman on 9/7/22.
 //  Copyright © 2022 Glacier. All rights reserved.
-//
 
 import Foundation
 
@@ -40,10 +36,6 @@ import Foundation
         //iPad check where there are two navigation controllers and we want the second one
         if splitVC.viewControllers.count > 1 && ((splitVC.viewControllers[1] as? UINavigationController)?.viewControllers.contains(mVC)) ?? false {
             //IOSM#20
-            //let navController = UINavigationController(rootViewController: mVC)
-            //navController.topViewController!.navigationItem.leftBarButtonItem = splitVC.displayModeButtonItem;
-            //navController.topViewController!.navigationItem.leftItemsSupplementBackButton = true;
-            //splitVC.viewControllers[1] = navController
             splitVC.showDetailViewController(mVC, sender: nil)
         } else if splitVC.viewControllers.count == 1 && ((splitVC.viewControllers.first as? UINavigationController)?.viewControllers.contains(mVC)) ?? false {
         } else {
@@ -79,9 +71,7 @@ import Foundation
                 if let key = buds.first {
                     self.enterSMSWithBuddy(key)
                 }
-            } //else if (buds.count > 1) {
-                //self.enterConversationWithBuddies(buds, accountKey: accountKey, name:name)
-            //}
+            }
         }
         
         if (self.splitViewController?.presentedViewController == viewController.navigationController) {

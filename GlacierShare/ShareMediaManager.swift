@@ -1,10 +1,6 @@
-//
-//  ShareMediaManager.swift
 //  GlacierShare
-//
 //  Created by Andy Friedman on 1/5/21.
 //  Copyright © 2021 Glacier. All rights reserved.
-//
 
 import Foundation
 import XMPPFramework
@@ -25,8 +21,6 @@ extension UIImage {
         }
     }
      struct Quality {
-        //static let low = Quality(initial: 0.4, decrementFactor: 0.65)
-        //static let medium = Quality(initial: 0.65, decrementFactor: 0.65)
         static let low = Quality(initial: 0.3, decrementFactor: 0.3)
         static let medium = Quality(initial: 0.5, decrementFactor: 0.5)
         static let high = Quality(initial: 0.75, decrementFactor: 0.75)
@@ -41,7 +35,6 @@ extension UIImage {
                   jpeg: Quality = Quality.low,
                   maxTries: UInt = 10) -> Data? {
         let image = self
-        //var scaledImageData: Data? = nil
         let scaledImageData = UIImageJPEGRepresentation(image, 0.5)
         return scaledImageData
     }
@@ -111,29 +104,6 @@ public class ShareMediaManager: NSObject {
         httpFileUpload.removeDelegate(self)
     }
     
-    /*@objc public init(sessionConfiguration: URLSessionConfiguration,
-                      delegate: ShareMessageDelegate,
-                      xmppStream: XMPPStream,
-                      uploadDomain: String) {
-        self.httpFileUpload = XMPPHTTPFileUpload()
-        //self.connection = connection
-        self.sessionManager = Alamofire.Session(configuration: sessionConfiguration)
-        self.uploadDomain = uploadDomain
-        self.shareDelegate = delegate
-        super.init()
-        
-        //create default HTTPServer
-        //ideally this info is retrieved from server, but we don't want to discover services here
-        //these are just a default/guess and may not work
-        if let jid = XMPPJID(string: "upload." + uploadDomain) {
-            let maxSize:UInt = 104857600
-            let server = HTTPServer(jid: jid, maxSize: maxSize)
-            servers.append(server)
-        }
-        
-        httpFileUpload.activate(xmppStream)
-        httpFileUpload.addDelegate(self, delegateQueue: DispatchQueue.main)
-    }*/
     
     @objc public func removeDelegates() {
         httpFileUpload.removeDelegate(self)
@@ -141,7 +111,6 @@ public class ShareMediaManager: NSObject {
     
     //IOSM-517
     @objc public func teardownConnections() {
-        //self.connection = nil
     }
     
     // MARK: - Public Methods
@@ -175,80 +144,11 @@ public class ShareMediaManager: NSObject {
         return UIImage(cgImage: downsampledImage)
     }
 
-    /*private func upload(mediaItem: OTRMediaItem,
-                        shouldEncrypt: Bool,
-                       prefetchedData: Data?,
-                       completion: @escaping (_ url: URL?, _ error: Error?) -> ()) {
-        internalQueue.async {
-            if let data = prefetchedData {
-                self.upload(media: mediaItem, data: data, shouldEncrypt: shouldEncrypt, filename: mediaItem.filename, contentType: mediaItem.mimeType, completion: completion)
-            } else {
-                let error = ShareMediaError.fileNotFound
-                DDLogError("Upload failed: Could not get file data \(error)")
-                self.callbackQueue.async {
-                    completion(nil, error)
-                }
-            }/*else {
-                var url: URL? = nil
-                self.connection.read({ (transaction) in
-                    url = mediaItem.mediaServerURL(with: transaction)
-                })
-                if let url = url {
-                    self.upload(media: mediaItem, file: url, shouldEncrypt: shouldEncrypt, completion: completion)
-                } else {
-                    let error = ShareMediaError.fileNotFound
-                    DDLogError("Upload filed: File not found \(error)")
-                    self.callbackQueue.async {
-                        completion(nil, error)
-                    }
-                }
-            }*/
         }
     }*/
     
     /// Currently just a wrapper around sendData
-    /*private func upload(media: OTRMediaItem,
-                        file: URL,
-                        shouldEncrypt: Bool,
-                     completion: @escaping (_ url: URL?, _ error: Error?) -> ()) {
-        internalQueue.async {
-            do {
-                let data = try Data(contentsOf: file)
-                let type = UTType(tag: file.pathExtension, tagClass: .filenameExtension, conformingTo: nil)
-                let mimeType = type?.preferredMIMEType ?? "nil"
-                self.upload(media: media, data: data, shouldEncrypt: shouldEncrypt, filename: file.lastPathComponent, contentType: mimeType, completion: completion)
-            } catch let error {
-                DDLogError("Error sending file URL \(file): \(error)")
-            }
-        }
-        
-    }*/
     
-    /*private func upload(media: OTRMediaItem,
-                        data inData: Data,
-                        shouldEncrypt: Bool,
-                 filename: String,
-                 contentType: String,
-                 completion: @escaping (_ url: URL?, _ error: Error?) -> ()) {
-        internalQueue.async {
-            guard let service = self.servers.first else {
-                DDLogWarn("No HTTP upload servers available")
-                self.callbackQueue.async {
-                    completion(nil, ShareMediaError.noServers)
-                }
-                return
-            }
-            var data = inData
-            
-            // When resending images, sometimes we need to recompress them
-            // to fit the max upload limit
-            /*if UInt(data.count) > service.maxSize,
-                let _ = media as? OTRImageItem,
-                let image = UIImage(data: inData),
-                let imageData = image.jpegData(dataSize: .maxBytes(service.maxSize), resize: UIImage.Quality.medium, jpeg: UIImage.Quality.medium, maxTries: 10)
-                {
-                    data = imageData
-            }*/
             
             if UInt(data.count) > service.maxSize {
                 DDLogError("HTTP Upload exceeds max size \(data.count) > \(service.maxSize)")
@@ -263,7 +163,6 @@ public class ShareMediaManager: NSObject {
             var outKeyIv: Data? = nil
             if shouldEncrypt {
                 guard let key = OTRPasswordGenerator.randomData(withLength: 32), let iv = OTRSignalEncryptionHelper.generateIV() else {
-                //guard let key = OTRPasswordGenerator.randomData(withLength: 32), let iv = OTRPasswordGenerator.randomData(withLength: 16) else {
                     DDLogError("Could not generate key/iv")
                     self.callbackQueue.async {
                         completion(nil, ShareMediaError.keyGenerationError)
@@ -273,7 +172,6 @@ public class ShareMediaManager: NSObject {
                 outKeyIv = iv + key
                 do {
                     let crypted = try OTRSignalEncryptionHelper.encryptData(data, key: key, iv: iv)
-                    //let crypted = try OTRCryptoUtility.encryptAESGCMData(data, key: key, iv: iv)
                     outData = crypted.data + crypted.authTag
                 } catch let error {
                     outData = Data()
@@ -323,8 +221,7 @@ public class ShareMediaManager: NSObject {
                             DDLogError("Upload error: \(error)")
                         }
                     }.uploadProgress(queue: self.internalQueue) { progress in
-                        //DDLogVerbose("Upload progress \(progress.fractionCompleted)")
-                        if let media = OTRMediaItem.getMediaItem(with: media.uniqueId) { //, completion: {
+                        if let media = OTRMediaItem.getMediaItem(with: media.uniqueId) {
                             media.transferProgress = Float(progress.fractionCompleted)
                             media.save(completion: {
                                 media.touchParent()
@@ -336,213 +233,15 @@ public class ShareMediaManager: NSObject {
         }
     }*/
     
-    /*@objc public func send(videoURL url: URL, thread: OTRThreadOwner) {
-        internalQueue.async {
-            self.send(url: url, thread: thread, type: .video)
-        }
-    }*/
     
-    /*private enum MediaURLType {
-        case audio
-        case video
-        case file
-    }*/
     
-    /*private func send(url: URL, thread: OTRThreadOwner, type: MediaURLType) {
-        internalQueue.async {
-            var item: OTRMediaItem? = nil
-            switch type {
-            case .audio:
-                item = OTRAudioItem(audioURL: url, isIncoming: false)
-            case .video:
-                item = OTRVideoItem(videoURL: url, isIncoming: false)
-            case .file:
-                item = OTRFileItem(fileURL: url, isIncoming: false)
-            }
-            guard let mediaItem = item else {
-                DDLogError("No media item to share for URL: \(url)")
-                return
-            }
-            
-            guard let message = self.newOutgoingMessage(to: thread, mediaItem: mediaItem) else {
-                DDLogError("No message could be created for \(thread) \(mediaItem)")
-                return
-            }
-            mediaItem.parentObjectKey = message.messageKey
-            mediaItem.parentObjectCollection = message.messageCollection
-            let newPath = OTRMediaFileManager.path(for: mediaItem, buddyUniqueId: thread.threadIdentifier)
-            self.connection.readWrite { transaction in
-                message.save(with: transaction)
-                mediaItem.save(with: transaction)
-                
-            }
-            OTRMediaFileManager.shared.copyData(fromFilePath: url.path, toEncryptedPath: newPath, completion: { (result, copyError: Error?) in
-                var prefetchedData: Data? = nil
-                if FileManager.default.fileExists(atPath: url.path) {
-                    do {
-                        let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
-                        if let size = attributes[FileAttributeKey.size] as? NSNumber, size.uint64Value < 1024 * 1024 * 100 {
-                            prefetchedData = try Data(contentsOf: url)
-                        }
-                    } catch let error {
-                        DDLogError("Error prefetching data: \(error)")
-                    }
-                    do {
-                        try FileManager.default.removeItem(atPath: url.path)
-                    } catch let error {
-                        DDLogError("Error removing file: \(error)")
-                    }
-                }
-                message.messageError = copyError
-                self.connection.readWrite({ (transaction) in
-                    mediaItem.save(with: transaction)
-                    message.save(with: transaction)
-                })
-                self.send(mediaItem: mediaItem, prefetchedData: prefetchedData, message: message)
-            }, completionQueue: self.internalQueue)
-        }
-    }*/
     
-    /*@objc public func send(audioURL url: URL, thread: OTRThreadOwner) {
-        internalQueue.async {
-            self.send(url: url, thread: thread, type: .audio)
-        }
-    }*/
     
-    /*@objc public func send(image: UIImage, thread: OTRThreadOwner) {
-        internalQueue.async {
-            guard let service = self.servers.first, service.maxSize > 0 else {
-                DDLogError("No HTTP upload service available!")
-                return
-            }
-            let filename = "\(UUID().uuidString).jpg"
-            let imageItem = OTRImageItem(filename: filename, size: image.size, mimeType: "image/jpeg", isIncoming: false)
-            guard let message = self.newOutgoingMessage(to: thread, mediaItem: imageItem) else {
-                DDLogError("No message could be created")
-                return
-            }
-            imageItem.parentObjectKey = message.messageKey
-            imageItem.parentObjectCollection = message.messageCollection
-            message.save()
-            imageItem.save()
-            
-            guard let ourImageData = image.jpegData(dataSize: .unlimited, resize: UIImage.Quality.low, jpeg: UIImage.Quality.low, maxTries: 10) else {
-                DDLogError("Could not make JPEG out of image!")
-                return
-            }
-            OTRMediaFileManager.shared.setData(ourImageData, for: imageItem, buddyUniqueId: thread.threadIdentifier, completion: { (bytesWritten: Int, error: Error?) in
-                imageItem.touchParent()
-                if let error = error {
-                    message.messageError = error
-                    message.save()
-                }
-                if let imageData = image.jpegData(dataSize: .maxBytes(service.maxSize), resize: UIImage.Quality.medium, jpeg: UIImage.Quality.medium, maxTries: 10) {
-                    self.send(mediaItem: imageItem, prefetchedData: imageData, message: message)
-                } else {
-                    DDLogError("Could not make JPEG out of image! Bad size")
-                    message.messageError = ShareMediaError.exceedsMaxSize
-                    message.save()
-                }
-            }, completionQueue: self.internalQueue)
-        }
-    }*/
     
-    /*@objc public func send(fileURL url: URL, thread: OTRThreadOwner) {
-        internalQueue.async {
-            self.send(url: url, thread: thread, type: .file)
-        }
-    }*/
     
     //IOSM-486, IOSM-557
-    /*@objc public func send(htmlURL url: URL, thread: OTRThreadOwner, completion: @escaping (_ success: Bool, _ error: Error?) -> ()) {
-        self.callbackQueue.async {
-            completion(false, nil)
-        }
-        internalQueue.async {
-            let mediaItem = OTRHTMLItem(filename: url.absoluteString, mimeType: nil, isIncoming: false)
-            
-            guard let message = self.newOutgoingMessage(to: thread, mediaItem: mediaItem) else {
-                DDLogError("No message could be created for \(thread) \(mediaItem)")
-                self.callbackQueue.async {
-                    completion(false, nil)
-                }
-                return
-            }
-            
-            mediaItem.parentObjectKey = message.messageKey
-            mediaItem.parentObjectCollection = message.messageCollection
-            message.messageMediaItemKey = mediaItem.uniqueId
-            
-            mediaItem.transferProgress = 1.0
-            message.messageText = url.absoluteString
-            message.save()
-            mediaItem.save()
-            thread.saveThread()
-            
-            self.callbackQueue.async {
-                completion(true, nil)
-            }
-            self.shareDelegate.doShare(message)
-        }
-    }*/
     
-    /*private func newOutgoingMessage(to thread: OTRThreadOwner, mediaItem: OTRMediaItem) -> OTRMessageProtocol? {
-        if let buddy = thread as? OTRBuddy {
-            let message = OTROutgoingMessage()!
-            var security: OTRMessageTransportSecurity = .invalid
-            security = buddy.preferredTransportSecurity()
-            message.buddyUniqueId = buddy.uniqueId
-            message.mediaItemUniqueId = mediaItem.uniqueId
-            message.messageSecurityInfo = OTRMessageEncryptionInfo(messageSecurity: security)
-
-            //let gtimer = OTRSettingsManager.string(forOTRSettingKey: "globalTimer")
-            if (thread.expiresIn != nil) {
-                message.expires = thread.expiresIn
-            }
-            return message
-        } else if let room = thread as? OTRXMPPRoom {
-            if let message = room.outgoingOMEMOMessage(withText: "") as? OTRXMPPRoomMessage {
-                message.messageText = nil
-                message.mediaItemId = mediaItem.uniqueId
-                //We are NOT checking for existing keys, just assuming
-                //IOSM-517
-                message.messageSecurityInfo = OTRMessageEncryptionInfo(messageSecurity: .OMEMO)
-                return message
-            }
-        }
-        return nil
-    }*/
     
-    /*@objc public func send(mediaItem: OTRMediaItem, prefetchedData: Data?, message: OTRMessageProtocol) {
-        var shouldEncrypt = false
-        switch message.messageSecurity {
-        case .OMEMO, .OTR:
-            shouldEncrypt = true
-        case .invalid, .plaintext, .plaintextWithOTR:
-            shouldEncrypt = false
-        }
-        
-        self.upload(mediaItem: mediaItem, shouldEncrypt: shouldEncrypt, prefetchedData: prefetchedData, completion: { (_url: URL?, error: Error?) in
-            guard let url = _url else {
-                if let error = error {
-                    DDLogError("Error uploading: \(error)")
-                }
-                
-                message.messageError = error
-                message.save()
-                self.shareDelegate.doShare(nil) //handle failure IOSM-517
-                return
-            }
-
-            mediaItem.transferProgress = 1.0
-            message.messageText = url.absoluteString
-            mediaItem.save()
-            message.save()
-            
-            self.shareDelegate.doShare(message)
-            //self.queueOutgoingMessage(message: message)
-        })
-    }*/
     
     
     // MARK: - Private Methods
@@ -723,15 +422,6 @@ public extension String {
 
 public extension ShareMediaManager {
     /// Returns whether or not message should be displayed or hidden from collection. Single incoming URLs should be hidden, for example.
-    /*@objc static func shouldDisplayMessage(_ message: OTRMessageProtocol) -> Bool {
-        // Always show media messages
-        if message.messageMediaItemKey != nil {
-            return true
-        }
-        // Always show downloads
-        /*if message is OTRDownloadMessage {
-            return true
-        }*/
         // Hide non-media messages that have no text
         guard let messageText = message.messageText else {
             return false
@@ -750,10 +440,6 @@ public extension ShareMediaManager {
         }
         
         // so media messages don't show as link in group, maybe remove after OMEMO
-        /*if messageText.isSingleURLOnly,
-           message.downloads().count > 0, message.isMessageIncomingOrDifferentDevice { //IOSM-474 added incoming
-            return false
-        }*/
 
         return true
     }*/

@@ -1,10 +1,6 @@
-//
-//  ChatAudioItem.swift
 //  Glacier
-//
 //  Created by andyfriedman on 9/21/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 import MessageKit
@@ -27,22 +23,6 @@ import MessageKit
         self.mediaSize = audiosize
         setSize(size: audiosize)
         self.grdbRecord?.mediaType = ChatMediaType.audioItem.rawValue
-        /*if let audioURL = URL(string: filename) {
-            let audioAsset = AVURLAsset(url: audioURL, options: [AVURLAssetPreferPreciseDurationAndTimingKey:true])
-            var mimetype:String?
-            if audioURL.pathExtension == "m4a" {
-                mimetype = "audio/mpeg"
-            }
-            let length = CMTimeGetSeconds(audioAsset.duration)
-            
-            super.init(filename: filename, mimetype: mimetype, isIncoming: isIncoming)
-            self.grdbRecord?.mediaType = ChatMediaType.audioItem.rawValue
-            self.timeLength = length
-            return
-        }
-        
-        super.init(filename: filename, mimetype: mimetype, isIncoming: isIncoming)
-        self.grdbRecord?.mediaType = ChatMediaType.audioItem.rawValue*/
     }
     
     public convenience init(audioURL: URL, isIncoming: Bool) {

@@ -1,10 +1,6 @@
-//
-//  ChatComposeViewController.swift
 //  Glacier
-//
 //  Created by andyfriedman on 12/14/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 import UIKit
@@ -42,9 +38,6 @@ import MBProgressHUD
     
     var selectionModeIsSingle = true
     
-    /*override public init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
-        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
-    }*/
     
     public init() {
         self.tableView = UITableView(frame: CGRect.zero, style: .plain)
@@ -97,12 +90,8 @@ import MBProgressHUD
         self.tableView.tableHeaderView = self.tableViewHeader
         
         self.tableView.register(OTRBuddyInfoCell.self, forCellReuseIdentifier: OTRBuddyInfoCell.reuseIdentifier())
-        //self.tableView.autoPinEdgesToSuperviewEdges()
         self.tableView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.tableView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor).isActive = true
-        //if let searchY = self.navigationController?.navigationBar.frame.height {
-            //self.tableView.topAnchor.constraint(equalToConstant: searchY).isActive = true
-        //}
 
         self.setupSearchController()
         self.extendedLayoutIncludesOpaqueBars = true
@@ -137,7 +126,6 @@ import MBProgressHUD
         let hud = MBProgressHUD.showAdded(to: self.view, animated: true)
         hud.label.text = "Fetching secure keys"
         
-        //NSInteger num = self.myBuddies.count;
         for bud in self.myBuddies {
             if ChatOmemoDevice.countOMEMODevices(for: bud.uniqueId) == 0 {
                 let buddy = ChatBuddyModel(buddy: bud)
@@ -264,12 +252,6 @@ import MBProgressHUD
     }
     
     //IOSM#55
-    /*public func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        if let thread = self.threadOwnerAt(indexPath: indexPath, tableView: tableView) {
-            return UITableView.editActions(forThread: thread)
-        }
-        return nil
-    }*/
     
     func selectedThreadOwner(_ buddyId:String) {
         if buddyId.count == 0 {
@@ -446,7 +428,6 @@ import MBProgressHUD
             //Group so need user to select name
             let alertController = UIAlertController(title: GROUP_NAME_STRING(), message: ENTER_GROUP_NAME_STRING(), preferredStyle: .alert)
             let okAction = UIAlertAction(title: OK_STRING(), style: .cancel, handler: {[weak self] _ in
-                //let name = alertController.textFields?.first?.text
                 if let self = self {
                     self.completeSelectingBuddies(self.selectedBuddiesIdSet, groupName: nil)
                 }
@@ -474,14 +455,8 @@ import MBProgressHUD
     }
     
     // Make sure bar stays at the top
-    /*public func position(for bar:UIBarPositioning) -> UIBarPosition {
-        return UIBarPosition.top
-    }*/
     
-    //IOSM#9 (next 7, all search functions)
     func setupSearchController() {
-        //self.tableViewHeader.backgroundColor = UIColor.systemGroupedBackground
-        //self.tableView.tableHeaderView = self.tableViewHeader
         
         let searchResultsController = UITableViewController.init(style: UITableView.Style.plain)
         searchResultsController.tableView.register(OTRBuddyInfoCell.self, forCellReuseIdentifier: OTRBuddyInfoCell.reuseIdentifier())
@@ -547,7 +522,6 @@ import MBProgressHUD
     public func didPresentSearchController(_ searchController:UISearchController) {
         if let searchBar = self.searchController?.searchBar, let tabs = (self.searchController?.searchResultsController as? UITableViewController)?.tableView, let mStyle = self.navigationController?.modalPresentationStyle, mStyle == .formSheet {
             let offset = searchBar.frame.height
-            //tabs.setContentOffset(CGPoint(x: 0, y: -offset), animated: true)
         }
     }
     
@@ -620,27 +594,8 @@ import MBProgressHUD
         }
         
         self.delegate?.enterConversation(withName:groupName, isPublic:publicgroup)
-        /*guard let xacct = ChatAccountModel.firstAccount() else {return}
-        
-        let components = groupName.components(separatedBy: "@")
-        var gname = groupName
-        if components.count != 2, let domain = xacct.domain {
-            let after = String(format: "conference.%@", domain)
-            gname = String(format: "%@@%@", groupName, after)
-        }
-        
-        guard let roomJid = XMPPJID(string: gname) else { return }
-        let joinRoom:((_ account:ChatAccountModel) -> Void) = { (account) in
-            if let xmpp = OTRProtocolManager.shared.xmppManager(forChatAccount: account) {
-                xmpp.roomManager.joinRoom(roomJid, withNickname: account.displayName, subject: nil, password: nil, completion: nil)
-                xmpp.roomManager.publishJoinedRoom(roomJid, withName: account.displayName)
-                self.dismiss(animated: true)
-            }
-        }
-        joinRoom(xacct)*/
     }
     
     @objc public func joinGroupCancelled(_ composeViewController: OTRJoinGroupViewController) {
-        //
     }
 }

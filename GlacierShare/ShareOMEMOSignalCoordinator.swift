@@ -1,7 +1,4 @@
-//
-//  ShareOMEMOSignalCoordinator.swift
 //  GlacierShare
-//
 //  Created by Andy Friedman on 12/21/20.
 //  Copyright © 2020 Glacier. All rights reserved.
 
@@ -23,7 +20,6 @@ import SignalProtocolObjC
     @objc open var callbackQueue:DispatchQueue
     @objc public let workQueue:DispatchQueue
     
-    //@objc open weak var delegate:ShareMessageDelegate?
 
     fileprivate var myJID:XMPPJID? {
         get {
@@ -44,7 +40,6 @@ import SignalProtocolObjC
         try self.signalEncryptionManager = OTRAccountSignalEncryptionManager(accountKey: accountKey)
         self.omemoStorageManager = OTROMEMOStorageManager(accountKey: accountKey, accountCollection: "OTRAccount")
         self.accountKey = accountKey
-        //self.delegate = shareDelegate
         self.outstandingXMPPStanzaResponseBlocks = [:]
         self.callbackQueue = DispatchQueue(label: "ShareOMEMOSignalCoordinator-callback", attributes: [])
         self.workQueue = DispatchQueue(label: "ShareOMEMOSignalCoordinator-work", attributes: [])
@@ -59,81 +54,6 @@ import SignalProtocolObjC
      - parameter messageId: The preffered XMPP element Id to be used.
      - parameter completion: The completion block is called after all the necessary omemo preperation has completed and sendKeyData:iv:toJID:payload:elementId:expiration is invoked
      */
-    /*@objc open func encryptAndSendMessage(_ message: OTRMessageProtocol, completion:@escaping (_ success: Bool, _ error: Error?) -> Void) {
-        return
-        // Gather bundles for buddy and account here
-        let group = DispatchGroup()
-        
-        let prepareCompletion = { (success:Bool) in
-            group.leave()
-        }
-        
-        // destinationJID is either the XMPPRoom JID or OTRXMPPBuddy JID
-        var _destinationJID: XMPPJID?
-        var buddyKeys: [String] = []
-        if let roomMessage = message as? OTRXMPPRoomMessage {
-            buddyKeys = roomMessage.allBuddyKeysForOutgoingMessage()
-            _destinationJID = roomMessage.room()?.roomJID
-        } else if let directMessage = message as? OTROutgoingMessage {
-            buddyKeys = [message.threadId]
-            _destinationJID = directMessage.xmppBuddy()?.bareJID
-        }
-        guard buddyKeys.count > 0, let destinationJID = _destinationJID else {
-            completion(false, NSError.chatSecureError(OTROMEMOError.noDevicesForBuddy, userInfo: nil))
-            return
-        }
-        buddyKeys.forEach { (key) in
-            group.enter()
-            self.prepareSessionForBuddy(key, completion: prepareCompletion)
-        }
-        group.enter()
-        self.prepareSessionWithOurDevices(prepareCompletion)
-        //Even if something went wrong fetching bundles we should push ahead. We may have sessions that can be used.
-        
-        //When working with a dispatch group, think of it as a number start at 0. The call to enter adds 1. The call to leave subtracts 1. A call to notify results in the block being called when the count is 0. If your notify block isn't being called then you have a mismatch in the class to enter and leave
-        //I think you are not leaving the dispatch group when you got error in the completion block
-        
-        group.notify(queue: self.workQueue) {
-            //Strong self work here
-            var buddies: [OTRXMPPBuddy] = buddyKeys.compactMap({ key in
-                OTRXMPPBuddy.getBuddy(uniqueId: key)
-            })
-            
-            guard buddies.count > 0 else {
-                completion(false, NSError.chatSecureError(OTROMEMOError.noDevicesForBuddy, userInfo: nil))
-                return
-            }
-            
-            guard let messageBody = message.messageText,
-                let ivData = OTRSignalEncryptionHelper.generateIV(), let keyData = OTRSignalEncryptionHelper.generateSymmetricKey(), let messageBodyData = messageBody.data(using: String.Encoding.utf8) else {
-                
-                let error = NSError.chatSecureError(OTROMEMOError.unknownError, userInfo: nil)
-                completion(false,error)
-                
-                return
-            }
-            do {
-                //Create the encrypted payload
-                let gcmData = try OTRSignalEncryptionHelper.encryptData(messageBodyData, key: keyData, iv: ivData)
-                
-                // this does the signal encryption. If we fail it doesn't matter here. We end up trying the next device and fail later if no devices worked.
-                let encryptClosure:(OMEMODevice) -> (OMEMOKeyData?) = { device in
-                    do {
-                        // new OMEMO format puts auth tag inside omemo session
-                        // see https://github.com/siacs/Conversations/commit/f0c3b31a42ac6269a0ca299f2fa470586f6120be#diff-e9eacf512943e1ab4c1fbc21394b4450R170
-                        let payload = keyData + gcmData.authTag
-                        return try self.encryptPayloadWithSignalForDevice(device, payload: payload)
-                    } catch {
-                        return nil
-                    }
-                }
-                
-                /**
-                 1. Get all devices for this buddy.
-                 2. Filter only devices that are trusted.
-                 3. encrypt to those devices.
-                 4. Remove optional values
-                */
                 let buddyKeyDataArray = buddyKeys.flatMap({ key in
                     self.omemoStorageManager.getDevicesForParentKey(key, collection: ChatBuddyModel.collection(), trustedOnly: true).map(encryptClosure).compactMap{ $0 }
                 })
@@ -205,7 +125,6 @@ import SignalProtocolObjC
      - parameter completion: The completion closure called on callbackQueue. If it successfully was able to fetch all the bundles or if it wasn't necessary. If there were no devices for this buddy it will also return flase
      */
     open func prepareSessionForBuddy(_ buddyYapKey:String, completion:@escaping (Bool) -> Void) {
-        //self.prepareSession(buddyYapKey, yapCollection: OTRBuddy.collection, completion: completion)
     }
     
     /**
@@ -221,114 +140,9 @@ import SignalProtocolObjC
         })
         return
         
-        /*var devices:[OMEMODevice] = []
-        var user:String? = nil
-        
-        //Get all the devices ID's for this buddy as well as their username for use with signal and XMPPFramework.
-        devices = OMEMODevice.allOMEMODevices(for: yapKey, collection: yapCollection)
-        user = self.fetchUsername(yapKey, yapCollection: yapCollection)
-        
-        guard let username = user,
-            let jid = XMPPJID(string:username) else {
-            self.callbackQueue.async(execute: {
-                completion(false)
-            })
-            return
-        }
-        
-        let bundleFetch = { [weak self] in
-            guard let strongself = self else {
-                return
-            }
-            var finalSuccess = true
-            
-            let group = DispatchGroup()
-            
-            //For each device Check if we have a session. If not then we need to fetch it from their XMPP server.
-            for device in devices where device.deviceId.uint32Value != self?.signalEncryptionManager.registrationId {
-                if !strongself.signalEncryptionManager.sessionRecordExistsForUsername(username, deviceId: device.deviceId.int32Value) || device.publicIdentityKeyData == nil {
-                    //No session for this buddy and device combo. We need to fetch the bundle.
-                    //No public idenitty key data. We don't have enough information (for the user and UI) to encrypt this message.
-                    
-                    let elementId = UUID().uuidString
-                    
-                    group.enter()
-                    // Hold on to a closure so that when we get the call back from OMEMOModule we can call this closure.
-                    strongself.outstandingXMPPStanzaResponseBlocks[elementId] = { success in
-                        if (!success) {
-                            finalSuccess = false
-                        }
-                        
-                        group.leave()
-                    }
-                    //Fetch the bundle
-                    strongself.omemoModule?.fetchBundle(forDeviceId: device.deviceId.uint32Value, jid: jid, elementId: elementId)
-                }
-            }
-            
-            if let cQueue = self?.callbackQueue {
-                group.notify(queue: cQueue) {
-                    completion(finalSuccess)
-                }
-            }
-        }
-        
-        let deviceFetch = { [weak self] in
-            guard let sself = self else {
-                return
-            }
-            var deviceFetchSuccess = true
-            let group = DispatchGroup()
-            let elementId = UUID().uuidString
-            
-            group.enter()
-            // Hold on to a closure so that when we get the call back from OMEMOModule we can call this closure.
-            self?.deviceIdFetchCallbacks[jid] = { success in
-                if (!success) {
-                    deviceFetchSuccess = false
-                }
-                group.leave()
-            }
-            //Fetch the bundle
-            self?.omemoModule?.fetchDeviceIds(for: jid, elementId: elementId)
-            
-            group.notify(queue: sself.workQueue) {
-                devices = OMEMODevice.allOMEMODevices(for: yapKey, collection: yapCollection)
-                if deviceFetchSuccess == false {
-                    DDLogWarn("Could not fetch devices for \(jid)")
-                }
-                if devices.count > 0 {
-                    DDLogVerbose("Fetched \(devices.count) devices on the fly while sending message for \(jid)")
-                    bundleFetch()
-                } else {
-                    self?.callbackQueue.async {
-                        completion(false)
-                    }
-                }
-            }
-        }
-        
-        self.workQueue.async {
-            // We are trying to send to someone but haven't fetched any devices
-            // this might happen if we aren't subscribed to someone's presence in a group chat
-            if devices.count == 0 {
-                deviceFetch()
-            } else {
-                bundleFetch()
-            }
-        }*/
     }
     
     fileprivate func fetchUsername(_ yapKey:String, yapCollection:String) -> String? {
-        /*if yapCollection == OTRAccount.collection {
-            if let acct = OTRXMPPAccount.getXMPPAccount(uniqueId: yapKey) {
-                return acct.username
-            }
-        } else {
-            if let buddy = OTRXMPPBuddy.getBuddy(uniqueId: yapKey) {
-                return buddy.username
-            }
-        }*/
 
         return nil
     }
@@ -337,36 +151,9 @@ import SignalProtocolObjC
      Check if we have valid sessions with our other devices and if not fetch their bundles and start sessions.
      */
     func prepareSessionWithOurDevices(_ completion:@escaping (_ success:Bool) -> Void) {
-        //self.prepareSession(self.accountKey, yapCollection: OTRAccount.collection, completion: completion)
     }
     
-    /*fileprivate func encryptPayloadWithSignalForDevice(_ device:OMEMODevice, payload:Data) throws -> OMEMOKeyData? {
-        var user = self.fetchUsername(device.parentKey, yapCollection: device.parentCollection)
-        if let username = user {
-            let encryptedKeyData = try self.signalEncryptionManager.encryptToAddress(payload, name: username, deviceId: device.deviceId.uint32Value)
-            var isPreKey = false
-            if (encryptedKeyData.type == .preKeyMessage) {
-                isPreKey = true
-            }
-            return OMEMOKeyData(deviceId: device.deviceId.uint32Value, data: encryptedKeyData.data, isPreKey: isPreKey)
-        }
-        return nil
-    }*/
     
-    /*private func newOutgoingMessage(to thread: OTRThreadOwner, mediaItem: OTRMediaItem) -> OTRMessageProtocol? {
-        if let buddy = thread as? OTRBuddy {
-            let message = OTROutgoingMessage()!
-            var security: OTRMessageTransportSecurity = .OMEMO
-            security = buddy.preferredTransportSecurity()
-            message.buddyUniqueId = buddy.uniqueId
-            message.mediaItemUniqueId = mediaItem.uniqueId
-            message.messageSecurityInfo = OTRMessageEncryptionInfo(messageSecurity: security)
-            /*let gtimer = OTRSettingsManager.string(forOTRSettingKey: "globalTimer")
-            if (thread.expiresIn == nil && gtimer != nil && gtimer != "Off") {
-                message.expires = gtimer
-            } else if (thread.expiresIn != nil) {
-                message.expires = thread.expiresIn
-            }*/
             return message
         } else if let room = thread as? OTRXMPPRoom {
             if let message = room.outgoingOMEMOMessage(withText: "") as? OTRXMPPRoomMessage {
@@ -412,49 +199,11 @@ import SignalProtocolObjC
     
     /// transforms incoming group message into JID matching a 1:1 Buddy
     private func extractAddressFromGroupMessage(_ message: XMPPMessage) -> XMPPJID? {
-        /*if let fromJID = message.from {
-            let roomJID = fromJID.bareJID
-            // This formula is defined in XMPPRoom.roomYapKey
-            let accountId = accountKey
-            var _occupant: OTRXMPPRoomOccupant? = OTRXMPPRoomOccupant.occupant(jid: fromJID, realJID: nil, roomJID: roomJID, accountId: accountId, createIfNeeded: false)
-            
-            // we've found the existing 1:1 buddy!
-            if let buddy = _occupant?.buddy() {
-                return buddy.bareJID
-            } else {
-                if let user = fromJID.resource {
-                    if let userjid = handleNoBuddy(message, fromname: user) {
-                        return userjid
-                    }
-                }
-                
-                if let occupant = _occupant,
-                    let user = occupant.jid?.resource {
-                    return XMPPJID(string: user)
-                }
-                
-                return nil
-            }
-        }*/
         return nil
     }
     
     func handleNoBuddy(_ message: XMPPMessage, fromname: String) -> XMPPJID? {
         var budjid: XMPPJID? = nil
-        /*if let account = OTRXMPPAccount.getXMPPAccount(uniqueId: self.accountKey) {
-            OTRXMPPBuddy.getAllBuddies(for: account.uniqueId).forEach { (buddy) in
-                let tempjid = XMPPJID(string: buddy.username)
-                if (fromname == buddy.displayName || fromname == tempjid?.user) {
-                    budjid = tempjid
-                    return
-                }
-            }
-            
-            let fromJID = message.from
-            if (account.displayName == fromJID?.resource) {
-                budjid = XMPPJID(string: account.username)
-            }
-        }*/
         
         return budjid
     }
@@ -464,16 +213,13 @@ import SignalProtocolObjC
 extension ShareOMEMOSignalCoordinator: OMEMOModuleDelegate {
     
     public func omemo(_ omemo: OMEMOModule, publishedDeviceIds deviceIds: [NSNumber], responseIq: XMPPIQ, outgoingIq: XMPPIQ) {
-        //DDLogVerbose("publishedDeviceIds: \(responseIq)")
 
     }
     
     public func omemo(_ omemo: OMEMOModule, failedToPublishDeviceIds deviceIds: [NSNumber], errorIq: XMPPIQ?, outgoingIq: XMPPIQ) {
-        //DDLogWarn("failedToPublishDeviceIds: \(String(describing: errorIq))")
     }
     
     public func omemo(_ omemo: OMEMOModule, deviceListUpdate deviceIds: [NSNumber], from fromJID: XMPPJID, incomingElement: XMPPElement) {
-        //DDLogVerbose("deviceListUpdate: \(fromJID) \(deviceIds)")
         self.workQueue.async { [weak self] in
             if let eid = incomingElement.elementID {
                 self?.callAndRemoveOutstandingBundleBlock(eid, success: true)
@@ -492,7 +238,6 @@ extension ShareOMEMOSignalCoordinator: OMEMOModuleDelegate {
     }
     
     public func omemo(_ omemo: OMEMOModule, publishedBundle bundle: OMEMOBundle, responseIq: XMPPIQ, outgoingIq: XMPPIQ) {
-        //DDLogVerbose("publishedBundle: \(responseIq) \(outgoingIq)")
     }
     
     public func omemo(_ omemo: OMEMOModule, failedToPublishBundle bundle: OMEMOBundle, errorIq: XMPPIQ?, outgoingIq: XMPPIQ) {
@@ -500,16 +245,13 @@ extension ShareOMEMOSignalCoordinator: OMEMOModuleDelegate {
     }
     
     public func omemo(_ omemo: OMEMOModule, fetchedBundle bundle: OMEMOBundle, from fromJID: XMPPJID, responseIq: XMPPIQ, outgoingIq: XMPPIQ) {
-        //DDLogVerbose("fetchedBundle: \(responseIq) \(outgoingIq)")
 
         if (self.isOurJID(fromJID) && bundle.deviceId == self.signalEncryptionManager.registrationId) {
-            //DDLogVerbose("fetchedOurOwnBundle: \(responseIq) \(outgoingIq)")
 
             //We fetched our own bundle
             if let ourDatabaseBundle = self.fetchMyBundle() {
                 //This bundle doesn't have the correct identity key. Something has gone wrong and we should republish
                 if ourDatabaseBundle.identityKey != bundle.identityKey {
-                    //DDLogError("Bundle identityKeys do not match! \(ourDatabaseBundle.identityKey) vs \(bundle.identityKey)")
                     omemo.publishBundle(ourDatabaseBundle, elementId: nil)
                 }
             }
@@ -547,7 +289,6 @@ extension ShareOMEMOSignalCoordinator: OMEMOModuleDelegate {
     }
     
     public func omemo(_ omemo: OMEMOModule, failedToRemoveBundleId bundleId: UInt32, errorIq: XMPPIQ?, outgoingIq: XMPPIQ) {
-        //DDLogWarn("Error removing bundle: \(String(describing: errorIq))")
     }
     
     public func omemo(_ omemo: OMEMOModule, failedToRemoveDeviceIds deviceIds: [NSNumber], errorIq: XMPPIQ?, elementId: String?) {
@@ -559,11 +300,9 @@ extension ShareOMEMOSignalCoordinator: OMEMOModuleDelegate {
     }
     
     public func omemo(_ omemo: OMEMOModule, receivedKeyData keyData: [OMEMOKeyData], iv: Data, senderDeviceId: UInt32, from fromJID: XMPPJID, payload: Data?, message: XMPPMessage) {
-        //self.processKeyData(keyData, iv: iv, senderDeviceId: senderDeviceId, forJID: fromJID, payload: payload, delayed: nil, forwarded: false, isIncoming: true, message: message, originalMessage: message)
     }
     
     public func omemo(_ omemo: OMEMOModule, receivedForwardedKeyData keyData: [OMEMOKeyData], iv: Data, senderDeviceId: UInt32, for forJID: XMPPJID, payload: Data?, isIncoming: Bool, delayed: Date?, forwardedMessage: XMPPMessage, originalMessage: XMPPMessage) {
-        //self.processKeyData(keyData, iv: iv, senderDeviceId: senderDeviceId, forJID: forJID, payload: payload, delayed: delayed, forwarded: true, isIncoming: isIncoming, message: forwardedMessage, originalMessage: originalMessage)
     }
 }
 
@@ -583,17 +322,6 @@ extension ShareOMEMOSignalCoordinator:OMEMOStorageDelegate {
     
     public func fetchDeviceIds(for jid: XMPPJID) -> [NSNumber] {
         return [NSNumber]()
-        /*var devices:[OMEMODevice]?
-        
-        if self.isOurJID(jid) {
-            devices = self.omemoStorageManager.getDevicesForOurAccount(trustedOnly: false)
-        } else {
-            devices = self.omemoStorageManager.getDevicesForBuddy(jid.bare, trustedOnly:false)
-        }
-        //Convert from devices array to NSNumber array.
-        return (devices?.map({ (device) -> NSNumber in
-            return device.deviceId
-        })) ?? [NSNumber]()*/
         
     }
 

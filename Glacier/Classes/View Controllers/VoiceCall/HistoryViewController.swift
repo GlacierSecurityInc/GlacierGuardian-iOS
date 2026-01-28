@@ -1,10 +1,6 @@
-//
-//  HistoryViewController.swift
 //  Glacier
-//
 //  Created by andyfriedman on 1/22/25.
 //  Copyright © 2025 Glacier. All rights reserved.
-//
 
 import Foundation
 import MBProgressHUD
@@ -141,13 +137,11 @@ import MBProgressHUD
         blueDot.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(blueDot)
             
-        // Constraints for imageView (optional: adjust size/spacing)
         NSLayoutConstraint.activate([
             imageView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
             imageView.centerYAnchor.constraint(equalTo: containerView.centerYAnchor)
         ])
             
-        // Constraints for blue dot (position it at the bottom-right corner of the image)
         NSLayoutConstraint.activate([
             blueDot.widthAnchor.constraint(equalToConstant: 8), // Size of the blue dot
             blueDot.heightAnchor.constraint(equalToConstant: 8), // Size of the blue dot
@@ -246,10 +240,6 @@ import MBProgressHUD
     }
     
     public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        /*if self.historyRecords.count == 0 {
-            return 1
-        }
-        return self.historyRecords.count*/
         
         if self.historyRecords.count == 0 && emptySet == false {
             DispatchQueue.main.async {
@@ -291,7 +281,6 @@ import MBProgressHUD
         if (self.historyRecords.count == 0) {
             cell.nameLabel.text = "No Calls"
         } else {
-            //cell.accountLabel.text = self.callRecords[indexPath.row].contact.phoneNumber
             cell.nameLabel.text = self.historyRecords[indexPath.row].name
             var dateString = self.historyRecords[indexPath.row].startTime
             if let date = inputFormatter.date(from: dateString) {
@@ -547,7 +536,6 @@ extension HistoryViewController : TwilioAccountDelegateProtocol {
         
         DispatchQueue.main.async {
             if (accounts.count == 0) {
-                //selectedAccount = nil
                 self.navigationItem.title = "No account"
             } else if let selacct = selected {
                 self.setSelectedAccount(selacct)

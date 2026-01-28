@@ -116,7 +116,6 @@ extension TunnelConfiguration {
             guard let preSharedKey = PreSharedKey(hexKey: preSharedKeyString) else {
                 throw ParseError.peerHasInvalidPreSharedKey(preSharedKeyString)
             }
-            // TODO(zx2c4): does the compiler optimize this away?
             var accumulator: UInt8 = 0
             for index in 0..<preSharedKey.rawValue.count {
                 accumulator |= preSharedKey.rawValue[index]

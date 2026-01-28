@@ -1,22 +1,16 @@
-//
-//  ChatSignedPreKey.swift
 //  Glacier
-//
 //  Created by andyfriedman on 12/13/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 import GRDB
 
 public struct ChatSignedPreKey: GRDBRecord, TableRecord {
-    //public protocol ChatThread: AnyObject {
     public var id: Int64?
     public var uniqueId: String
     var accountKey: String
     var keyId: UInt32
     var keyData: Data
-    //var modified: Date?
     
     public init(accountKey:String, keyId:UInt32, keyData:Data) {
         self.uniqueId = UUID().uuidString

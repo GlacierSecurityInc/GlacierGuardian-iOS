@@ -1,10 +1,6 @@
-//
-//  ChatVideoItem.swift
 //  Glacier
-//
 //  Created by andyfriedman on 9/21/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 import MessageKit
@@ -28,21 +24,6 @@ import Kingfisher
     public init(videoURL: URL, isIncoming: Bool) {
         super.init(filename: videoURL.lastPathComponent, mimetype: nil, isIncoming: isIncoming)
         self.grdbRecord?.mediaType = ChatMediaType.videoItem.rawValue
-        /*let asset = AVURLAsset(url: videoURL)
-        let videoTrack = asset.tracks(withMediaType: AVMediaType.video).first
-        let videoSize = videoTrack?.naturalSize
-        let transform = videoTrack?.preferredTransform
-        
-        if ((videoSize?.width == transform?.tx && videoSize?.height == transform?.ty) || (transform?.tx == 0 && transform?.ty == 0))
-        {
-            _width = videoSize.width
-            _height = videoSize.height
-        }
-        else
-        {
-            _width = videoSize.height
-            _height = videoSize.width
-        }*/
     }
     
     public override init(uniqueId: String) {
@@ -57,9 +38,6 @@ import Kingfisher
         self.grdbRecord?.mediaType = ChatMediaType.videoItem.rawValue
     }
     
-    /*required public init(filename: String, mimetype: String?, isIncoming: Bool) {
-        fatalError("init(filename:mimetype:isIncoming:) has not been implemented")
-    }*/
 }
     
 extension ChatVideoItem: MediaItem {
@@ -84,7 +62,6 @@ extension ChatVideoItem: MediaItem {
             return nil
         }
                     
-        //let uid = self.uniqueId
         self.setThumbnail(videoUrl)
 #endif
         return nil
@@ -101,9 +78,6 @@ extension ChatVideoItem: MediaItem {
         
         guard let parentKey = self.grdbRecord?.parentObjectKey else { return curSize }
         let thumbnailKey = "\(parentKey)-thumb"
-        /*if let chatImg = OTRImages.image(withIdentifier: thumbnailKey) {
-            return chatImg.size
-        }*/
         
         if let chatImg = GlacierImageCache.shared().retrieveImageInMemoryCache(forKey: thumbnailKey) {
             if chatImg.size.width > 0, chatImg.size.height > 0 {
@@ -121,7 +95,6 @@ extension ChatVideoItem: MediaItem {
         self.downloadVideo(url, completion: { (img, url) in
             guard let img = img else {return }
             let mediaSize = ChatMediaItem.normalizeWidth(width: img.size.width, height: img.size.height)
-            //print("***** setThumbnail video \(self.uniqueId) normalized size \(mediaSize), but downloaded width \(img.size.width), height \(img.size.height)")
             
             let resizedImage = img.scaleImageWith(newSize: mediaSize)
             

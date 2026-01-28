@@ -1,10 +1,6 @@
-//
-//  Msg+ScrollToCell.swift
 //  Glacier
-//
 //  Created by Prem Pratap Singh on 21/11/25.
 //  Copyright © 2025 Glacier. All rights reserved.
-//
 
 import MessageKit
 

@@ -1,10 +1,6 @@
-//
-//  OTRXMPPMessageStatusModule.swift
 //  ChatSecure
-//
 //  Created by David Chiles on 5/5/16.
 //  Copyright © 2016 Chris Ballinger. All rights reserved.
-//
 
 import Foundation
 import XMPPFramework

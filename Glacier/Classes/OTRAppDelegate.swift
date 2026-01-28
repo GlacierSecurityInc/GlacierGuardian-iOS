@@ -1,10 +1,6 @@
-//
-//  OTRAppDelegate.swift
 //  ChatSecureCore
-//
 //  Created by Chris Ballinger on 12/5/17.
 //  Copyright © 2017 Chris Ballinger. All rights reserved.
-//
 
 import Foundation
 import UserNotifications
@@ -24,7 +20,6 @@ public extension OTRAppDelegate {
         if UIApplication.shared.isProtectedDataAvailable {
             configureAmplifyIfNeeded()
             Task {
-                //await configureAmplifyIfNeeded()
                 await tryFetchSession()
             }
         } else {
@@ -36,7 +31,6 @@ public extension OTRAppDelegate {
                 guard let self = self else { return }
                 self.configureAmplifyIfNeeded()
                 Task {
-                    //await self.configureAmplifyIfNeeded()
                     await self.tryFetchSession()
                 }
             }
@@ -59,7 +53,7 @@ public extension OTRAppDelegate {
         }
     }
 
-    private func configureAmplifyIfNeeded() {//async {
+    private func configureAmplifyIfNeeded() {
         guard !self.amplifyIsConfigured else { return }
 
         do {
@@ -141,7 +135,6 @@ final class MetricKitDiagnostics: NSObject, MXMetricManagerSubscriber {
         super.init()
     }
 
-    /// Call this once during app startup (after the process launches).
     func start() {
         MXMetricManager.shared.add(self)
         logger.info("MetricKit subscriber added")
@@ -151,7 +144,6 @@ final class MetricKitDiagnostics: NSObject, MXMetricManagerSubscriber {
         MXMetricManager.shared.remove(self)
     }
 
-    // MARK: - Diagnostics (crash / hang / cpu / disk write)
 
     func didReceive(_ payloads: [MXDiagnosticPayload]) {
         for payload in payloads {
@@ -174,7 +166,6 @@ final class MetricKitDiagnostics: NSObject, MXMetricManagerSubscriber {
         }
     }
 
-    // (Optional) Daily metrics, not required for hangs:
     func didReceive(_ payloads: [MXMetricPayload]) {
         // Can ignore or use for broader perf tracking.
     }
@@ -208,7 +199,6 @@ struct HangRecord: Codable {
     let payloadBegin: Date
     let payloadEnd: Date
 
-    /// JSON from MXCallStackTree.jsonRepresentation()
     /// Stored as base64 to keep the record Codable + single-file.
     let callStackTreeJSONBase64: String
 
@@ -417,7 +407,6 @@ public extension OTRAppDelegate {
         }
             
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            //NotificationCenter.default.post(name: Notification.Name(rawValue: "ReloadDataNotificationName"), object: self, userInfo:nil)
                 
             hud.hide(animated: true)
             hud.removeFromSuperview()
@@ -442,7 +431,6 @@ public extension OTRAppDelegate {
     @objc func enterSMSThread(key: String, collection: String) {
         if let smsthread = SMSChatConversationModel.getConversation(with: key) {
             //should probably also switch to account
-            //self.smsSplitViewCoordinator.enterSMSWithThread(smsthread, sender: self)
             
             //switch accounts if needed on incoming notification touch
             if TwilioBackendManager.sharedMgr().selectedAccount?.grdbRecord?.phoneNumber == smsthread.grdbRecord?.localNumber {
@@ -488,7 +476,7 @@ public extension OTRAppDelegate {
         }
     }
     
-    internal func openPhoneCallController(_ callContact:PhoneContact) {//nameTitle:String) {
+    internal func openPhoneCallController(_ callContact:PhoneContact) {
         //do title here? Related to incoming call number/name/contact
         if self.callWindow == nil {
             self.callWindow = UIWindow(frame: UIScreen.main.bounds)
@@ -502,7 +490,6 @@ public extension OTRAppDelegate {
             if let callVC = storyboard.instantiateViewController(withIdentifier: "PhoneCallVC") as? VoiceCallViewController, let account = ChatAccountModel.firstAccount(), let xmpp = OTRProtocolManager.shared.xmppManager(forChatAccount:account) {
                 xmpp.callManager.setGlacierCallDelegate(callVC)
                 callVC.setCallManager(xmpp.callManager)
-                //callVC.setNameTitle(nameTitle)
                 callVC.setContact(callContact)
                 callVC.modalPresentationStyle = .overCurrentContext
                 
@@ -529,7 +516,7 @@ extension OTRAppDelegate: UNUserNotificationCenterDelegate {
         let userInfo = notification.request.content.userInfo
         if let rawNotificationType = userInfo[kOTRNotificationType] as? String {
             return NotificationType(rawValue: rawNotificationType)
-        } else if userInfo[kNotificationTwilioType] is String { //we use the key here for NotificationType also, not the value
+        } else if userInfo[kNotificationTwilioType] is String {
             return NotificationType(rawValue: kNotificationTwilioType)
         } else {
             return nil
@@ -576,7 +563,6 @@ extension OTRAppDelegate: UNUserNotificationCenterDelegate {
             break
         case .voicemail:
             appd.window?.rootViewController = appd.dialerViewController
-            //self.navigationController!.viewControllers.first
             if let dialer = appd.dialerViewController.viewControllers.first as? DialerViewController { dialer.vmButtonPressed()
             }
             break
@@ -599,7 +585,7 @@ extension OTRAppDelegate: UNUserNotificationCenterDelegate {
             completionHandler([.badge, .sound, .banner, .list])
         case .connectionError:
             completionHandler([.badge, .sound, .banner, .list])
-        case .smsMessage: //IOSM#102 only show if not currently visible
+        case .smsMessage:
             if let (key, _) = extractThreadInformation(notification: notification) {
                 OTRAppDelegate.visibleSMSThread({ (tkey) in
                     if key == tkey {
@@ -638,7 +624,6 @@ extension OTRAppDelegate: PKPushRegistryDelegate {
     }
     
     @objc public func handleVoipPushToken(_ token: Data) {
-        //let tokString = token.toHexString()
         OTRProtocolManager.pushController.setVoipToken(token)
         CallManager.sharedCallManager().credentialsUpdated(token)
     }
@@ -664,8 +649,6 @@ extension OTRAppDelegate: PKPushRegistryDelegate {
         var awaitingAsyncCompletion = false
 
         if type == .voIP {
-            //if UIApplication.shared.applicationState == .background {
-            //AND NOT TWILIO key:twi_message_type, twilio.voice.call
             let userInfo = payload.dictionaryPayload
             
             if let jsonData = try? JSONSerialization.data(withJSONObject: userInfo, options: [.prettyPrinted]),
@@ -675,7 +658,6 @@ extension OTRAppDelegate: PKPushRegistryDelegate {
                 DDLogDebug("***** Received VoIP push payload (raw): \(userInfo)")
             }
             
-            //print("***** userInfo: \(userInfo)")
             
             var twilioVoiceCall = false
             if let type = userInfo[kNotificationTwilioType] as? String, type == kNotificationTwilioVoiceCall {
@@ -683,7 +665,6 @@ extension OTRAppDelegate: PKPushRegistryDelegate {
             }
             
             if UIApplication.shared.applicationState != .active, !twilioVoiceCall, self.isProxyDetected() == false {
-                //DDLogInfo("***** received VoIP push, app not active")
                 DispatchQueue.global().async {
                     if let account = ChatAccountModel.firstAccount(), OTRProtocolManager.shared.isAccountIdConnected(account.uniqueId) == false {
                         self.voipNotification = true

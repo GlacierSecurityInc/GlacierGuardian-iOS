@@ -1,10 +1,6 @@
-//
-//  DefaultTheme.swift
 //  ChatSecureCore
-//
 //  Created by Chris Ballinger on 2/23/18.
 //  Copyright © 2018 Chris Ballinger. All rights reserved.
-//
 
 import Foundation
 
@@ -27,9 +23,6 @@ import Foundation
         return ConversationViewController()
     }
     
-    /*public func messagesViewController() -> UIViewController {
-        return MessagesHoldTalkViewController()
-    }*/
     
     public func chatViewController() -> UIViewController {
         return ChatViewControllerExt()

@@ -1,10 +1,6 @@
-//
-//  ChatOMEMODevice.swift
 //  Glacier
-//
 //  Created by andyfriedman on 12/14/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 import GRDB
@@ -14,7 +10,7 @@ public enum OMEMOTrustLevel:Int {
     case untrusted = 1
     case trustedTofu = 2
     case trustedUser = 3
-    case removed = 4 // counts as delivered if >1 receipts
+    case removed = 4
 }
 
 public struct ChatOmemoDevice: GRDBRecord, TableRecord {
@@ -27,7 +23,6 @@ public struct ChatOmemoDevice: GRDBRecord, TableRecord {
     var publicIdentityKeyData: Data?
     var trustLevel: Int
     var lastSeenDate: Date
-    //var modified: Date?
     
     public init(deviceId:NSNumber, trustLevel:OMEMOTrustLevel?, parentKey:String, parentCollection:String, publicIdentityKeyData:Data?, lastSeenDate:Date?) {
         self.uniqueId = Self.keyWith(deviceId: deviceId, parentKey: parentKey, parentCollection: parentCollection)

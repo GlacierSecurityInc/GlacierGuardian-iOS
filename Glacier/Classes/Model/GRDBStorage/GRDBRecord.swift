@@ -1,10 +1,6 @@
-//
-//  GRDBRecord.swift
 //  Glacier
-//
 //  Created by andyfriedman on 1/10/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 import GRDB
@@ -14,14 +10,11 @@ import CocoaLumberjack
 public protocol GRDBRecord: Codable, FetchableRecord, MutablePersistableRecord, Hashable {
     var id: Int64? { get mutating set }
     var uniqueId: String { get }
-    //var modified: Date { get mutating set }
     static var databaseTableName: String { get }
     
     func storeInGRDB(completion: @escaping () -> Void)
     func save(completion: @escaping () -> Void)
     
-    //func hash(into hasher: inout Hasher)
-    //func isContentEqual(to source: any GRDBRecord) -> Bool
 }
 
 public extension GRDBRecord {
@@ -34,18 +27,7 @@ public extension GRDBRecord {
         return self.uniqueId
     }
     
-    /*func hash(into hasher: inout Hasher) {
-        hasher.combine(self.uniqueId)
-    }
     
-    //static func == (lhs: any GRDBRecord, rhs: any GRDBRecord) -> Bool {
-    static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.uniqueId == rhs.uniqueId
-    }*/
-    
-    /*func isContentEqual(to source: any GRDBRecord) -> Bool {
-        return uniqueId == source.uniqueId && modified == source.modified
-    }*/
     
     mutating func didInsert(with rowID: Int64, for column: String?) {
         id = rowID
@@ -82,12 +64,10 @@ public extension GRDBRecord {
     }
 
     // This is a "fault-tolerant" save method that will upsert in production.
-    // In DEBUG builds it will fail if the intention (insert v. update)
     // doesn't match the database contents.
     func grdbSave(transaction: GRDBWriteTransaction) {
         // GRDB TODO: the record has an id property, but we can't use it here
         //            until we modify the logic.
-        //            grdbIdByUniqueId() verifies that the model hasn't been
         //            deleted from the db.
         if let grdbId: Int64 = grdbIdByUniqueId(transaction: transaction) {
             grdbUpdate(grdbId: grdbId, transaction: transaction)
@@ -128,7 +108,6 @@ public extension GRDBRecord {
 
     func grdbRemove(transaction: GRDBWriteTransaction) {
         do {
-            //let tableName = tableMetadata.tableName
             let whereSQL = "\(uniqueIdColumnName.quotedDatabaseIdentifier)=?"
             let sql: String = "DELETE FROM \(Self.databaseTableName.quotedDatabaseIdentifier) WHERE \(whereSQL)"
 
@@ -144,10 +123,7 @@ public extension GRDBRecord {
             statement.setUncheckedArguments(arguments)
             try statement.execute()
         } catch {
-            //DatabaseCorruptionState.flagDatabaseCorruptionIfNecessary(
-            //    userDefaults: CurrentAppContext().appUserDefaults(),
             //    error: error
-            //)
             logWriteFailure(operation: "delete", error: error)
         }
     }
@@ -219,7 +195,6 @@ extension GRDBModel {
                                  uniqueIdColumnValue: String,
                                  transaction: GRDBReadTransaction) -> Int64? {
         do {
-            //let tableName = tableMetadata.tableName
             let sql = "SELECT id FROM \(tableName.quotedDatabaseIdentifier) WHERE \(uniqueIdColumnName.quotedDatabaseIdentifier)=?"
             guard let value = try Int64.fetchOne(transaction.database, sql: sql, arguments: [uniqueIdColumnValue]) else {
                 return nil

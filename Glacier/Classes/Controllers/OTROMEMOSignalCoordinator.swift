@@ -1,10 +1,6 @@
-//
-//  OTROMEMOSignalCoordinator.swift
 //  ChatSecure
-//
 //  Created by David Chiles on 8/4/16.
 //  Copyright © 2016 Chris Ballinger. All rights reserved.
-//
 
 import UIKit
 import XMPPFramework
@@ -193,7 +189,6 @@ import GRDB
         
         //IOSM#75
         if trustedDevices.count == 0, devices.count > 0 {
-            //print("***** found devices \(devices)")
             for device in devices {
                 var deviceCopy = device
                 deviceCopy.trustLevel = device.trustLevel
@@ -242,10 +237,8 @@ import GRDB
             do {
                 try DBManager.sharedDB().grdbStorage.write(block: { transaction in
                     for device in devices where UInt32(device.deviceId) != self?.signalEncryptionManager.storage.getLocalRegistrationId(transaction) {
-                        //print("***** fetching bundle for \(device.deviceId)")
                         if !strongself.signalEncryptionManager.sessionRecordExistsForUsername(username, deviceId: Int32(device.deviceId), transaction:transaction) || device.publicIdentityKeyData == nil {
                             //No session for this buddy and device combo. We need to fetch the bundle.
-                            //No public idenitty key data. We don't have enough information (for the user and UI) to encrypt this message.
                             
                             fetchlist.append(device.deviceId)
                         }
@@ -257,7 +250,6 @@ import GRDB
             
             for devid in fetchlist {
                 let elementId = UUID().uuidString
-                //print("***** fetching bundle for \(device.deviceId) and no session record")
                 
                 group.enter()
                 // Hold on to a closure so that when we get the call back from OMEMOModule we can call this closure.
@@ -300,7 +292,6 @@ import GRDB
             
             group.notify(queue: sself.workQueue) {
                 devices = ChatOmemoDevice.allOMEMODevices(for: vars.key, collection: vars.collection)
-                //print("***** fetched devices \(devices)")
                 if deviceFetchSuccess == false {
                     DDLogWarn("Could not fetch devices for \(jid)")
                 }
@@ -333,83 +324,6 @@ import GRDB
      - parameter collection: The key for the buddy or account to check
      - parameter completion: The completion closure called on callbackQueue. If it successfully was able to fetch all the bundles or if it wasn't necessary. If there were no devices for this buddy it will also return flase
      */
-    /*open func prepareSession(_ key:String, collection:String, transaction:GRDBWriteTransaction?, completion:@escaping (Bool) -> Void) {
-        var devices:[ChatOmemoDevice] = []
-        var trustedDevices:[ChatOmemoDevice] = [] //IOSM#75
-        var user:String? = nil
-        
-        //Get all the devices ID's for this buddy as well as their username for use with signal and XMPPFramework.
-        if let transaction = transaction {
-            devices = ChatOmemoDevice.allOMEMODevices(for: key, collection: collection, transaction: transaction)
-            trustedDevices = ChatOmemoDevice.allOMEMODevices(for: key, collection: collection, transaction: transaction, trusted: true) //IOSM#75
-            user = self.fetchUsername(key, collection: collection, transaction:transaction)
-        } else {
-            devices = ChatOmemoDevice.allOMEMODevices(for: key, collection: collection)
-            trustedDevices = ChatOmemoDevice.allOMEMODevices(for: key, collection: collection, trusted: true) //IOSM#75
-            user = self.fetchUsername(key, collection: collection, transaction: nil)
-        }
-        
-        //IOSM#75
-        if trustedDevices.count == 0, devices.count > 0 {
-            //print("***** found devices \(devices)")
-            for device in devices {
-                var deviceCopy = device
-                deviceCopy.trustLevel = device.trustLevel
-                if ((deviceCopy.trustLevel == OMEMOTrustLevel.trustedUser.rawValue || deviceCopy.trustLevel == OMEMOTrustLevel.trustedTofu.rawValue) && device.isExpired()) {
-                    if let date = Calendar.current.date(byAdding: .day, value: -44, to: Date()) {
-                        deviceCopy.lastSeenDate = date
-                        if let transaction = transaction {
-                            deviceCopy.grdbSave(transaction: transaction)
-                        } else {
-                            deviceCopy.save()
-                        }
-                    }
-                }
-            }
-        }
-        
-        guard let username = user,
-            let jid = XMPPJID(string:username) else {
-            self.callbackQueue.async(execute: {
-                completion(false)
-            })
-            return
-        }
-        
-        let bundleFetch = { [weak self] in
-            guard let strongself = self else {
-                return
-            }
-            var finalSuccess = true
-            
-            let group = DispatchGroup()
-            
-            //For each device Check if we have a session. If not then we need to fetch it from their XMPP server.
-            //print("***** fetching bundle")
-            var fetchlist:[Int] = []
-            do {
-                try DBManager.sharedDB().grdbStorage.write(block: { transaction in
-                    for device in devices where UInt32(device.deviceId) != self?.signalEncryptionManager.storage.getLocalRegistrationId(transaction) {
-                        //print("***** fetching bundle for \(device.deviceId)")
-                        if !strongself.signalEncryptionManager.sessionRecordExistsForUsername(username, deviceId: Int32(device.deviceId), transaction:transaction) || device.publicIdentityKeyData == nil {
-                            //No session for this buddy and device combo. We need to fetch the bundle.
-                            //No public idenitty key data. We don't have enough information (for the user and UI) to encrypt this message.
-                            
-                            fetchlist.append(device.deviceId)
-                            /*let elementId = UUID().uuidString
-                            //print("***** fetching bundle for \(device.deviceId) and no session record")
-                            
-                            group.enter()
-                            // Hold on to a closure so that when we get the call back from OMEMOModule we can call this closure.
-                            strongself.outstandingXMPPStanzaResponseBlocks[elementId] = { success in
-                                if (!success) {
-                                    finalSuccess = false
-                                }
-                                
-                                group.leave()
-                            }
-                            //Fetch the bundle
-                            strongself.omemoModule?.fetchBundle(forDeviceId: UInt32(device.deviceId), jid: jid, elementId: elementId)*/
                         }
                     }
                 })
@@ -419,7 +333,6 @@ import GRDB
             
             for devid in fetchlist {
                 let elementId = UUID().uuidString
-                //print("***** fetching bundle for \(device.deviceId) and no session record")
                 
                 group.enter()
                 // Hold on to a closure so that when we get the call back from OMEMOModule we can call this closure.
@@ -458,17 +371,10 @@ import GRDB
                 group.leave()
             }
             //Fetch the bundle
-            //print("***** fetching deviceIds for \(jid.bare)")
-            /*if let omemoMod = self?.omemoModule {
-                omemoMod.performBlock {
-                    omemoMod.fetchDeviceIds(for: jid, elementId: elementId)
-                }
-            }*/
             self?.omemoModule?.fetchDeviceIds(for: jid, elementId: elementId)
             
             group.notify(queue: sself.workQueue) {
                 devices = ChatOmemoDevice.allOMEMODevices(for: key, collection: collection)
-                //print("***** fetched devices \(devices)")
                 if deviceFetchSuccess == false {
                     DDLogWarn("Could not fetch devices for \(jid)")
                 }
@@ -582,12 +488,10 @@ import GRDB
                     group.enter()
                     let budVars = self.prepSession(key, collection: ChatBuddyModel.collection(), transaction: transaction)
                     sessionVars.append(budVars)
-                    //self.prepareSessionForBuddy(key, transaction:transaction, completion: prepareCompletion)
                 }
                 group.enter()
                 let ourVars = self.prepSession(self.accountKey, collection: ChatAccountModel.collection(), transaction: transaction)
                 sessionVars.append(ourVars)
-                //self.prepareSessionWithOurDevices(transaction, completion: prepareCompletion)
                 //Even if something went wrong fetching bundles we should push ahead. We may have sessions that can be used.
             })
         } catch {
@@ -634,7 +538,6 @@ import GRDB
                         let encryptClosure:(ChatOmemoDevice) -> (OMEMOKeyData?) = { device in
                             do {
                                 // new OMEMO format puts auth tag inside omemo session
-                                // see https://github.com/siacs/Conversations/commit/f0c3b31a42ac6269a0ca299f2fa470586f6120be#diff-e9eacf512943e1ab4c1fbc21394b4450R170
                                 let payload = keyData + gcm.authTag
                                 return try self.encryptPayloadWithSignalForDevice(device, payload: payload, transaction: transaction)
                             } catch {
@@ -743,7 +646,6 @@ import GRDB
     }
     
     private func prepSessionForCall(_ buddyjid:String) {
-        //var buddyId:String?
         
         do {
             let budjid = XMPPJID(string: buddyjid)!
@@ -751,7 +653,6 @@ import GRDB
                 let acct = ChatAccountModel.firstAccount()
                 if let buddy = ChatBuddyModel.fetchBuddy(jid: budjid, accountUniqueId: acct!.uniqueId, transaction: transaction) {
                 
-                    //buddyId = buddy.uniqueId
                     let group = DispatchGroup()
                     let prepareCompletion = { (success:Bool) in
                         group.leave()
@@ -770,17 +671,6 @@ import GRDB
         //return buddyId
     }
     
-    /*
-     <fingerprint xmlns='http://gultsch.de/xmpp/drafts/omemo/dlts-srtp-verification' hash='sha-256' setup='actpass'>
-       <encrypted xmlns='eu.siacs.conversations.axolotl'>
-         <header sid='5678'>
-           <key rid='1234'>BASE64ENCODED...</key>
-           <iv>BASE64ENCODED...</iv>
-         </header>
-         <payload>BASE64ENCODED</payload>
-       </encrypted>
-     </fingerprint>
-     */
     open func getPayloadForCall(_ fingerprint:String, buddyjid:String, deviceId:String, senderDeviceId:UInt32) -> XMLElement? {
         
         guard let ivData = OTRSignalEncryptionHelper.generateIV(), let keyData = OTRSignalEncryptionHelper.generateSymmetricKey(), let fingerprintData = fingerprint.data(using: String.Encoding.utf8) else {
@@ -804,11 +694,9 @@ import GRDB
             let omemoKeyData = OMEMOKeyData(deviceId: rid!, data: encryptedKeyData.data, isPreKey: isPreKey)
                         
             let encryptedElement = XMLElement.omemo_keyTransport(withKeyData: [omemoKeyData], iv: ivData, senderDeviceId: senderDeviceId, xmlNamespace: .conversationsLegacy)
-                        //if payload != nil {
             let b64 = gcmData.base64EncodedString(options: [])
             let payloadElement = XMLElement(name: "payload", stringValue: b64)
             encryptedElement.addChild(payloadElement)
-                        //}
                         
             return encryptedElement
         } catch let err {
@@ -819,7 +707,6 @@ import GRDB
     }
     
     open func getDecryptedPayload(_ keyData:[OMEMOKeyData], senderDeviceId:UInt32, iv:Data, payload:Data, addressjid:String) -> String? {
-        //DDLogInfo("***** in getDecryptedPayload 1")
         var decryptedPayload:String?
         let rid = self.signalEncryptionManager.registrationId
         
@@ -869,7 +756,6 @@ import GRDB
             DDLogError("Message decryption error: \(error)")
             return nil
         }
-        //DDLogInfo("***** in getDecryptedPayload 2 with \(decryptedPayload ?? "none")")
         return decryptedPayload
     }
     
@@ -879,9 +765,6 @@ import GRDB
                 oMod.xmppStream?.send(message)
             })
         }
-        /*self.workQueue.async { [weak self] in
-            self?.omemoModule?.xmppStream?.send(message)
-        }*/
     }
     
     /**
@@ -915,7 +798,6 @@ import GRDB
             //For each username device pair remove the underlying signal session
             usernameDeviceArray.forEach({ (username,device) in
                 let address = SignalAddress(name: username.lowercased(), deviceId: Int32(device.deviceId))
-                //print("***** removingDevice \(device.deviceId)")
                 _ = self.signalEncryptionManager.storage.deleteSessionRecord(for: address, transaction: transaction)
             })
                     
@@ -943,7 +825,6 @@ import GRDB
     private func extractAddressFromGroupMessage(_ message: XMPPMessage) -> XMPPJID? {
         if let fromJID = message.from {
             let roomJID = fromJID.bareJID
-            // This formula is defined in XMPPRoom.roomYapKey
             let accountId = accountKey
             var _occupant: ChatRoomOccupantModel? = ChatRoomOccupantModel.occupant(jid: fromJID, realJID: nil, roomJID: roomJID, accountId: accountId, createIfNeeded: false)
             
@@ -990,7 +871,6 @@ import GRDB
     
     open func processKeyData(_ keyData: [OMEMOKeyData], iv: Data, senderDeviceId: UInt32, forJID: XMPPJID, payload: Data?, delayed: Date?, forwarded: Bool, isIncoming: Bool, message: XMPPMessage, originalMessage: XMPPMessage) {
         var incoming = isIncoming
-        //let aesGcmBlockLength = 16
         guard let encryptedPayload = payload, encryptedPayload.count > 0, let myJID = self.myJID else {
             return
         }
@@ -1039,16 +919,13 @@ import GRDB
                     DDLogInfo("Ignoring duplicate OMEMO message: \(message)")
                     return
                 }
-                //var letEmKnow = false  //IOSM-338c
                 let buddyAddress = SignalAddress(name: addressJID.bare, deviceId: Int32(senderDeviceId))
-                //print("***** processKeyData failed decrypting from \(addressJID.bare) with deviceId \(senderDeviceId)")
                 
                 var sessionVars: SessionVars?
                 do {
                     try DBManager.sharedDB().grdbStorage.write(block: { transaction in
                         //IOSM-338c added here and removed letEmKnow
                         if (incoming) {
-                            //self.omemoModule?.fetchBundle(forDeviceId: senderDeviceId, jid: addressJID, elementId: nil)
                             //create session does the above if needed...
                         
                             if handleMissingKeys(message: message, forwarded: forwarded, delayed: delayed, transaction:transaction) {
@@ -1056,7 +933,6 @@ import GRDB
                                 let deviceNumber = NSNumber(value: senderDeviceId as UInt32)
                                 if let buddy = ChatBuddyModel.fetchBuddy(jid: addressJID, accountUniqueId: self.accountKey, transaction: transaction) {
                                     let key = ChatOmemoDevice.keyWith(deviceId: deviceNumber, parentKey: buddy.uniqueId, parentCollection: ChatBuddyModel.collection())
-                                    //print("***** processKeyData deleting session record and creating session \(key) for \(addressJID.bare)")
                                     let _ = self.signalEncryptionManager.storage.deleteSessionRecord(for: buddyAddress, transaction: transaction)
                                     
                                     sessionVars = self.prepSession(buddy.uniqueId, collection: ChatBuddyModel.collection(), transaction: transaction)
@@ -1171,13 +1047,10 @@ import GRDB
         let aesGcmBlockLength = 16
         
         guard var aesKey = unencryptedKeyData else {
-            //handleMissingKeys(message: message, forwarded: forwarded, delayed: delayed) //IOSM-338c
             return
         }
         var authTag: Data?
         
-        // Treat >=32 bytes OMEMO 'keys' as containing the auth tag.
-        // https://github.com/ChatSecure/ChatSecure-iOS/issues/647
         if (aesKey.count >= aesGcmBlockLength * 2) {
             
             authTag = aesKey.subdata(in: aesGcmBlockLength..<aesKey.count)
@@ -1266,11 +1139,10 @@ import GRDB
         }
     }
     
-    //IOSM-579 //test with espn.com and suntrust.com and let me know
     func convertBadLinksText(text: String) throws -> String {
         let detector = try! NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
         
-        var newText = text//.lowercased() //IOSM-596
+        var newText = text
         var badurls = true
         while (badurls) {
             badurls = false
@@ -1279,9 +1151,8 @@ import GRDB
                 if let match = result, match.resultType == .link, let urlstr = match.url?.absoluteString, let range = Range(match.range, in: newText) {
                     
                     //IOSM-596 modified
-                    if urlstr.lowercased().hasPrefix("http://"), let schemerange = urlstr.lowercased().range(of: "http:") {
+                    if urlstr.lowercased().hasPrefix("http:
                         badurls = true
-                        //let newurl = urlstr.replacingOccurrences(of: "http:", with: "https:")
                         let newurl = urlstr.replacingCharacters(in: schemerange, with: "https:")
                         newText = newText.replacingCharacters(in: range, with: newurl)
                         stop.pointee = true
@@ -1303,7 +1174,6 @@ import GRDB
 
             let deviceNumber = NSNumber(value: senderDeviceId as UInt32)
             let deviceKey = ChatOmemoDevice.keyWith(deviceId: deviceNumber, parentKey: buddyId, parentCollection: ChatBuddyModel.collection())
-            //message.messageSecurityInfo = OTRMessageEncryptionInfo.init(omemoDevice: deviceKey, collection: ChatOmemoDevice.collection)
             message.messageSecurity = .OMEMO
             message.omemoDeviceKey = deviceKey
             
@@ -1325,26 +1195,15 @@ import GRDB
             } else {
                 message.save()
                 //Update device last received message
-                guard var device = ChatOmemoDevice.omemoDevice(for: buddyId, parentCollection: ChatBuddyModel.collection(), deviceId: deviceNumber) else {// ?.copyAsSelf() else {
+                guard var device = ChatOmemoDevice.omemoDevice(for: buddyId, parentCollection: ChatBuddyModel.collection(), deviceId: deviceNumber) else {
                     return
                 }
                 device.lastSeenDate = Date()
                 device.save()
             }
             
-            /*if let threadOwner = message.threadOwner() {
-                threadOwner.lastMessageIdentifier = message.uid
-                threadOwner.threadDate = message.messageDate
-                threadOwner.grdbRecord?.modified = Date()
-                threadOwner.saveThread()
-            }*/
             
             //Update device last received message
-            /*guard var device = ChatOmemoDevice.omemoDevice(for: buddy.uniqueId, parentCollection: ChatBuddyModel.collection(), deviceId: deviceNumber) else {// ?.copyAsSelf() else {
-                return
-            }
-            device.lastSeenDate = Date()
-            device.save()*/
         }
         
         if message.isGroupChatMessage {
@@ -1359,7 +1218,7 @@ import GRDB
                     isOutgoingFromOtherDevice = true //and added below
                 }
             } else if forwarded, let fromresource = message.from?.resource {
-                if let account = ChatAccountModel.getXMPPAccount(uniqueId: self.accountKey), fromresource == account.displayName { //, transaction:transaction)
+                if let account = ChatAccountModel.getXMPPAccount(uniqueId: self.accountKey), fromresource == account.displayName {
                     isOutgoingFromOtherDevice = true
                 }
             }
@@ -1375,9 +1234,6 @@ import GRDB
                 if let origto = originalMessage.to, let forwardedfrom = message.from {
                     if (origto.bare == forwardedfrom.bare && origto.resource != forwardedfrom.resource) {
                         isOutgoingFromOtherDevice = true
-                        /*if (messageCopy.hasPrefix("geo:")) {
-                            msgString = messageCopy
-                        }*/
                     }
                 }
                 
@@ -1400,9 +1256,7 @@ import GRDB
            messageString.contains("encrypted message") || messageString.contains ("Message cannot be decrypted") {
             
             //this is a self-sent message, not sure why its getting here
-            //if (messageString.contains("Sent encrypted message")) {
             //    return
-            //}
             
             if message.isGroupChatMessage {
                 if let roomJID = message.from?.bareJID,
@@ -1410,19 +1264,16 @@ import GRDB
                     
                     guard let myRoomJID = room.myRoomJID,
                         let messageJID = message.from else {
-                            //DDLogError("Discarding invalid MUC message \(message)")
                             return false
                     }
                     if myRoomJID.isEqual(to: messageJID),
                         !message.wasDelayed {
-                        // DDLogVerbose("Discarding duplicate outgoing MUC message \(message)")
                         return false
                     }
                     
                     // this can be delayed/stamped from me if it was a share.
                     //Will it cause big problems to ignore anything from my roomjid?
                     if myRoomJID.isEqual(to: messageJID) {
-                        // DDLogVerbose("Discarding duplicate outgoing MUC message \(message)")
                         return false
                     }
                     
@@ -1433,8 +1284,6 @@ import GRDB
                             return false
                         }
                         
-                        //self.missingKeysSet.insert(missingFrom)
-                        //self.roomManager.roomStorage.handleFailedIncomingMessage(message, room: room)
                         
                         //put this on a timer. if just published, don't immediately do it again
                         //in case we opened and logged in to multiple messages we cant decrypt
@@ -1446,7 +1295,6 @@ import GRDB
                         if self.roomManager.roomStorage.handleFailedIncomingMessage(message, room: room, transaction: transaction), let myid = self.myJID, !self.publishingMyDevice {
                             self.publishingMyDevice = true
                             let devices = self.fetchDeviceIds(for: myid)
-                            //print("***** Publishing my device IDs \(devices)")
                             self.omemoModule?.publishDeviceIds(devices, elementId: nil)
                             
                             return true
@@ -1470,10 +1318,6 @@ import GRDB
                         return false
                     }
                     
-                    //self.missingKeysSet.insert(missingFrom)
-                    //self.messageStorage.handleDirectMessage(message, body: "Message cannot be decrypted.", original: nil, accountId: self.accountKey) //IOSM-531
-                    //self.messageStorage.handleDirectMessage(message, body: "Message cannot be decrypted - we are attempting to reset session.", original: nil, accountId: self.accountKey) //IOSM-531
-                    //self.messageStorage.handleDirectMessage(message, body: "Message(s) cannot be decrypted. For more information visit https://glaciersecurity.zendesk.com/hc/en-us/articles/360027880632", original: nil, accountId: self.accountKey)
                     
                     //put this on a timer. if just published, don't immediately do it again
                     //in case we opened and logged in to multiple messages we cant decrypt
@@ -1483,11 +1327,9 @@ import GRDB
                         self.publishingMyDevice = false
                     }
                     if self.messageStorage.handleFailedIncomingMessage(message, body: "Message cannot be decrypted", original: nil, accountId: self.accountKey), let myid = self.myJID, !self.publishingMyDevice {
-                        //self.messageStorage.handleDirectMessage(message, body: "Message cannot be decrypted - we are attempting to reset session.", original: nil, accountId: self.accountKey) //IOSM-531
                         
                         self.publishingMyDevice = true
                         let devices = self.fetchDeviceIds(for: myid)
-                        //print("***** Publishing my device IDs \(devices)")
                         self.omemoModule?.publishDeviceIds(devices, elementId: nil)
                         
                         return true
@@ -1518,7 +1360,7 @@ import GRDB
                 let cur = Date()
                 account.loginDate = cur
                 acctTime = cur
-                account.grdbRecord?.grdbSave(transaction: transaction)// saveXMPPAccountAsync()
+                account.grdbRecord?.grdbSave(transaction: transaction)
             }
         }
         
@@ -1534,7 +1376,6 @@ import GRDB
 extension OTROMEMOSignalCoordinator: OMEMOModuleDelegate {
     
     public func omemo(_ omemo: OMEMOModule, publishedDeviceIds deviceIds: [NSNumber], responseIq: XMPPIQ, outgoingIq: XMPPIQ) {
-        //DDLogVerbose("publishedDeviceIds: \(responseIq)")
 
     }
     
@@ -1543,7 +1384,6 @@ extension OTROMEMOSignalCoordinator: OMEMOModuleDelegate {
     }
     
     public func omemo(_ omemo: OMEMOModule, deviceListUpdate deviceIds: [NSNumber], from fromJID: XMPPJID, incomingElement: XMPPElement) {
-        //DDLogVerbose("deviceListUpdate: \(fromJID) \(deviceIds)")
         self.workQueue.async { [weak self] in
             if let eid = incomingElement.elementID {
                 self?.callAndRemoveOutstandingBundleBlock(eid, success: true)
@@ -1562,7 +1402,6 @@ extension OTROMEMOSignalCoordinator: OMEMOModuleDelegate {
     }
     
     public func omemo(_ omemo: OMEMOModule, publishedBundle bundle: OMEMOBundle, responseIq: XMPPIQ, outgoingIq: XMPPIQ) {
-        //DDLogVerbose("publishedBundle: \(responseIq) \(outgoingIq)")
     }
     
     public func omemo(_ omemo: OMEMOModule, failedToPublishBundle bundle: OMEMOBundle, errorIq: XMPPIQ?, outgoingIq: XMPPIQ) {
@@ -1570,16 +1409,13 @@ extension OTROMEMOSignalCoordinator: OMEMOModuleDelegate {
     }
     
     public func omemo(_ omemo: OMEMOModule, fetchedBundle bundle: OMEMOBundle, from fromJID: XMPPJID, responseIq: XMPPIQ, outgoingIq: XMPPIQ) {
-        //DDLogVerbose("fetchedBundle: \(responseIq) \(outgoingIq)")
 
         if (self.isOurJID(fromJID) && bundle.deviceId == self.signalEncryptionManager.registrationId) {
-            //DDLogVerbose("fetchedOurOwnBundle: \(responseIq) \(outgoingIq)")
 
             //We fetched our own bundle
             if let ourDatabaseBundle = self.fetchMyBundle() {
                 //This bundle doesn't have the correct identity key. Something has gone wrong and we should republish
                 if ourDatabaseBundle.identityKey != bundle.identityKey {
-                    //DDLogError("Bundle identityKeys do not match! \(ourDatabaseBundle.identityKey) vs \(bundle.identityKey)")
                     omemo.publishBundle(ourDatabaseBundle, elementId: nil)
                 }
             }
@@ -1595,7 +1431,6 @@ extension OTROMEMOSignalCoordinator: OMEMOModuleDelegate {
             var result = false
             //Consume the incoming bundle. This goes through signal and should hit the storage delegate. So we don't need to store ourselves here.
             do {
-                //print("***** consuming incoming bundle \(fromJID.bare)")
                 try self?.signalEncryptionManager.consumeIncomingBundle(fromJID.bare, bundle: bundle)
                 result = true
             } catch let err {
@@ -1606,7 +1441,6 @@ extension OTROMEMOSignalCoordinator: OMEMOModuleDelegate {
         
     }
     public func omemo(_ omemo: OMEMOModule, failedToFetchBundleForDeviceId deviceId: UInt32, from fromJID: XMPPJID, errorIq: XMPPIQ?, outgoingIq: XMPPIQ) {
-        //print("***** failed to fetch bundle")
         
         self.workQueue.async { [weak self] in
             let elementId = outgoingIq.elementID
@@ -1652,17 +1486,14 @@ extension OTROMEMOSignalCoordinator:OMEMOStorageDelegate {
         
         let isOurDeviceList = self.isOurJID(jid)
         
-        //print("***** Storing device IDs for \(jid.bare) with \(deviceIds.count)")
         if (isOurDeviceList) {
             self.omemoStorageManager.storeOurDevices(deviceIds)
             self.workQueue.async { [weak self] in
                 self?.requestBundlesForOurDevicesIfNeeded(deviceIds: deviceIds, jid: jid)
             }
         } else {
-            //print("***** storing buddy devices \(deviceIds)")
             self.omemoStorageManager.storeBuddyDevices(deviceIds, buddyUsername: jid.bare, completion: {() -> Void in
 
-                //print("***** stored buddy devices \(deviceIds)")
                 //Devices updated for buddy
                 DispatchQueue.main.async {
                     NotificationCenter.default.post(name: OTROMEMOSignalCoordinator.DeviceListUpdateNotificationName, object: self, userInfo: ["jid":jid])

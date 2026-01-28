@@ -1,10 +1,6 @@
-//
-//  FilePreviewView.swift
 //  ChatSecureCore
-//
 //  Created by Andy Friedman on 6/14/19.
 //  Copyright © 2019 Glacier. All rights reserved.
-//import BButton
 import Font_Awesome_Swift
 
 public class FilePreviewView: UIView {

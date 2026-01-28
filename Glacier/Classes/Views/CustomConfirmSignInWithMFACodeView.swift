@@ -1,10 +1,6 @@
-//
-//  CustomConfirmSignInWithMFACodeView.swift
 //  Glacier
-//
 //  Created by andyfriedman on 10/14/25.
 //  Copyright © 2025 Glacier. All rights reserved.
-//
 
 
 import SwiftUI
@@ -15,7 +11,6 @@ import Authenticator
 struct CustomConfirmSignInWithMFACodeView: View {
     @ObservedObject var state: ConfirmSignInWithCodeState
 
-    //@State private var code: String = ""
     @FocusState private var isFocused: Bool
 
     // Resend timer
@@ -58,21 +53,9 @@ struct CustomConfirmSignInWithMFACodeView: View {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                         isFocused = true
                     }
-                    //startResendCountdown()
                 }
 
             // Paste from SMS helper
-            /*Button("Paste from SMS") {
-                if let paste = UIPasteboard.general.string {
-                    let trimmed = paste.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if trimmed.count == 6, trimmed.allSatisfy(\.isNumber) {
-                        code = trimmed
-                    }
-                }
-            }
-            .font(.footnote)
-            .foregroundColor(.secondary)
-            .opacity(0.8)*/
 
             // Confirm button
             let isConfirmEnabled = state.confirmationCode.count == 6 && !state.isBusy
@@ -97,22 +80,8 @@ struct CustomConfirmSignInWithMFACodeView: View {
             .opacity(isConfirmEnabled ? 1 : 0.5)
 
             // Resend helper
-            /*Button {
-                resend()
-            } label: {
-                Text(canResend ? "Resend Code" : "Resend in \(remainingTime)s")
-            }
-            .font(.footnote)
-            .disabled(!canResend)
-            .opacity(canResend ? 1 : 0.6)*/
 
             // Error
-            /*if let error = state.error {
-                Text(error.localizedDescription)
-                    .foregroundColor(.red)
-                    .font(.footnote)
-                    .multilineTextAlignment(.center)
-            }*/
         }
         .padding()
         .onReceive(timer) { _ in
@@ -137,7 +106,6 @@ struct CustomConfirmSignInWithMFACodeView: View {
 
     private func resend() {
         Task {
-            //try? await state. resendCode()
             startResendCountdown()
         }
     }
@@ -189,7 +157,6 @@ struct CustomConfirmSignInWithMFACodeView: View {
             if lastClipboard != code {
                 lastClipboard = code
                 state.confirmationCode = code
-                //submit()
             }
         }
     }

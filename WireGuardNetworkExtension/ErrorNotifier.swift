@@ -1,10 +1,6 @@
-//
-//  ErrorNotifier.swift
 //  WireGuardNetworkExtension
-//
 //  Created by andyfriedman on 8/26/24.
 //  Copyright © 2024 Glacier. All rights reserved.
-//
 
 import Foundation
 import NetworkExtension

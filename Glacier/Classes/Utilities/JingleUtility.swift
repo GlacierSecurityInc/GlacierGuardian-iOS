@@ -1,10 +1,6 @@
-//
-//  JingleUtility.swift
 //  Glacier
-//
 //  Created by andyfriedman on 4/11/25.
 //  Copyright © 2025 Glacier. All rights reserved.
-//
 
 import Foundation
 import XMPPFramework
@@ -46,11 +42,11 @@ class JingleUtility {
     public static let JINGLE = "urn:xmpp:jingle:1"
     public static let JINGLE_RTP_SOURCE_SPECIFIC_MEDIA_ATTRIBUTES =
     "urn:xmpp:jingle:apps:rtp:ssma:0"
-    public static let DLTS_SRTP_VERIFICATION = "http://gultsch.de/xmpp/drafts/omemo/dlts-srtp-verification"
+    public static let DLTS_SRTP_VERIFICATION = "http:
     public static let GLACIER_OMEMO = "com.glaciersecurity.glaciermessenger.axolotl"
     public static let JINGLE_APPS_GROUPING = "urn:xmpp:jingle:apps:grouping:0"
     public static let JINGLE_TRANSPORT_ICE_OPTION =
-                "http://gultsch.de/xmpp/drafts/jingle/transports/ice-udp/option"
+                "http:
     
     static func parseSDP(_ sdp: String) -> [MediaDescription] {
         let lines = sdp.split(separator: "\r\n").map { $0.trimmingCharacters(in: .whitespaces) }
@@ -63,7 +59,6 @@ class JingleUtility {
         
         for line in lines {
             if line.starts(with: "a=group:BUNDLE") {
-                //print("***** parseSDP \(line)")
                 groupBundle = true
                 groupNames = line.split(separator: " ").dropFirst(1).map { String($0) }
             } else if line.starts(with: "a=extmap-allow-mixed") {
@@ -147,10 +142,7 @@ class JingleUtility {
                     currentMedia?.ssrcGroups.append((semantics, ssrcs))
                 } else if line.starts(with: "b=AS:") {
                     currentMedia?.bandwidth = String(line.dropFirst(5))
-                } //else if line.starts(with: "a=group:BUNDLE") {
-                    //print("***** parseSDP \(line)")
-                    //groupBundle = true
-                //}
+                }
             }
         }
         
@@ -167,7 +159,6 @@ class JingleUtility {
     static func generateContentReject(initiator: String, sessionID: String) -> XMLElement {
         let jingleElement = XMLElement(name: "jingle", xmlns: JingleUtility.JINGLE)
         jingleElement.addAttribute(withName: "action", stringValue: "content-reject")
-        //jingleElement.addAttribute(withName: "initiator", stringValue: initiator)
         jingleElement.addAttribute(withName: "sid", stringValue: sessionID)
         
         let transportElement = XMLElement(name: "transport", xmlns: CallManager.JINGLE_TRANSPORT_ICE_UDP)
@@ -190,13 +181,8 @@ class JingleUtility {
         switch jingleType {
         case .sessioninitiate:
             jingleElement.addAttribute(withName: "action", stringValue: "session-initiate")
-            //jingleElement.addAttribute(withName: "initiator", stringValue: initiator)
         case .sessionanswer:
             jingleElement.addAttribute(withName: "action", stringValue: "session-accept")
-            /*jingleElement.addAttribute(withName: "initiator", stringValue: initiator)
-            if let responder = responder {
-                jingleElement.addAttribute(withName: "responder", stringValue: responder)
-            }*/
         case .contentadd:
             jingleElement.addAttribute(withName: "action", stringValue: "content-add")
         case .contentaccept:
@@ -220,11 +206,9 @@ class JingleUtility {
             let contentElement = XMLElement(name: "content")
             contentElement.addAttribute(withName: "creator", stringValue: "initiator")
             contentElement.addAttribute(withName: "name", stringValue: media.contentName)
-            //contentElement.addAttribute(withName: "sender", stringValue: "both")
             
             let descElement = XMLElement(name: "description", xmlns: CallManager.JINGLE_APPS_RTP)
             descElement.addAttribute(withName: "media", stringValue: media.mediaType)
-            //descElement.stringValue = "m=audio \(audioPort) RTP/SAVPF 111"
             
             if let bw = media.bandwidth {
                 let bwEl = XMLElement(name: "bandwidth")
@@ -294,7 +278,6 @@ class JingleUtility {
                 let msidPar = XMLElement(name: "parameter")
                 msidPar.addAttribute(withName: "name", stringValue: "msid")
                 msidPar.addAttribute(withName: "value", stringValue: finalMsid)
-                //ssrcEl.addAttribute(withName: "msid", stringValue: finalMsid)
                 sourceElement.addChild(cnamePar)
                 sourceElement.addChild(msidPar)
                 
@@ -334,20 +317,14 @@ class JingleUtility {
                     
                     fingerprintEl.addAttribute(withName: "hash", stringValue: "sha-256")
                     let setup = media.setup ?? "actpass"
-                    //print("***** generate Jingle from SDP with setup: \(setup)")
                     fingerprintEl.addAttribute(withName: "setup", stringValue: setup)
-                    //fingerprintEl.addAttribute(withName: "setup", stringValue: setupval)
                     
-                    //if let encryptedEl = getOmemoFingerprint(fingerprint) {
                     if media.mediaType == "video", let encryptedCopy = encryptedVideoElement?.copy() as? XMLElement {
                         fingerprintEl.addChild(encryptedCopy)
                     } else {
                         let encryptedCopy = encryptedAudioElement.copy() as! XMLElement
                         fingerprintEl.addChild(encryptedCopy)
                     }
-                    //} else {
-                        //fingerprintEl.stringValue = fingerprint
-                    //}
                     
                     transportElement.addChild(fingerprintEl)
                 }
@@ -397,7 +374,6 @@ class JingleUtility {
             
             let descElement = XMLElement(name: "description", xmlns: CallManager.JINGLE_APPS_RTP)
             descElement.addAttribute(withName: "media", stringValue: media.mediaType)
-            //descElement.stringValue = "m=audio \(audioPort) RTP/SAVPF 111"
             
             if let bw = media.bandwidth {
                 let bwEl = XMLElement(name: "bandwidth")
@@ -467,7 +443,6 @@ class JingleUtility {
                 let msidPar = XMLElement(name: "parameter")
                 msidPar.addAttribute(withName: "name", stringValue: "msid")
                 msidPar.addAttribute(withName: "value", stringValue: finalMsid)
-                //ssrcEl.addAttribute(withName: "msid", stringValue: finalMsid)
                 sourceElement.addChild(cnamePar)
                 sourceElement.addChild(msidPar)
                 
@@ -507,15 +482,9 @@ class JingleUtility {
                     
                     fingerprintEl.addAttribute(withName: "hash", stringValue: "sha-256")
                     let setup = media.setup ?? "actpass"
-                    //print("***** generate Jingle from Media, setup \(setup)")
                     fingerprintEl.addAttribute(withName: "setup", stringValue: setup)
                     
-                    //if let encryptedEl = getOmemoFingerprint(fingerprint) {
-                    //let encryptedCopy = encryptedElement.copy() as! XMLElement
-                    //fingerprintEl.addChild(encryptedCopy)
-                    //} else {
                         fingerprintEl.stringValue = fingerprint
-                    //}
                     
                     transportElement.addChild(fingerprintEl)
                 }
@@ -584,11 +553,6 @@ class JingleUtility {
         let ufragIndex = tokens.firstIndex(of: "ufrag") ?? 10
         let ufrag = tokens[ufragIndex + 1]
 
-        /*let networkIndex = tokens.firstIndex(of: "network-id") ?? 12
-        let network = tokens[networkIndex + 1]
-        
-        let networkCostIndex = tokens.firstIndex(of: "network-cost") ?? 14
-        let networkCost = tokens[networkCostIndex + 1]*/
         
         var raddr: String?
         if let raddrIndex = tokens.firstIndex(of: "raddr") {
@@ -627,7 +591,6 @@ class JingleUtility {
     }
     
     static func filterCandidatesByHighestPriority(_ candidates: [IceCandidate]) -> [IceCandidate] {
-        // Dictionary key is (ip, candidateType)
         var bestCandidates: [String: IceCandidate] = [:]
 
         for candidate in candidates {
@@ -650,13 +613,10 @@ class JingleUtility {
     static func generateTransportInfo(candidates: [String:[IceCandidate]], ufrag: String, pwd: String, initiator: String, responder: String?, sessionID: String) -> XMLElement {
         let jingleElement = XMLElement(name: "jingle", xmlns: JingleUtility.JINGLE)
         jingleElement.addAttribute(withName: "action", stringValue: "transport-info")
-        //jingleElement.addAttribute(withName: "initiator", stringValue: initiator)
-        //jingleElement.addAttribute(withName: "responder", stringValue: responder)
         jingleElement.addAttribute(withName: "sid", stringValue: sessionID)
         
         for mediaType in candidates.keys {
             let candidateAr = candidates[mediaType] ?? []
-            //let bestCandidates = filterCandidatesByHighestPriority(candidateAr)
             let contentElement = XMLElement(name: "content")
             contentElement.addAttribute(withName: "creator", stringValue: "initiator")
             contentElement.addAttribute(withName: "name", stringValue: mediaType)
@@ -692,9 +652,6 @@ class JingleUtility {
                 if let network = ic.network {
                     candidateElement.addAttribute(withName: "network", stringValue: network)
                 }
-                //if ic.protocolType.lowercased() == "tcp", let tcpType = ic.tcptype {
-                //    candidateElement.addAttribute(withName: "tcptype", stringValue: tcpType)
-                //}
                 
                 transportElement.addChild(candidateElement)
             }
@@ -728,14 +685,12 @@ class JingleUtility {
         var hasGroupBundle = false
         if let groupElement = jingleElement.elements(forLocalName: "group", uri: JingleUtility.JINGLE_APPS_GROUPING).first {
             let contentEls = groupElement.elements(forName: "content")
-            //let groupNames = contentEls.compactMap { $0.attributeStringValue(forName: "name") }.joined(separator: " ")
             var bundleline = "a=group:BUNDLE"
-            //var num = 0
             for (index, _) in contentEls.enumerated() {
                 bundleline += " \(index)"
             }
             
-            sdpLines.append(bundleline)  //"a=group:BUNDLE 0 1")//\(groupNames)")
+            sdpLines.append(bundleline)
             //this is hard coded for now, not sure how to get this
             hasGroupBundle = true
         }
@@ -822,12 +777,6 @@ class JingleUtility {
                         if let network = cand.attributeStringValue(forName: "network") {
                             candidateLine += " network \(network)"
                         }
-                        /*if let networkId = cand.attributeStringValue(forName: "network-id") {
-                            candidateLine += " network-id \(networkId)"
-                        }
-                        if let networkCost = cand.attributeStringValue(forName: "network-cost") {
-                            candidateLine += " network-cost \(networkCost)"
-                        }*/
                         sdpLines.append(candidateLine)
                     }
                 }
@@ -847,7 +796,6 @@ class JingleUtility {
             
             if hasGroupBundle || hasRtcpMux {
                 sdpLines.append("a=rtcp-mux")
-                //sdpLines.append("a=rtcp-rsize")
             }
                     
             for pt in payloadTypes {
@@ -920,12 +868,6 @@ class JingleUtility {
                   
                 // Add ICE candidates
                 var candidates: [String] = []
-                //if let ufrag = transport.attributeStringValue(forName: "ufrag") {
-                //    candidates.append("a=ice-ufrag:\(ufrag)")
-                //}
-                //if let pwd = transport.attributeStringValue(forName: "pwd") {
-                //    candidates.append("a=ice-pwd:\(pwd)")
-                //}
                 let candidateElements = transport.elements(forName: "candidate")
                 for cand in candidateElements {
                     if let foundation = cand.attributeStringValue(forName: "foundation"),
@@ -954,12 +896,6 @@ class JingleUtility {
                         if let network = cand.attributeStringValue(forName: "network") {
                             candidateLine += " network \(network)"
                         }
-                        /*if let networkId = cand.attributeStringValue(forName: "network-id") {
-                            candidateLine += " network-id \(networkId)"
-                        }
-                        if let networkCost = cand.attributeStringValue(forName: "network-cost") {
-                            candidateLine += " network-cost \(networkCost)"
-                        }*/
                         candidates.append(candidateLine)
                     }
                 }
@@ -1069,8 +1005,6 @@ struct IceCandidate {
     let generation: String
     let id: String
     let network: String?
-    //let networkCost: String
-    //let tcptype: String? // only if protocol is tcp
     let ufrag: String
 }
 

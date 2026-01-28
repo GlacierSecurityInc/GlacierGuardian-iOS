@@ -1,19 +1,11 @@
-//
-//  AttachmentsInputBarView.swift
 //  Glacier
-//
 //  Created by andyfriedman on 8/21/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
-//
-//  CameraInputBarAccessoryView.swift
 //  ChatExample
-//
 //  Created by Mohannad on 12/25/20.
 //  Modified by andyfriedman on 8/21/23.
 //  Copyright © 2020 MessageKit. All rights reserved.
-//
 
 import InputBarAccessoryView
 import UIKit
@@ -36,7 +28,6 @@ extension AttachmentsInputBarViewDelegate {
 class AttachmentsInputBarView: InputBarAccessoryView {
     
   // MARK: Lifecycle
-    //var attachmentPicker: OTRAttachmentPicker?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -94,57 +85,6 @@ extension AttachmentsInputBarView: PHPickerViewControllerDelegate {
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
         
-        /*NSString *imageString = (NSString *)kUTTypeImage;
-        NSString *videoString = (NSString *)kUTTypeVideo;
-        NSString *movieString = (NSString *)kUTTypeMovie;
-        NSString *gifString = (NSString *)kUTTypeGIF; //IOSM#61
-        
-        //IOSM-602
-        var infodict = ["Multiselect":NSNumber(false)]
-        if (results.count > 1) {
-            infodict["Multiselect"] = NSNumber(true)
-        }
-        
-        for result in results {
-            if result.itemProvider.hasItemConformingToTypeIdentifier(UTType.gif.identifier) { //IOSM#61
-                result.itemProvider loadFileRepresentationForTypeIdentifier:gifString completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
-                    if ([self.delegate respondsToSelector:@selector(attachmentPicker:gotGif:withInfo:)]) {
-                        NSData *imageData = [NSData dataWithContentsOfURL:url];
-                        UIImage* image = [GifHelper getGifImage:imageData];
-                        
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            [self.delegate attachmentPicker:self gotGif:image withInfo:infodict];
-                        });
-                    }
-                }];
-            } else if ([result.itemProvider hasItemConformingToTypeIdentifier:imageString]) {
-                [result.itemProvider loadFileRepresentationForTypeIdentifier:imageString completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
-                    if ([self.delegate respondsToSelector:@selector(attachmentPicker:gotPhoto:withInfo:)]) {
-                        NSData *imageData = [NSData dataWithContentsOfURL:url];
-                        UIImage* image = [[UIImage alloc] initWithData:imageData];
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            [self.delegate attachmentPicker:self gotPhoto:image withInfo:infodict];
-                        });
-                    }
-                }];
-            } else if ([result.itemProvider hasItemConformingToTypeIdentifier:videoString]) {
-                [result.itemProvider loadFileRepresentationForTypeIdentifier:videoString completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
-                    [self handleVideoPicked:url];
-                }];
-            } else if ([result.itemProvider hasItemConformingToTypeIdentifier:movieString]) {
-                [result.itemProvider loadFileRepresentationForTypeIdentifier:movieString completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
-                    [self handleVideoPicked:url];
-                }];
-            }
-        }
-        /*if let editedImage = info[UIImagePickerController.InfoKey.editedImage] as? UIImage {
-          // self.sendImageMessage(photo: editedImage)
-          inputPlugins.forEach { _ = $0.handleInput(of: editedImage) }
-        }
-        else if let originImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage {
-          inputPlugins.forEach { _ = $0.handleInput(of: originImage) }
-          // self.sendImageMessage(photo: originImage)
-        }*/
         getRootViewController()?.dismiss(animated: true, completion: nil)
         inputAccessoryView?.isHidden = false*/
     }
@@ -154,7 +94,6 @@ extension AttachmentsInputBarView: PHPickerViewControllerDelegate {
 extension AttachmentsInputBarView: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
   @objc
   func showImagePickerControllerActionSheet() {
-      //self.attachmentPicker?.showAlertController(fromSourceView: self)
       let photoLibraryAction = UIAlertAction(title: "Choose From Library", style: .default) { [weak self] _ in
           self?.showImagePickerController(sourceType: .photoLibrary)
       }
@@ -175,7 +114,6 @@ extension AttachmentsInputBarView: UIImagePickerControllerDelegate, UINavigation
   func showImagePickerController(sourceType: UIImagePickerController.SourceType) {
       let imgPicker = UIImagePickerController()
       imgPicker.delegate = self
-      //imgPicker.allowsEditing = true
       imgPicker.sourceType = sourceType
     
       if sourceType == .photoLibrary {
@@ -187,14 +125,6 @@ extension AttachmentsInputBarView: UIImagePickerControllerDelegate, UINavigation
       inputAccessoryView?.isHidden = true
       getRootViewController()?.present(imgPicker, animated: true, completion: nil)
       
-      /*var imgPicker = PHPickerConfiguration()
-      imgPicker.selectionLimit = 5
-          
-      imgPicker.preferredAssetRepresentationMode = .current
-      let pickerViewController = PHPickerViewController(configuration: imgPicker)
-      pickerViewController.modalPresentationStyle = .currentContext
-      pickerViewController.delegate = self
-      getRootViewController()?.present(pickerViewController, animated: true, completion: nil)*/
   }
 
   func imagePickerController(
@@ -202,17 +132,13 @@ extension AttachmentsInputBarView: UIImagePickerControllerDelegate, UINavigation
     didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any])
   {
     if let editedImage = info[UIImagePickerController.InfoKey.editedImage] as? UIImage {
-      // self.sendImageMessage(photo: editedImage)
       inputPlugins.forEach { _ = $0.handleInput(of: editedImage) }
     }
     else if let originImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage {
       inputPlugins.forEach { _ = $0.handleInput(of: originImage) }
-      // self.sendImageMessage(photo: originImage)
     } else if let videoUrl = info[.mediaURL] as? NSURL {
         //handleVideo
-        //self.handleVideoPicked(videoUrl)
         (self.delegate as? AttachmentsInputBarViewDelegate)?.didChooseVideo(with: videoUrl as URL)
-        //inputPlugins.forEach { _ = $0.handleInput(of: videoUrl) }
     }
     getRootViewController()?.dismiss(animated: true, completion: nil)
     inputAccessoryView?.isHidden = false

@@ -1,10 +1,6 @@
-//
-//  GlacierTabs.swift
 //  Glacier
-//
 //  Created by andyfriedman on 11/29/22.
 //  Copyright © 2022 Glacier. All rights reserved.
-//
 
 import UIKit
 import PureLayout
@@ -48,7 +44,6 @@ import PureLayout
     
     func doInitStuff() {
         self.items = [chatsItem, hubItem, settingsItem]
-        //self.delegate = self
         self.selectedItem = chatsItem
         
         let appearance = UITabBarAppearance.init()
@@ -105,7 +100,6 @@ import PureLayout
             
             if let superbottom = superview?.safeAreaLayoutGuide.bottomAnchor {
                 NSLayoutConstraint.activate([
-                    //self.heightAnchor.constraint(equalToConstant: CGFloat(49)),
                     self.topAnchor.constraint(equalTo: superbottom, constant: -49)
                 ])
             } else {

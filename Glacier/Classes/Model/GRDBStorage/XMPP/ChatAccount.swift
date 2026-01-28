@@ -1,10 +1,6 @@
-//
-//  ChatAccount.swift
 //  Glacier
-//
 //  Created by andyfriedman on 9/18/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 import GRDB
@@ -34,7 +30,6 @@ extension ChatAccountModel: ChatvCard {
     @objc public var vCardTemp: XMPPvCardTemp? {
         get {
             var vtemp = XMPPvCardTemp.v()
-            //vtemp.setNameAndAvatar(self.grdbRecord?.displayName, avatar: self.grdbRecord?.avatarData)
             if let av = self.grdbRecord?.avatarData {
                 vtemp.photo = av
             }
@@ -88,7 +83,6 @@ extension ChatAccountModel: ChatvCard {
         }
         set {
             if let avatarData = self.grdbRecord?.avatarData, avatarData != newValue {
-                //GlacierImageCache.shared().removeImage(self.uniqueId)
                 OTRImages.removeImage(withIdentifier: self.uniqueId)
             }
             self.grdbRecord?.avatarData = newValue
@@ -101,9 +95,6 @@ extension ChatAccountModel: ChatvCard {
         }
     }
     
-    /*@objc public func copyAsSelf() -> Self? {
-        return self.copy() as? Self
-    }*/
 }
 #endif
 
@@ -135,31 +126,6 @@ extension ChatAccountModel {
         //return result
     }
 
-    /*@objc public func setPassword(_ password:String) {
-        if password.count == 0 {
-            //NSAssert(password.length > 0, @"Improperly removing password!");
-            DDLogError("Improperly removing password! To remove password call removeKeychainPassword!")
-            return
-        }
-        
-        var error: NSError?
-        let result = SAMKeychain.setPassword(password, forService: kOTRServiceName, account: self.uniqueId, error:&error)
-        if result == false {
-            DDLogError("Error saving password to keychain: \(String(describing: error?.localizedDescription)) \(String(describing: error?.userInfo))")
-            //[GlacierLog glogWithLogMsg:@"Error retrieving account password from keychain" detail:self.uniqueId];
-        }
-    }
-
-    @objc public func password() -> String? {
-        var error: NSError?
-        let password = SAMKeychain.password(forService: kOTRServiceName, account: self.uniqueId, error:&error)
-        if (error != nil) {
-            DDLogError("Error retreiving password from keychain: \(String(describing: error?.localizedDescription)) \(String(describing: error?.userInfo))")
-            //[GlacierLog glogWithLogMsg:@"Error retrieving account password from keychain" detail:self.uniqueId];
-        }
-        
-        return password
-    }*/
     
     @objc public var password: String? {
         get {
@@ -167,7 +133,6 @@ extension ChatAccountModel {
             let password = SAMKeychain.password(forService: kOTRServiceName, account: self.uniqueId, accessGroup: kGlacierKeyGroup, error:&error)
             if (error != nil) {
                 DDLogError("Error retreiving password from keychain: \(String(describing: error?.localizedDescription)) \(String(describing: error?.userInfo))")
-                //[GlacierLog glogWithLogMsg:@"Error retrieving account password from keychain" detail:self.uniqueId];
             }
             
             return password
@@ -175,7 +140,6 @@ extension ChatAccountModel {
         set {
             guard let pass = newValue else { return }
             if pass.count == 0 {
-                //NSAssert(password.length > 0, @"Improperly removing password!");
                 DDLogError("Improperly removing password! To remove password call removeKeychainPassword!")
                 return
             }
@@ -184,7 +148,6 @@ extension ChatAccountModel {
             let result = SAMKeychain.setPassword(pass, forService: kOTRServiceName, account: self.uniqueId, accessGroup:kGlacierKeyGroup, error:&error)
             if result == false {
                 DDLogError("Error saving password to keychain: \(String(describing: error?.localizedDescription)) \(String(describing: error?.userInfo))")
-                //[GlacierLog glogWithLogMsg:@"Error retrieving account password from keychain" detail:self.uniqueId];
             }
         }
     }
@@ -333,11 +296,6 @@ extension ChatAccountModel {
         }
     }
     
-    /*@objc public var avatarData: Data? {
-        get {
-            return self.grdbRecord?.avatarData
-        }
-    }*/
     
     @objc public var accountId: Int64 {
         get {
@@ -577,7 +535,6 @@ extension ChatAccountModel: UserInfoProfile {
 #if !TARGET_IS_EXTENSION
     public var avatarImage: UIImage {
         get {
-            //self.getAvatarImage()
             let grec = self.grdbRecord!
             return OTRImages.avatarImage(withUniqueIdentifier: self.uniqueId, avatarData: grec.avatarData, displayName: grec.displayName, username: grec.username)
         }

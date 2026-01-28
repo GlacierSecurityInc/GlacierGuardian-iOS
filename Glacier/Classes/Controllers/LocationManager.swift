@@ -1,10 +1,6 @@
-//
-//  LocationManager.swift
 //  Glacier
-//
 //  Created by andyfriedman on 10/2/24.
 //  Copyright © 2024 Glacier. All rights reserved.
-//
 
 import CoreLocation
 import Alamofire
@@ -13,9 +9,6 @@ public protocol LocationManagerDelegate {
     func showDeniedAlert(_ alert:UIAlertController)
 }
 
-/*public protocol LocationDelegate {
-    func locationUpdated(_ location: CLLocation)
-}*/
 
 class LocationManager: NSObject, CLLocationManagerDelegate, OrgUpdateDel {
     
@@ -26,7 +19,6 @@ class LocationManager: NSObject, CLLocationManagerDelegate, OrgUpdateDel {
     private var lastLocation = CLLocation(latitude: 0,longitude: 0)
     private var lastUpdated = Date.distantPast
     private var locationManagerDelegate:LocationManagerDelegate?
-    //private var locationDelegates:Set<LocationDelegate> = []
     private var finishedLogin = false
     private var orgDataReady = false
     private var trackingOn = false
@@ -43,30 +35,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, OrgUpdateDel {
     private var deviceId: String?
     
     
-    /*func addLocationDelegate(_ delegate: LocationDelegate) {
-        self.locationDelegates.insert(delegate)
-    }
     
-    func removeLocationDelegate(_ delegate: LocationDelegate) {
-        self.locationDelegates.remove(delegate)
-        if self.locationDelegates.count == 0, trackingOn == false {
-            self.locationManager.stopUpdatingLocation()
-        }
-    }
-    
-    public func getLastObservedLocation() -> CLLocation? {
-        return self.lastLocation
-    }
-    
-    public func getCurrentAuthorization() -> CLAuthorizationStatus {
-        return self.locationManager.compatibleAuthorizationStatus
-    }*/
-    
-    /*func toggleLocationUpdates(_ enable:Bool) {
-        if enable == false, self.trackingOn == false {
-            self.locationManager.stopUpdatingLocation()
-        }
-    }*/
     
     func orgInfoUpdated() {
         //if tracking is on, setupLocationManager
@@ -127,23 +96,13 @@ class LocationManager: NSObject, CLLocationManagerDelegate, OrgUpdateDel {
         if trackingEnabled {
             locationManager.delegate = self
             locationManager.desiredAccuracy = kCLLocationAccuracyBest
-            //locationManager.distanceFilter = kCLDistanceFilterNone
             locationManager.activityType = .otherNavigation
             locationManager.pausesLocationUpdatesAutomatically = false
             locationManager.showsBackgroundLocationIndicator = false
-            //locationManager.allowsBackgroundLocationUpdates = true
             self.requestLocationPermission()
         } 
     }
     
-    /*func setupLocationManagerForChat() {
-        if trackingOn == false {
-            locationManager.delegate = self
-            locationManager.desiredAccuracy = kCLLocationAccuracyBest
-            locationManager.pausesLocationUpdatesAutomatically = false
-            self.requestLocationPermission()
-        }
-    }*/
     
     func requestLocationPermission() {
         internalQueue.async {
@@ -153,9 +112,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, OrgUpdateDel {
                     DispatchQueue.main.async {
                         self.handleAuthStatus(authStatus)
                     }
-                } //else {
-                   // self.handleAuthStatusForChat(authStatus)
-                //}
+                }
             } else {
                 DispatchQueue.main.async {
                     self.handleLocationAuthorizationDenied()
@@ -235,21 +192,6 @@ class LocationManager: NSObject, CLLocationManagerDelegate, OrgUpdateDel {
         }
     }
     
-    /*func handleAuthStatusForChat(_ status:CLAuthorizationStatus) {
-        switch (status) {
-        case .notDetermined:
-            self.locationManager.requestWhenInUseAuthorization()
-            break
-        case .restricted, .denied:
-            self.handleLocationAuthorizationDenied()
-            break
-        case .authorizedWhenInUse, .authorizedAlways:
-            self.locationManager.startUpdatingLocation()
-            break
-        default:
-            break
-        }
-    }*/
     
     private func handleNotDetermined() {
         DispatchQueue.main.async {
@@ -316,9 +258,6 @@ class LocationManager: NSObject, CLLocationManagerDelegate, OrgUpdateDel {
         let currentLocation = locations.last
 
         //handle updates for chat
-        //for locDel in self.locationDelegates {
-        //    locDel.locationUpdated(currentLocation)
-        //}
 
         // Handle location updates
         if trackingEnabled, trackingOn {

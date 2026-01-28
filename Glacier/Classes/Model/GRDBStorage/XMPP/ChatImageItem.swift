@@ -1,10 +1,6 @@
-//
-//  ChatImageItem.swift
 //  Glacier
-//
 //  Created by andyfriedman on 9/21/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 import MessageKit
@@ -31,9 +27,6 @@ import Kingfisher
         self.grdbRecord?.mediaType = ChatMediaType.imageItem.rawValue
     }
     
-    /*public convenience init() {
-        self.init(uniqueId: UUID().uuidString)
-    }*/
 }
 
 extension ChatImageItem {
@@ -84,13 +77,11 @@ extension ChatImageItem: MediaItem {
         let thumbnailKey = "\(parentKey)-thumb"
         //#if !TARGET_IS_EXTENSION
         if let chatImg = GlacierImageCache.shared().retrieveImageInMemoryCache(forKey: thumbnailKey) {
-            //return Self.normalizeWidth(width: chatImg.size.width, height: chatImg.size.height)
-            //print("***** image exists \(self.getFilename()) for Key \(thumbnailKey) with size width \(chatImg.size.width), height \(chatImg.size.height)")
             
             if chatImg.size.width > 0, chatImg.size.height > 0 {
                 self.mediaSize = chatImg.size
                 self.save {}
-                return chatImg.size//CGSizeMake(chatImg.size.width, chatImg.size.height)
+                return chatImg.size
             }
         }
         //#endif
@@ -121,15 +112,7 @@ extension ChatImageItem: MediaItem {
             let options = KingfisherParsedOptionsInfo(optionsInfo)
             let thumbnailKey = "\(parentKey)-thumb"
             
-            //let myuidstr = self.uniqueId
-            //let parentColl = self.grdbRecord?.parentObjectCollection
             GlacierImageCache.shared().store(resizedImage, original: idata, forKey: thumbnailKey, options: options, toDisk: false, completionHandler: {_ in
-                //self.removeFromCache()
-                /*if parentColl == ChatRoomMessageModel.collection() {
-                    ChatRoomMessage.touch(parentKey)
-                } else {
-                    ChatMessage.touch(parentKey)
-                }*/
             })
         })
     }
@@ -149,45 +132,24 @@ extension ChatImageItem: MediaItem {
                 self.save{}
             }
         }
-        //self.grdbRecord?.transferProgress = 1.0
-        //self.save{}
         
         let optionsInfo:KingfisherOptionsInfo = [.cacheMemoryOnly,
                                                  .memoryCacheExpiration(.days(14)),
                                                  .memoryCacheAccessExtendingExpiration(.cacheTime)]
         let options = KingfisherParsedOptionsInfo(optionsInfo)
         
-        //let myuidstr = self.uniqueId// as NSString
-        //let mycoll = self.grdbRecord?.parentObjectCollection
         GlacierImageCache.shared().store(resizedImage, original: idata, forKey: thumbnailKey, options: options, toDisk: false, completionHandler: {result in
-            //let dt = Date.timeIntervalSinceReferenceDate
-            //print("***** \(dt) done setting image thumbnail for \(parentKey)")
-            /*self.removeFromCache()
-            if mycoll == ChatRoomMessageModel.collection() {
-                ChatRoomMessage.touch(parentKey)
-            } else {
-                ChatMessage.touch(parentKey)
-            }*/
         })
     }
     
 #if !TARGET_IS_EXTENSION
-    //func downloadImage(_ url: URL, completion: ((_ dimage: UIImage?, _ url: URL?) -> Void)?) {
     func downloadImage(_ url: URL, filename: String?, completion: ((_ dimage: UIImage?, _ url: URL?, _ data: Data?) -> Void)?) {
-        /*guard let url = urlString else {
-            completion?(nil, urlString)
-            return
-        }*/
         URLSession.shared.dataTask(with: url) { (data, response, error) in
             if let error = error {
                 print("error in downloading image: \(error)")
                 completion?(nil, url, nil)
                 return
             }
-            /*guard let httpResponse = response as? HTTPURLResponse,(200...299).contains(httpResponse.statusCode) else {
-                completion?(nil, urlString)
-                return
-            }*/
             guard let data = data else {
                 completion?(nil, url, nil)
                 return
@@ -244,15 +206,9 @@ extension UIImage {
 
         let image = renderer.image { ctx in
             color.setFill()
-            //UIRectFill(CGRect(origin: CGPoint.zero, size: size))
             ctx.cgContext.fill(imageRect)
         }
         
-        /*UIGraphicsBeginImageContextWithOptions(size, false, 0)
-        color.setFill()
-        UIRectFill(CGRect(origin: CGPoint.zero, size: size))
-        let image = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()*/
         return image
     }
 }

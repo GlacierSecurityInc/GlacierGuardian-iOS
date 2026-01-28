@@ -1,10 +1,6 @@
-//
-//  CallRecord.swift
 //  Glacier
-//
 //  Created by andyfriedman on 2/11/25.
 //  Copyright © 2025 Glacier. All rights reserved.
-//
 
 import Foundation
 import GRDB

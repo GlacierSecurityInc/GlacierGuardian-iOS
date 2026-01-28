@@ -1,10 +1,6 @@
-//
-//  ContactsViewController.swift
 //  Glacier
-//
 //  Created by andyfriedman on 1/20/25.
 //  Copyright © 2025 Glacier. All rights reserved.
-//
 
 import UIKit
 
@@ -102,11 +98,6 @@ import UIKit
         
         self.navigationItem.leftBarButtonItem = self.settingsButton
         
-        /*let contacts = TwilioBackendManager.sharedMgr().contacts.filter({ (contact) -> Bool in
-            return contact.phoneNumber.count > 6
-        })
-        phoneContacts = contacts
-        self.filteredContacts = contacts*/
         
         self.setupSearchHeaderView()
         self.setupTapGestureRecognizer()
@@ -143,13 +134,11 @@ import UIKit
         blueDot.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(blueDot)
             
-        // Constraints for imageView (optional: adjust size/spacing)
         NSLayoutConstraint.activate([
             imageView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
             imageView.centerYAnchor.constraint(equalTo: containerView.centerYAnchor)
         ])
             
-        // Constraints for blue dot (position it at the bottom-right corner of the image)
         NSLayoutConstraint.activate([
             blueDot.widthAnchor.constraint(equalToConstant: 8), // Size of the blue dot
             blueDot.heightAnchor.constraint(equalToConstant: 8), // Size of the blue dot
@@ -415,7 +404,6 @@ extension ContactsViewController : TwilioAccountDelegateProtocol {
         
         DispatchQueue.main.async {
             if (accounts.count == 0) {
-                //selectedAccount = nil
                 self.navigationItem.title = "No account"
             } else if let selacct = selected {
                 self.setSelectedAccount(selacct)

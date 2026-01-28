@@ -1,10 +1,6 @@
-//
-//  InputTextView+ResetSize.swift
 //  Glacier
-//
 //  Created by Prem Pratap Singh on 29/09/25.
 //  Copyright © 2025 Glacier. All rights reserved.
-//
 
 import InputBarAccessoryView
 

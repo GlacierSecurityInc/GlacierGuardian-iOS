@@ -1,10 +1,6 @@
-//
-//  SMSChatMessage.swift
 //  Glacier
-//
 //  Created by andyfriedman on 8/22/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 import GRDB
@@ -30,37 +26,6 @@ open class SMSChatMessageModel: GRDBModel {
     }
 }
 
-/*extension SMSChatMessage: MessageType {
-    /// The sender of the message.
-    public var sender: SenderType {
-        get {
-            return SMSChatUser(senderId: self.grdbRecord!.msgSenderId!, displayName: self.grdbRecord!.msgSenderDisplayName!)
-        }
-    }
-
-    /// The unique identifier for the message.
-    public var messageId: String {
-        get {return uniqueId}
-    }
-
-    /// The date the message was sent.
-    public var sentDate: Date {
-        get {return self.grdbRecord!.messageDate}
-    }
-
-    /// The kind of message and its underlying kind.
-    public var kind: MessageKind {
-        get {
-            if let item = self.mediaItem {
-                return MessageKind.photo(item)
-            } else if self.grdbRecord?.mediaItemUniqueId != nil, let item = SMSChatMediaItem.mediaItem(for: self) {
-                self.mediaItem = item
-                return MessageKind.photo(item)
-            }
-            return MessageKind.text(self.grdbRecord!.msgText!)
-        }
-    }
-}*/
 
 extension SMSChatMessageModel {
     public func save(completion: @escaping () -> Void) {
@@ -158,7 +123,6 @@ extension SMSChatMessageModel {
 struct SMSChatMessage: GRDBRecord, TableRecord {
     var id: Int64?
     var uniqueId: String
-    //var value: SMSMessage
     
     var conversationId: String?
     var twilioSid: String?

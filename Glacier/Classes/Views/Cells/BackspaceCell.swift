@@ -1,10 +1,6 @@
-//
-//  BackspaceCell.swift
 //  NumPadLBTA
-//
 //  Created by Brian Voong on 3/20/19.
 //  Copyright © 2019 Brian Voong. All rights reserved.
-//
 
 import UIKit
 
@@ -12,8 +8,8 @@ class BackspaceCell: UICollectionViewCell {
 
     let imageView = UIImageView(image: UIImage(named: "phone_backspace", in: GlacierInfo.resourcesBundle, compatibleWith: nil))
     
-    fileprivate let defaultBGColor = UIColor.systemGray4//UIColor(white: 0.9, alpha: 1)
-    fileprivate let highlightColor = UIColor.systemGray//UIColor(white: 0.9, alpha: 1)
+    fileprivate let defaultBGColor = UIColor.systemGray4
+    fileprivate let highlightColor = UIColor.systemGray
     
     override var isHighlighted: Bool {
         didSet {
@@ -23,7 +19,6 @@ class BackspaceCell: UICollectionViewCell {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        //backgroundColor = defaultBGColor
         imageView.contentMode = .scaleAspectFit
         addSubview(imageView)
         imageView.centerInSuperview(size: .init(width: 40, height: 40))

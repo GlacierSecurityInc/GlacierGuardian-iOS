@@ -1,10 +1,6 @@
-//
-//  XMPPAccountCell.swift
 //  ChatSecure
-//
 //  Created by Chris Ballinger on 3/3/17.
 //  Copyright © 2017 Chris Ballinger. All rights reserved.
-//
 
 import UIKit
 

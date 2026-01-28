@@ -1,10 +1,6 @@
-//
-//  ShareViewController.swift
 //  ShareExtension
-//
 //  Created by Scott Fister on 4/24/17.
 //  Copyright © 2017 Scott Fister. All rights reserved.
-//
 import UIKit
 import Social
 import MobileCoreServices
@@ -13,7 +9,6 @@ import LinkPresentation
 
 class ShareViewController: SLComposeServiceViewController, ShareExtensionDelegate {
     
-    //private var url: NSURL?
     private var userConversations = [Conversation]()
     fileprivate var selectedConversation: Conversation?
     private var dataInterface: GlacierShareDataInterface?
@@ -30,8 +25,6 @@ class ShareViewController: SLComposeServiceViewController, ShareExtensionDelegat
     private var provider = LPMetadataProvider()
     private var sharectr: Int = 0
     private var hud:MBProgressHUD?
-    //private var disGroup:DispatchGroup?
-    //private var linkView = LPLinkView()
     
     override func isContentValid() -> Bool {
         // Do validation of contentText and/or NSExtensionContext attachments here
@@ -77,7 +70,6 @@ class ShareViewController: SLComposeServiceViewController, ShareExtensionDelegat
     override func loadPreviewView() -> UIView! {
         var previewView = super.loadPreviewView()
         if (previewView == nil && !isText) { 
-            //return self.linkView
             if let glacierImage = UIImage(named: "Safari", in: GlacierInfo.resourcesBundle, compatibleWith: nil) {
                 var image = glacierImage
                 image = glacierImage.withTintColor(UIColor.label)
@@ -163,46 +155,10 @@ class ShareViewController: SLComposeServiceViewController, ShareExtensionDelegat
                         attached.loadItem(forTypeIdentifier: kUTTypeText as String, options: nil, completionHandler: { (results, error) in
                             let text = results as! String
                             self.textString = text
-                            //_ = self.isContentValid()
                         })
                     }
                     
                 })
-            }
-            
-            /*if attachment.isFile {
-                attachment.loadItem(forTypeIdentifier:kUTTypeFileURL as String, options: nil, completionHandler: { (results, error) in
-                    if let url = results as! URL? {
-                        self.readyMedia(url, type: .file)
-                    }
-                })
-            } else if attachment.isVideo {
-                attachment.loadItem(forTypeIdentifier:kUTTypeMovie as String, options: nil, completionHandler: { (results, error) in
-                    if let url = results as! URL? {
-                        self.readyMedia(url, type: .video)
-                    }
-                })
-            } else*/
-            
-            /*if attachment.isPropertyList {
-                attachment.loadItem(forTypeIdentifier:kUTTypePropertyList as String, options: nil, completionHandler: { (results, error) -> Void in
-                    guard let dictionary = results as? NSDictionary else { return }
-                    OperationQueue.main.addOperation {
-                        if let results = dictionary[NSExtensionJavaScriptPreprocessingResultsKey] as? NSDictionary,
-                            let urlStr = results["URL"] as? String,
-                            let url = URL(string: urlStr) {
-                                self.textString = url.absoluteString
-                                self.urlString = url.absoluteString
-                                self.getLinkPreview(url)
-                        }
-                    }
-                })
-            } else if attachment.isImage {
-                /*attachment.loadItem(forTypeIdentifier:kUTTypeImage as String, options: nil, completionHandler: { (results, error) in
-                    if let url = results as! URL? {
-                        self.readyMedia(url, type: .image)
-                    }
-                })*/
             } else if attachment.isURL {
                 attachment.loadItem(forTypeIdentifier: kUTTypeURL as String, options: nil, completionHandler: { (results, error) in
                     if let url = results as! URL? {
@@ -216,17 +172,14 @@ class ShareViewController: SLComposeServiceViewController, ShareExtensionDelegat
                 attachment.loadItem(forTypeIdentifier: kUTTypeText as String, options: nil, completionHandler: { (results, error) in
                     let text = results as! String
                     self.textString = text
-                    //_ = self.isContentValid()
                 })
-            }*/
+            }
         }
     }
     
     private func getLinkPreview(_ url:URL) {
         guard LinkPreviewHelper.isPermittedLinkPreviewUrl(url) else { return }
 
-        //self.linkView.removeFromSuperview()
-        //self.linkView = LPLinkView(url: url)
 
         DispatchQueue.main.async{ [weak self] in
             guard let self = self else { return }
@@ -282,47 +235,11 @@ class ShareViewController: SLComposeServiceViewController, ShareExtensionDelegat
             }
         }
         
-        //disGroup = DispatchGroup()
         sharectr = 1
         self.hud = nil
         
         //Use the existing stored info?
-        /*if let mediatype = self.mediaType, let url = self.shareurl {
-            self.hud = MBProgressHUD.showAdded(to: self.view, animated: true)
-            self.dataInterface?.doShare(url, with: tOwner, withType: mediatype.rawValue)
-            if let extraText = self.finalText {
-                sharectr=2
-                self.dataInterface?.doShare(extraText, with: tOwner)
-            }
-        } else if let mediatype = self.mediaType, let data = self.sharedata { //IOSM-548
-            self.hud = MBProgressHUD.showAdded(to: self.view, animated: true)
-            self.dataInterface?.doShare(data, with: tOwner, withType: mediatype.rawValue)
-            if let extraText = self.finalText {
-                sharectr=2
-                self.dataInterface?.doShare(extraText, with: tOwner)
-            }
-        } else if let textstring = self.finalText { //self.textString {
-            self.hud = MBProgressHUD.showAdded(to: self.view, animated: true)
-            if let linkText = self.urlString {
-                sharectr=2
-                self.dataInterface?.doShare(linkText, with: tOwner)
-            }
-            self.dataInterface?.doShare(textstring, with: tOwner)
-        } else if let linkText = self.urlString {
-            self.hud = MBProgressHUD.showAdded(to: self.view, animated: true)
-            self.dataInterface?.doShare(linkText, with: tOwner)
-        } else {
-            self.doneSending(false)
-        }*/
         
-        /*if let url = data as? URL, let imageData = try? Data(contentsOf: url) {
-            //self.save(imageData, key: "imageData", value: imageData)
-        } else if let img = data as? UIImage{
-            imgData = UIImagePNGRepresentation(img)
-        } else {
-            // Handle this situation as you prefer
-            fatalError("Impossible to save image")
-        }*/
     }
     
     func doneSending(_ success:Bool) {
@@ -341,7 +258,6 @@ class ShareViewController: SLComposeServiceViewController, ShareExtensionDelegat
             present(alert, animated: true, completion: nil)
             return
         }
-        //_ = [ NSExtensionJavaScriptFinalizeArgumentKey : [ "statusMessage" : "Done Sending" ]]
         
         if (sharectr > 1) {
             sharectr = sharectr-1
@@ -401,31 +317,8 @@ extension NSItemProvider {
         return hasItemConformingToTypeIdentifier(kUTTypeImage as String)
     }
     
-    /*var isVideo: Bool {
-        return hasItemConformingToTypeIdentifier(kUTTypeMovie as String)
-    }
-    
-    var isFile: Bool {
-        return hasItemConformingToTypeIdentifier(kUTTypeFileURL as String)
-    }*/
     
     var isPropertyList:Bool {
         return hasItemConformingToTypeIdentifier(kUTTypePropertyList as String)
     }
 }
-
-/*@objc(CustomShareNavigationController)
-class ShareNavigationController: UINavigationController {
-
-    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
-        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
-
-        // 2: set the ViewControllers
-        self.setViewControllers([ShareViewController()], animated: false)
-    }
-
-    @available(*, unavailable)
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
-    }
-}*/

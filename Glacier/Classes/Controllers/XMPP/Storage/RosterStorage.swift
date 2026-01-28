@@ -1,10 +1,6 @@
-//
-//  RosterStorage.swift
 //  ChatSecureCore
-//
 //  Created by N-Pex on 2018-01-21.
 //  Copyright © 2018 Chris Ballinger. All rights reserved.
-//
 
 import Foundation
 import XMPPFramework
@@ -37,7 +33,7 @@ import XMPPFramework
         switch type {
         case .subscribed:
             buddyModel.refetch(completion: { (buddy) in
-                if let bud = buddy { //}?.copyAsSelf() {
+                if let bud = buddy {
                     bud.pendingApproval = false
                     bud.saveThread(completion: {
                         NotificationCenter.default.post(name: NSNotification.Name.BuddyPendingApprovalDidChange, object: self, userInfo: ["buddy": bud])
@@ -49,7 +45,7 @@ import XMPPFramework
             stream.resendMyPresence()
         case .unsubscribed:
             buddyModel.refetch(completion: { (buddy) in
-                if let bud = buddy { //}?.copyAsSelf() {
+                if let bud = buddy {
                     bud.pendingApproval = false
                     bud.saveThread()
                 }
@@ -118,21 +114,10 @@ extension RosterStorage: XMPPRosterStorage {
             }
         }
         
-        //var roomMgr:OTRXMPPRoomManager?
         for kicked in kickList {
             if let buddy = ChatBuddyModel.fetchBuddyModel(jid: kicked, accountUniqueId: accountId) {
                 buddy.grdbRecord?.remove(completion: {})
             }
-            /*...
-            }, completionQueue: DispatchQueue.global(), completionBlock: {
-                if roomMgr != nil {
-                    //This doesn't work yet because the server holds onto
-                    // group affiliations even after user is removed
-                    // So when we enter group details it queries the server
-                    // and repopulates this
-                    //roomManager.clearOccupantRole(with: kicked)
-                }
-            })*/
         }
         
         self.rosterSet.removeAll()
@@ -242,25 +227,15 @@ extension RosterStorage: XMPPRosterDelegate {
                 buddy = ChatBuddy(uniqueId: buddyModel!.uniqueId)
                 buddy?.accountUniqueId = accountId
                     
-                // We can be called with buddies that are not really on our roster, i.e.
                 // they are in state none + pendingIn, so default to BuddyTrustLevelUntrusted and set to BuddyTrustLevelRoster only when we are subscribed to them.
-                //buddy?.trustLevel = .untrusted
                 buddy?.displayName = jid.user ?? jidStr
                 buddy?.username = jid.bare
                 buddyModel?.grdbRecord = buddy
             } else if let buddy = buddy {
                 buddyModel = ChatBuddyModel(buddy: buddy)
-                //buddyModel = buddyModel?.copyAsSelf()
             }
             guard let buddyModel = buddyModel else { return }
             buddyModel.grdbRecord?.subscription = SubscriptionAttribute(stringValue: subscription).rawValue
-            //buddyModel.pendingApproval.setPendingOut(pending: (ask == "subscribe"))
-            //if buddyModel.subscribedFrom {
-            //    buddyModel.pendingApproval.setPendingIn(pending: false)
-            //}
-            //if buddyModel.subscribedTo || buddyModel.subscribedFrom {
-            //    buddyModel.trustLevel = .roster
-            //}
                 
             // Update name
             if let name = item.attributeStringValue(forName: "name"), name.count > 0 {

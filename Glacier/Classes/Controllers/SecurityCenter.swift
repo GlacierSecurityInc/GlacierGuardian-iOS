@@ -1,10 +1,6 @@
-//
-//  SecurityCenter.swift
 //  Glacier
-//
 //  Created by andyfriedman on 3/3/22.
 //  Copyright © 2022 Glacier. All rights reserved.
-//
 
 import Foundation
 import Alamofire
@@ -21,7 +17,7 @@ import NetworkExtension
     var needsNotification = false
     var versionNeedsNotification = false
     var lastVersionsCheck = Date.distantPast
-    let secVersionsUrl = "https://tiny.one/5967h5e2"
+    let secVersionsUrl = "https:
     var compromisedStatus = false
     
     //IOSM#48
@@ -49,21 +45,6 @@ import NetworkExtension
     @objc var secInfoUtil = SecurityInfoUtil()
     
     //FOR TSTING
-    /*private let monitor = NWPathMonitor()
-    private let queue = DispatchQueue(label: "NetworkMonitor")
-    var isUsingWiFi: Bool = false
-    @objc override public init() {
-        super.init()
-        
-        monitor.pathUpdateHandler = { path in
-            if path.status == .satisfied {
-                self.isUsingWiFi = path.usesInterfaceType(.wifi)
-            } else {
-                self.isUsingWiFi = false
-            }
-        }
-        monitor.start(queue: queue)
-    }*/
     
     @objc public func doSettingsSecurityChecks() {
         self.needsNotification = false
@@ -86,8 +67,6 @@ import NetworkExtension
         } else if IOSSecuritySuite.amIProxied() {
             compromised = true
             self.secInfoUtil.securityInfo.compromised_detail = COMPROMISED_PROXIED
-        //} else if IOSSecuritySuite.amIDebugged() {
-        //    compromised = true
         } else if reStatus.reverseEngineered {
             compromised = true
             let reason = ": The following checks failed: \(reStatus.failedChecks)"
@@ -99,10 +78,6 @@ import NetworkExtension
             self.secInfoUtil.securityInfo.compromised_detail = "none"
         }
         
-        /*if self.isUsingWiFi {
-            compromised = true
-            self.secInfoUtil.securityInfo.compromised_detail = COMPROMISED_PROXIED
-        }*/
         
         self.compromisedStatus = compromised
         let compromisedDetail = self.secInfoUtil.securityInfo.compromised_detail
@@ -133,7 +108,6 @@ import NetworkExtension
         return self.compromisedStatus
     }
     
-    //IOSM#58 (next 2)
     @objc public func shouldIgnoreCompromisedAlert() -> Bool {
         return self.ignoreCompromisedAlert
     }
@@ -259,62 +233,6 @@ import NetworkExtension
         }
     }
     
-    /*func handleResults(securityResults: String) {
-        let curVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-    
-        do {
-            let securityEl = try XMLElement.init(xmlString: securityResults)
-            let glacierversion = securityEl.element(forName: "glacier")?.stringValue
-            let latestiosversion = securityEl.element(forName: "ios")?.stringValue
-            
-            //check our Glacier version vs latest
-            if (curVersion != self.secInfoUtil.securityInfo.glacier_version) {
-                self.secInfoUtil.secinfoNeedsUpdate = true
-            }
-            self.secInfoUtil.securityInfo.glacier_version = curVersion
-            if let myVersion = curVersion, let latestVersion = glacierversion, myVersion.compare(latestVersion, options: .numeric) == .orderedAscending {
-                self.versionNeedsNotification = true
-                
-                if self.secInfoUtil.securityInfo.glacier_version_outdated == false {
-                    self.secInfoUtil.secinfoNeedsUpdate = true
-                }
-                self.secInfoUtil.securityInfo.glacier_version_outdated = true
-            } else {
-                if self.secInfoUtil.securityInfo.glacier_version_outdated == true {
-                    self.secInfoUtil.secinfoNeedsUpdate = true
-                }
-                self.secInfoUtil.securityInfo.glacier_version_outdated = false
-            }
-            
-            //check our iOS version vs latest
-            let osversion = UIDevice.current.systemVersion
-            if osversion != self.secInfoUtil.securityInfo.os_version {
-                self.secInfoUtil.secinfoNeedsUpdate = true
-            }
-            self.secInfoUtil.securityInfo.os_version = osversion
-            
-            if let latestios = latestiosversion, self.iOS_VERSION_LESS_THAN(version: latestios) {
-                self.versionNeedsNotification = true
-                
-                if self.secInfoUtil.securityInfo.os_version_outdated == false {
-                    self.secInfoUtil.secinfoNeedsUpdate = true
-                }
-                self.secInfoUtil.securityInfo.os_version_outdated = true
-            } else {
-                if self.secInfoUtil.securityInfo.os_version_outdated == true {
-                    self.secInfoUtil.secinfoNeedsUpdate = true
-                }
-                self.secInfoUtil.securityInfo.os_version_outdated = false
-            }
-            
-            if self.versionNeedsNotification {
-                self.needsNotification = true
-            }
-                
-        } catch {
-            DDLogError("Failure parsing latest iOS/Glacier versions")
-        }
-    }*/
     
     @objc public func setVersionIssue(_ versionIssue: Bool) {
         self.versionNeedsNotification = versionIssue
@@ -372,15 +290,6 @@ import NetworkExtension
           print(error)
         }
         
-        /*let dict = ["deviceid": sDeviceId, "device": sDevice, "glacier_version": sGlacierVersion,
-                   "glacier_version_outdated": String(sGlacierOutdated), "os_version": sOsVersion, "os_version_outdated": String(sOsOutdated), "os_patch": sOsPatch, "compromised": String(sCompromised), "compromised_detail": sCompromisedDetail, "screen_lock": String(sScreenLock), "biometric_lock": String(sBiometricLock), "core_enabled": String(sCoreEnabled)];
-        
-        let encoder = JSONEncoder()
-        if let jsonData = try? encoder.encode(dict) {
-            if let jsonString = String(data: jsonData, encoding: .utf8) {
-                return jsonString
-            }
-        }*/
         return ""
     }
     

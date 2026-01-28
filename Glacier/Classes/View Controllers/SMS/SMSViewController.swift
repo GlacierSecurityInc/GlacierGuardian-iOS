@@ -1,10 +1,6 @@
-//
-//  SMSViewController.swift
 //  Glacier
-//
 //  Created by andyfriedman on 9/6/22.
 //  Copyright © 2022 Glacier. All rights reserved.
-//
 
 import UIKit
 import Alamofire
@@ -23,14 +19,6 @@ import MBProgressHUD
     static let kOTRConversationCellHeight = 80.0
 
     var numAction: SMSNumbersAction?
-    //var currentAccounts: [SMSChatAccountModel] = []
-    /*var selectedAccount: SMSChatAccountModel? {
-        didSet {
-            if let ds = self.dataSource {
-                ds.accountId = self.selectedAccount?.uniqueId
-            }
-        }
-    }*/
     var addRemoveMenu: UIMenu
     var smsMenu: UIMenu
     var settingsButton: UIBarButtonItem
@@ -76,7 +64,6 @@ import MBProgressHUD
         let items = [self.addRemoveMenu]
         smsMenu = UIMenu(title: "Phone Numbers", children: items)
         super.init(nibName:nil, bundle:nil)
-        //settingsButton.target = self
         
         self.addNumber = UIAction(title: "Add Number", image: UIImage(systemName: "plus"), handler: { (_) in
             self.handleAddNumber()
@@ -88,7 +75,6 @@ import MBProgressHUD
             self.setNumbersWithAction(SMSNumbersAction.name)
         })
         self.copyNumber = UIAction(title: "Copy Number", image: UIImage(systemName: "doc.on.doc"), handler: { (_) in
-            //self.setNumbersWithAction(SMSNumbersAction.copy)
             self.doCopy()
         })
         
@@ -120,9 +106,7 @@ import MBProgressHUD
         let accounts = tmgr.currentAccounts
         let selected = tmgr.selectedAccount
         
-        let vmIcon = UIImage(systemName: "recordingtape")?.imageMasked(with: UIColor.label) //UIImage(named: "voicemail", in: GlacierInfo.resourcesBundle, compatibleWith: nil)
-        //self.vmBtn = UIBarButtonItem(image: vmIcon, style: .plain, target: self, action: #selector(vmButtonPressed))
-        //self.vmBtn?.tintColor = .label
+        let vmIcon = UIImage(systemName: "recordingtape")?.imageMasked(with: UIColor.label)
         
         let customView = createCustomBarButtonView(with: vmIcon!)
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(vmButtonPressed))
@@ -136,7 +120,6 @@ import MBProgressHUD
             
             if AWSAcctManager.sharedMgr().getGlacierEnablements()?.voicemailEnabled == true {
                 self.vmEnabled = true
-                //self.navigationItem.rightBarButtonItem = self.vmBtn
             }
         } else if accounts.count > 0 {
             self.navigationItem.title = accounts.first?.grdbRecord?.displayName ?? accounts.first?.grdbRecord?.phoneNumber
@@ -189,12 +172,9 @@ import MBProgressHUD
             self.navigationController?.view.addSubview(tabs)
             tabs.delegate = self
             tabs.setPhoneModule()
-            //self.checkSecurityTab()
         }
         
         if let tabBarHeight = self.tabBar?.frame.height {
-            //self.tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: tabBarHeight, right: 0)
-            //self.tableView.scrollIndicatorInsets = tableView.contentInset
             self.tableView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor).isActive = true
             self.tableView.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor, constant: -tabBarHeight).isActive = true
             if let navwidth = self.navigationController?.view.frame.size.width {
@@ -203,7 +183,6 @@ import MBProgressHUD
         }
         
         self.setupLongPress()
-        //self.tableView.reloadData()
         TwilioBackendManager.sharedMgr().fetchContacts(completion: {_ in })
         
         if self.observed == false {
@@ -228,13 +207,11 @@ import MBProgressHUD
         blueDot.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(blueDot)
             
-        // Constraints for imageView (optional: adjust size/spacing)
         NSLayoutConstraint.activate([
             imageView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
             imageView.centerYAnchor.constraint(equalTo: containerView.centerYAnchor)
         ])
             
-        // Constraints for blue dot (position it at the bottom-right corner of the image)
         NSLayoutConstraint.activate([
             blueDot.widthAnchor.constraint(equalToConstant: 8), // Size of the blue dot
             blueDot.heightAnchor.constraint(equalToConstant: 8), // Size of the blue dot
@@ -266,7 +243,6 @@ import MBProgressHUD
             
             return cell ?? UITableViewCell()
         })
-        //self.tableView.dataSource.defaultRowAnimation = .fade
         self.dataSource.accountId = TwilioBackendManager.sharedMgr().selectedAccount?.uniqueId
         self.tableView.dataSource = self.dataSource
     }
@@ -280,7 +256,6 @@ import MBProgressHUD
                 appDelegate.window?.rootViewController = appDelegate.splitViewCoordinator.splitViewController
                 break
             case GlacierTabs.Screen.dial.rawValue:
-                //appDelegate.goGlacierVoice()
                 appDelegate.window?.rootViewController = appDelegate.dialerViewController
                 break
             case GlacierTabs.Screen.contacts.rawValue:
@@ -299,7 +274,6 @@ import MBProgressHUD
         super.viewWillAppear(animated)
         TwilioBackendManager.sharedMgr().getToken()
         self.navigationController?.isToolbarHidden = true
-        //self.tableView.reloadData()
         self.tableView.tableHeaderView = nil
         self.tabBar?.isHidden = false
         self.tabBar?.selectedItem = self.tabBar?.smsItem //IOSM#90
@@ -347,7 +321,6 @@ import MBProgressHUD
             }
             
             if (accounts.count == 0) {
-                //selectedAccount = nil
                 self.navigationItem.title = "SMS"
             } else if let selacct = selected {
                 self.setSelectedAccount(selacct)
@@ -575,7 +548,7 @@ import MBProgressHUD
         }
     }
     
-    func setNumbersWithAction(_ action:SMSNumbersAction) {//name:Bool, copy:Bool) {
+    func setNumbersWithAction(_ action:SMSNumbersAction) {
         self.numAction = action
         
         let tmgr = TwilioBackendManager.sharedMgr()
@@ -591,7 +564,7 @@ import MBProgressHUD
                 }
             }
         }
-        smsNumbersViewController.setNumbers(currentNumbers, names: currentNames, action: action) //release: self.releasing, name: self.naming)
+        smsNumbersViewController.setNumbers(currentNumbers, names: currentNames, action: action)
         let modalNavigationController = UINavigationController(rootViewController: smsNumbersViewController)
         modalNavigationController.modalPresentationStyle = .formSheet
         
@@ -630,9 +603,6 @@ import MBProgressHUD
         return nil
     }
     
-    /*open func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return self.tableView(tableView, heightForHeaderInSection: section)
-    }*/
     
     open func tableView(_ tableView: UITableView, shouldShowMenuForRowAt indexPath: IndexPath) -> Bool {
         return true
@@ -677,8 +647,6 @@ import MBProgressHUD
             }
         })
         
-        //var lastMessage = smsConversation.lastMessage()
-        //})
         cell.nameLabel.textColor = UIColor.label
         cell.dateLabel.textColor = UIColor.label
     }
@@ -709,12 +677,8 @@ import MBProgressHUD
         if let ds = self.dataSource {
             ds.itemCnt = snapshot.numberOfItems
             ds.apply(snapshot, animatingDifferences: false)
-        }//, completion: {
+        }
             // Restore selection
-            //if let index = conversations.firstIndex(where: { $0.uniqueId == convId }) {
-            //    self.tableView.selectRow(at: IndexPath(row: index, section: 0), animated: false, scrollPosition: .none)
-            //}
-        //})
     }
     
     private func observeConversations() {
@@ -849,7 +813,7 @@ extension SMSViewController {
 
 // MARK: - UITableViewDataSource
 /// Subclass of UITableViewDiffableDataSource that supports row deletion
-private class SMSConversationDataSource: UITableViewDiffableDataSource<Int, SMSChatConversation> {//}, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
+private class SMSConversationDataSource: UITableViewDiffableDataSource<Int, SMSChatConversation> {
     
     var accountId:String?
     var emptySet = false
@@ -857,7 +821,6 @@ private class SMSConversationDataSource: UITableViewDiffableDataSource<Int, SMSC
     
     override public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if accountId != nil {
-            //let numRows = SMSChatConversationModel.countConversations(acctid)
             if section == 0 {
                 if itemCnt == 0 && emptySet == false {
                     DispatchQueue.main.async {

@@ -1,10 +1,6 @@
-//
-//  ChatThread.swift
 //  Glacier
-//
 //  Created by andyfriedman on 9/12/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 import GRDB
@@ -137,7 +133,6 @@ import GRDB
 
 
 public struct ChatThread: GRDBRecord, TableRecord {
-//public protocol ChatThread: AnyObject {
     public var id: Int64?
     public var uniqueId: String
     
@@ -191,23 +186,9 @@ extension ChatThread: Hashable {
     }
 }
 
-//extension ChatThread {
-    //static let buddy = hasOne(ChatBuddy.self)
-//}
 
 extension ChatThread {
     
-    /*public var isMuted: Bool {
-        get {
-            guard let expiration = muteExpiration else {
-                return false
-            }
-            if expiration > Date() {
-                return true
-            }
-            return false
-        }
-    }*/
     
     func getChatAccount() -> ChatAccountModel? {
         var acct:ChatAccountModel?
@@ -220,9 +201,6 @@ extension ChatThread {
         } catch {
             DDLogDebug("ChatThread.getChatAccount with error: \(error)")
         }
-        //if let budId = self.grdbRecord?.buddyUniqueId {
-        //    return ChatBuddyModel.getBuddy(uniqueId: budId)
-        //}
         
         return acct
     }
@@ -235,7 +213,6 @@ extension ChatThread {
                     .filter(Column("uniqueId") == thread.uniqueId)
                     .fetchOne(transaction.database)
             } catch {
-                //DDLogDebug("ChatThread.update with error: \(error)")
             }
         }, completion: {
             if cthread != nil {
@@ -267,7 +244,6 @@ extension ChatThread {
                     .fetchCount(transaction.database)
             })
         } catch {
-            //DDLogDebug("error: \(error)")
         }
         return count
     }
@@ -373,10 +349,6 @@ extension ChatThread {
 }
 
 extension ChatThread {
-    //static let threads = hasMany(ChatThread.self)
-    //var threads: QueryInterfaceRequest<ChatThread> {
-    //    request(for: ChatThread.threads)
-    //}
     
     static let account = belongsTo(ChatAccount.self)
     var account: QueryInterfaceRequest<ChatAccount> {

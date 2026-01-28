@@ -1,10 +1,6 @@
-//
-//  ChatMediaItem.swift
 //  Glacier
-//
 //  Created by andyfriedman on 9/21/23.
 //  Copyright © 2023 Glacier. All rights reserved.
-//
 
 import Foundation
 import AVFoundation
@@ -26,7 +22,6 @@ enum ChatMediaType: Int {
     static private let mediaItemCache:NSCache<NSString, ChatMediaItemModel> = NSCache.init()
     static let mediaThreadCache:NSCache<NSString, GlacierThreadID> = NSCache.init()
     var grdbRecord:ChatMediaItem?
-    //var parentObjectCollection = ChatMessageModel.collection()
     var curSize = UIDevice.current.userInterfaceIdiom == .pad ? CGSizeMake(315.0, 225.0) : CGSizeMake(210.0, 200.0)
     
     convenience init(media:ChatMediaItem) {
@@ -58,7 +53,6 @@ enum ChatMediaType: Int {
             let fileext = (filename as NSString).pathExtension
             let ext = Self.getExtensionForMimeType(mimeType: mimetype ?? "")
             if fileext != ext {
-                //DDLogWarn(@"Given file extension does not match expected extension from mime type: %@ %@", filename.pathExtension, extension);
                 if fileext.count == 0 && ext.count > 0 {
                     grec.filename = fname + "." + ext
                     DDLogInfo("Created new filename with best guess for file extension: \(fname)")
@@ -87,7 +81,6 @@ enum ChatMediaType: Int {
             let fileext = (filename as NSString).pathExtension
             let ext = Self.getExtensionForMimeType(mimeType: mimetype ?? "")
             if fileext != ext {
-                //DDLogWarn(@"Given file extension does not match expected extension from mime type: %@ %@", filename.pathExtension, extension);
                 if fileext.count == 0 && ext.count > 0 {
                     self.grdbRecord?.filename = fname + "." + ext
                     DDLogInfo("Created new filename with best guess for file extension: \(fname)")
@@ -148,7 +141,7 @@ extension ChatMediaItemModel {
         } else if mimetype.contains("text/html") {
             mediaClass = ChatHTMLItem.self
         } else {
-            mediaClass = ChatFileItem.self //mime type likely starts with application for PDF, doc, or text for plain text
+            mediaClass = ChatFileItem.self
         }
     #endif
         
@@ -295,7 +288,6 @@ extension ChatMediaItemModel {
         var parentMessage:MessageProtocol?
         guard let key = self.grdbRecord?.parentObjectKey else {return nil}
         if self.grdbRecord?.parentObjectCollection == ChatRoomMessageModel.collection() {
-            //parentMessage = ChatRoomMessage.getMessage(with: key)
             
             do {
                 try DBManager.sharedDB().grdbStorage.read(block: { transaction in
@@ -403,7 +395,7 @@ extension ChatMediaItemModel {
     #if !TARGET_IS_EXTENSION
     func getImageItemDisplayText() -> String {
         if self is ChatImageItem {
-            let otrd = self.parentMessage() //downloadMessage()
+            let otrd = self.parentMessage()
             if let origtext = otrd?.messageOriginalText, origtext.hasPrefix("geo") {
                 let mapIconChar: UniChar = 0xf3c5
                 if let mapIcon = UnicodeScalar(mapIconChar) {

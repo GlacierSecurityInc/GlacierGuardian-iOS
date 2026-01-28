@@ -1,5 +1,3 @@
-//
-//  CallManager.swift
 //  Created by Andy Friedman on 2/10/20.
 //  Copyright © 2020 Glacier Security. All rights reserved.
 
@@ -55,14 +53,14 @@ public enum CallType : UInt {
 public class CallManager: XMPPModule {
     private static let shared = CallManager(dispatchQueue: nil)
     
-    @objc public static let XMPPCommandNamespace = "http://jabber.org/protocol/commands"
+    @objc public static let XMPPCommandNamespace = "http:
     @objc public static let CallManagerErrorDomain = "CallManagerErrorDomain"
     public static let JINGLE_MESSAGE = "urn:xmpp:jingle-message:0"
     public static let JINGLE_APPS_RTP = "urn:xmpp:jingle:apps:rtp:1"
     public static let JINGLE_TRANSPORT_ICE_UDP = "urn:xmpp:jingle:transports:ice-udp:1"
     public static let JINGLE_APPS_DTLS = "urn:xmpp:jingle:apps:dtls:0"
     public static let JINGLE = "urn:xmpp:jingle:1"
-    public static let DLTS_SRTP_VERIFICATION = "http://gultsch.de/xmpp/drafts/omemo/dlts-srtp-verification"
+    public static let DLTS_SRTP_VERIFICATION = "http:
 
     let kCachedDeviceToken = "CachedDeviceToken"
     let kCachedBindingDate = "CachedBindingDate"
@@ -145,7 +143,6 @@ public class CallManager: XMPPModule {
     
     var iceServers:[RTCIceServer] = []
     private var iceServersRefreshDeadline: Date?
-    //var iceCandidates:[RTCIceCandidate] = []
     let syncQueue = DispatchQueue(label: "callManager.syncQueue")
 
     deinit {
@@ -161,7 +158,6 @@ public class CallManager: XMPPModule {
         let configuration = CXProviderConfiguration(localizedName: "Glacier")
         configuration.maximumCallGroups = 1
         configuration.maximumCallsPerCallGroup = 1
-        //configuration.ringtoneSound = "MarimbaRingtone.wav"
         configuration.supportsVideo = true
         configuration.supportedHandleTypes = [.generic]
         configuration.includesCallsInRecents = false;
@@ -291,7 +287,7 @@ public class CallManager: XMPPModule {
     
     /**
      * <iq from='hag66@shakespeare.lit/pda' id='h7ns81g' to='p2.glaciersec.cc' type='set'>
-     *   <command xmlns='http://jabber.org/protocol/commands' action='execute' node='call-user-apns'>
+     *   <command xmlns='http:
      *     <x xmlns="jabber:x:data" type="submit">
      *       <field var="caller"><value>hag66</value></field>
      *       <field var="callerdevice"><value>152F11D4-9380-43E4-BCDE-B47314752B9B</value></field>
@@ -331,13 +327,13 @@ public class CallManager: XMPPModule {
         call.callerFullJID = call.caller
         call.callstatus = .waiting
         call.audioOnly = isAudioOnly
-        call.calltitle = name// ?? call.receiver?.components(separatedBy: "@")[0]
+        call.calltitle = name
         self.currentCall = call
         self.userInitiatedDisconnect = false
         
         //call CallKit here before sending to ejabberd
         if let uuid = self.currentUuid {
-            performStartCallAction(uuid: uuid, receiver: name) //receiver)
+            performStartCallAction(uuid: uuid, receiver: name)
         }
         
         self.sendJmiPropose(audioOnly: isAudioOnly)
@@ -428,7 +424,7 @@ public class CallManager: XMPPModule {
         self.makeVoiceCall(contact)
     }
     
-    func makeVoiceCall(_ contact:PhoneContact) {//receiver: String, name: String) {
+    func makeVoiceCall(_ contact:PhoneContact) {
         guard let callto = CallManager.formatDialString(contact.phoneNumber) else {
             DDLogError("***** Unable to format phone number for dialing")
             return
@@ -450,7 +446,7 @@ public class CallManager: XMPPModule {
         
         //call CallKit here before sending to ejabberd
         if let uuid = self.currentUuid {
-            performStartCallAction(uuid: uuid, receiver: contact.name) //receiver)
+            performStartCallAction(uuid: uuid, receiver: contact.name)
         }
     }
     
@@ -495,8 +491,6 @@ public class CallManager: XMPPModule {
             msg = "Your call could not be connected. Please check your network connection and if the problem continues contact Glacier Support."
         }
         
-        //let name = self.currentCall?.receiver?.components(separatedBy: "@")[0]
-        //let user = name ?? "the other user(s)"
         let alert = UIAlertController(title: "Call Failed", message: msg, preferredStyle: .alert)
         let cancelAction = UIAlertAction(title: "OK", style: .cancel, handler: nil)
         alert.addAction(cancelAction)
@@ -512,7 +506,7 @@ public class CallManager: XMPPModule {
 
     /**
     * <iq from='hag66@shakespeare.lit/pda' id='h7ns81g' to='p2.glaciersec.cc' type='set'>
-    *   <command xmlns='http://jabber.org/protocol/commands' action='execute' node='accept-call-apns'>
+    *   <command xmlns='http:
     *     <x xmlns="jabber:x:data" type="submit">
     *       <field var="callid"><value>237</value></field>
     *       <field var="receiverdevice"><value>152F11D4-9380-43E4-BCDE-B47314752B9B</value></field>
@@ -525,15 +519,10 @@ public class CallManager: XMPPModule {
         DDLogDebug("***** acceptCall, will send proceed")
         UIDevice.current.isProximityMonitoringEnabled = false
         self.userInitiatedDisconnect = false
-        //let callid = call.callid
-        //let me = self.cAccount?.displayName
-        //self.currentCall = call
         
         //send JmiProceed
-        //createConnectingTimeoutTimer()
         self.sendJmiProceed(call)
         
-        //openCallStuff
         DispatchQueue.main.async {
             call.systemMessage = "Received call"
             OTRAppDelegate.appDelegate.conversationViewController.connectVideoCall(call)
@@ -541,16 +530,6 @@ public class CallManager: XMPPModule {
         }
     }
     
-    /*
-     <message from='juliet@capulet.example/phone'
-              to='romeo@montague.example'
-              type='chat'>
-       <proceed xmlns='urn:xmpp:jingle-message:0' id='ca3cf894-5325-482f-a412-a6e9f832298d'/>
-         <device xmlns='http://gultsch.de/xmpp/drafts/omemo/dlts-srtp-verification' id='1234' />
-       </proceed>
-       <store xmlns="urn:xmpp:hints"/>
-     </message>
-     */
     public func sendJmiProceed(_ call: TwilioCall) {
         guard let callid = call.callid, let callerjid = call.callerFullJID ?? call.caller, let tojid = XMPPJID(string: callerjid) else { return}
         
@@ -569,7 +548,6 @@ public class CallManager: XMPPModule {
             xmppMessage.addAttribute(withName: "from", stringValue: fromjid)
             xmppMessage.addStorageHint(.store)
                     
-            //self.tracker?.add(xmppMessage, target: self, selector: #selector(self.handleJmiProposeResponse(_:)), timeout: 15)
                     
             self.sendXmppElement(xmppMessage)
         }
@@ -582,19 +560,6 @@ public class CallManager: XMPPModule {
         DDLogDebug("*** rejectCall isBusy: \(isBusy)")
     }
     
-    /*
-     <message from='juliet@capulet.example/phone'
-              to='romeo@montague.example'
-              type='chat'>
-       <reject xmlns='urn:xmpp:jingle-message:0' id='ca3cf894-5325-482f-a412-a6e9f832298d'>
-         <reason xmlns="urn:xmpp:jingle:1">
-           <busy/>
-           <text>Busy</text>
-         </reason>
-       </reject>
-       <store xmlns="urn:xmpp:hints"/>
-     </message>
-     */
     public func sendJmiReject(_ call: TwilioCall, busy: Bool) {
         if let callerjid = call.callerFullJID ?? call.caller, let tojid = XMPPJID(string: callerjid), let callid = call.callid {
             DDLogDebug("sendJmiReject")
@@ -632,8 +597,6 @@ public class CallManager: XMPPModule {
             return
         }
         
-        //let callid = call.callid
-        //let caller = self.cAccount?.displayName
         var tojidstr = call.receiver
         if call.isCaller == false {
             tojidstr = call.callerFullJID
@@ -653,19 +616,6 @@ public class CallManager: XMPPModule {
         }
     }
     
-    /*
-     <message from='romeo@montague.example/orchard'
-              to='juliet@capulet.example'
-              type='chat'>
-       <retract xmlns='urn:xmpp:jingle-message:0' id='ca3cf894-5325-482f-a412-a6e9f832298d'>
-         <reason xmlns="urn:xmpp:jingle:1">
-           <cancel/>
-           <text>Retracted</text>
-         </reason>
-       </retract>
-       <store xmlns="urn:xmpp:hints"/>
-     </message>
-     */
     public func sendJmiRetract(_ call: TwilioCall) {
         DDLogDebug("***** sendJmiRetract ")
         
@@ -698,7 +648,6 @@ public class CallManager: XMPPModule {
     
     //make sure this is called from asyncBlock
     func sendJmiFinishWithReason(_ call:TwilioCall, reason:String) {
-        //DDLogDebug("***** sendJmiFinishWithReason")
         if let callid = call.callid, let fromjid = self.xmppStream?.myJID?.full {
             
             var tojidstr = call.receiver
@@ -706,9 +655,7 @@ public class CallManager: XMPPModule {
                 tojidstr = call.callerFullJID
             }
             
-            //DDLogDebug("sendJmiFinish with reason \(reason)")
             if let to = tojidstr, let tojid = XMPPJID(string: to) {
-                //self.performBlock(async: true){
                     let finishElement = XMLElement(name: "finish", xmlns: CallManager.JINGLE_MESSAGE)
                     finishElement.addAttribute(withName: "id", stringValue: callid)
                     let reason = XMLElement(name: "reason", xmlns: CallManager.JINGLE)
@@ -720,7 +667,6 @@ public class CallManager: XMPPModule {
                     xmppMessage.addAttribute(withName: "from", stringValue: fromjid)
                         
                     self.sendXmppElement(xmppMessage)
-                //}
             }
         }
     }
@@ -754,7 +700,6 @@ public class CallManager: XMPPModule {
             }
             
             self.retryAcceptCallList.forEach({ (iq) in
-                //self.tracker?.add(iq, target: self, selector: #selector(self.handleAcceptCallResponse(_:)), timeout: 15)
                 self.xmppStream?.send(iq)
             })
             self.retryAcceptCallList.removeAll()
@@ -772,7 +717,6 @@ public class CallManager: XMPPModule {
     }
     
     func handleSessionInitAccept(_ jingle:XMLElement, from:XMPPJID, isInit:Bool) {
-        //DDLogInfo("***** in handleSessionInitAccept with Jingle: \(jingle)")
         if let fingerprintEl = JingleUtility.getFingerprintElement(from: jingle), let encrypted = fingerprintEl.omemo_encryptedElement(.conversationsLegacy) {
             
             if self.currentCall?.remoteSDP != nil {
@@ -800,12 +744,8 @@ public class CallManager: XMPPModule {
                 self.performBlock(async: true){
                     let sdp = JingleUtility.generateSDP(from: jingle, fingerprint:fingerprint)
                     
-                    //handle candidates in initial sdp (our webrtc lib does not like them --> fake transport-info iqs for these) ???
                     
-                    //self.syncQueue.sync { //is this really necessary?
                     self.currentCall?.remoteSDP = sdp
-                    //print("***** Remote: \(sdp)")
-                    //}
                     
                     let sdpType:RTCSdpType = isInit ? .offer : .answer
                     let resultSDP = RTCSessionDescription(type: sdpType, sdp: sdp)
@@ -814,10 +754,8 @@ public class CallManager: XMPPModule {
                         if let error = error {
                             return //??
                         } else if isInit {
-                            //self.currentCall?.callstatus = .connecting
                             webClient.answer(completion: { (asdp) in
                                 self.currentCall?.localSDP = asdp.sdp
-                                //print("***** Answer SDP: \(asdp.sdp)")
                                 self.prepareSessionAnswer(from, sdp: asdp.sdp)
                             })
                             return
@@ -836,7 +774,6 @@ public class CallManager: XMPPModule {
                                 let eid = self.xmppStream?.generateUUID
                                 let tiq = XMPPIQ.init(iqType: XMPPIQ.IQType.set, to: from, elementID: eid, child: transportInfo)
                                 tiq.addAttribute(withName: "from", stringValue: myjid)
-                                //DDLogInfo("***** handleSessionInitAccept sending immediate transportInfo") //: \(transportInfo)")
                                 self.sendXmppElement(tiq)
                             }
                         }
@@ -852,7 +789,6 @@ public class CallManager: XMPPModule {
         //assume this is video?
         if self.currentCall?.remoteSDP == nil || self.currentCall?.audioOnly == false {
             self.sendCancelIQ(from)
-            //self.sendContentReject(from)
             return
         } //should be already processed, or already should have video
         
@@ -921,11 +857,9 @@ public class CallManager: XMPPModule {
                     let newSdp = JingleUtility.generateSDP(from: newJingle, fingerprint: fingerprint)
                     
                     self.currentCall?.remoteSDP = newSdp
-                    //print("***** Remote: \(sdp)")
                     
                     let sessionType: RTCSdpType = isInit ? .offer : .answer
                     let resultSDP = RTCSessionDescription(type: sessionType, sdp: newSdp)
-                    //print("***** processContentUpgrade 4 with sdp \(newSdp)")
                     
                     webClient.setRemoteSdp(resultSDP, completion: { (error) in
                         if isInit == false {
@@ -933,7 +867,6 @@ public class CallManager: XMPPModule {
                         }
                         
                         if error != nil {
-                            //self.sendCancelIQ(from)
                             self.sendContentReject(from)
                             if let origSdp = fullOrigSdp {
                                 webClient.setRemoteSdp(origSdp, completion: { (error) in })
@@ -949,16 +882,12 @@ public class CallManager: XMPPModule {
     }
     
     //this is receiving after attempted upgrade, so we turn off video again
-    //func handleContentReject(_ jingle:XMLElement, from:XMPPJID) {
-        //self.processContentUpgrade(jingle, from: from, isInit: false)
-    //}
     
     func handleContentAccept(_ jingle:XMLElement, from:XMPPJID) {
         self.processContentUpgrade(jingle, from: from, isInit: false)
     }
     
     func handleTransportInfo(_ jingle:XMLElement, from:XMPPJID) {
-        //print("***** handleTransportInfo")
         self.performBlock(async: true){
             let sdpCandidates = JingleUtility.generateSDPCandidates(from: jingle)
             if let curcall = self.currentCall {
@@ -1001,11 +930,9 @@ extension CallManager: XMPPStreamDelegate {
             if let iqid = jingle.attributeStringValue(forName: "sid"), let call = self.currentCall, iqid == call.callid {
                 DDLogDebug("***** jingle with sid \(iqid)")
                 if jingle.attributeStringValue(forName: "action") == "session-initiate" {
-                    //DDLogInfo("***** received session initiate about to call handleSessionInitAccept")
                     //check if this is related to current existing call or drop it
                     self.handleSessionInitAccept(jingle, from: from, isInit: true)
                 } else if jingle.attributeStringValue(forName: "action") == "session-accept" {
-                    //DDLogInfo("***** received session accept about to call handleSessionInitAccept")
                     self.handleSessionInitAccept(jingle, from: from, isInit: false)
                 } else if jingle.attributeStringValue(forName: "action") == "transport-info" {
                     self.handleTransportInfo(jingle, from: from)
@@ -1066,10 +993,7 @@ extension CallManager: XMPPStreamDelegate {
                 } else if (callstatus == "busy") {
                     reportCallBusy()
                 } else if (callstatus == "joincall") {
-                    //let calltitle = callupdate.attributeStringValue(forName: "calltitle")
-                    //reportCallJoinRequest(callid: callid, calltitle: calltitle)
                 } else if (callstatus == "endcall") {
-                    //reportCallEnded()
                 }
             }
         } else if message.containsJmiElements {
@@ -1078,8 +1002,6 @@ extension CallManager: XMPPStreamDelegate {
             }
             
             if let propose = message.element(forName: "propose", xmlnsPrefix: CallManager.JINGLE_MESSAGE) {
-                //DDLogInfo("***** receive propose")
-                //syncQueue.sync {
                     let caller = message.fromStr ?? ""
                     let callid = propose.attributeStringValue(forName: "id") ?? ""
                         
@@ -1095,7 +1017,6 @@ extension CallManager: XMPPStreamDelegate {
                     if let uuid = UUID(uuidString: callid) {
                         self.handleJMIPropose(uuid: uuid, callId: callid, caller: caller, callType:callType)
                     }
-                //}
                 DDLogInfo("Received JMI propose message: \(propose)")
             } else if let ringing = message.element(forName: "ringing", xmlnsPrefix: CallManager.JINGLE_MESSAGE) {
                 //shows call was received on other side?
@@ -1192,7 +1113,6 @@ extension CallManager : CXProviderDelegate {
         // The Phone code has this as false. why?
         self.tvoaudioDevice.isEnabled = false
         
-        //room?.disconnect()
         gcdelegate?.disconnectCall(false)
     }
 
@@ -1203,7 +1123,6 @@ extension CallManager : CXProviderDelegate {
     public func provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession) {
         DDLogInfo("***** didActivateAudioSession:")
         if let curcall = self.currentCall, curcall.isVoice {
-            //DDLogInfo("***** didActivateAudioSession isVoice:")
             self.tvoaudioDevice.isEnabled = true
         } else {
             self.audioSession = audioSession
@@ -1212,7 +1131,6 @@ extension CallManager : CXProviderDelegate {
     }
 
     public func provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession) {
-        //DDLogInfo("Twilio provider:didDeactivateAudioSession:")
         self.tvoaudioDevice.isEnabled = false
         if let asession = self.audioSession {
             self.didDeactivate(audioSession: asession)
@@ -1222,11 +1140,9 @@ extension CallManager : CXProviderDelegate {
     }
 
     public func provider(_ provider: CXProvider, timedOutPerforming action: CXAction) {
-        //DDLogInfo("Twilio provider:timedOutPerformingAction:")
     }
 
     public func provider(_ provider: CXProvider, perform action: CXStartCallAction) {
-        //DDLogInfo("Twilio provider:performStartCallAction:")
 
         /*
          * Configure the audio session, but do not start call audio here, since it must be done once
@@ -1281,7 +1197,6 @@ extension CallManager : CXProviderDelegate {
             self.waitingToAnswerCall = true
             self.unconnectedAnswerCallAction = action
             let task = DispatchWorkItem {
-                //DDLogInfo("***** calling timeout")
                 self.performTimeout()
             }
             callTimeout = task
@@ -1295,29 +1210,23 @@ extension CallManager : CXProviderDelegate {
     }
 
     public func provider(_ provider: CXProvider, perform action: CXEndCallAction) {
-        //print("Twilio provider:performEndCallAction: with *** userInitiatedDisconnect: \(userInitiatedDisconnect)")
-        //DDLogInfo("***** CXProvider:CXEndCallAction:")
         
         self.callTimeout?.cancel()
         
         if isBusy, hasIncomingVoiceCall == false {
             self.handleBusyCall()
             action.fulfill()
-            //DDLogInfo("***** CXProvider:CXEndCallAction: returning early")
             return
         }
         
         if let invite = activeCallInvite {
             invite.reject()
         } else if !userInitiatedDisconnect {
-            //DDLogInfo("***** CXProvider:CXEndCallAction: !userInitiatedDisconnect")
             gcdelegate?.disconnectCall(false)
             if self.endedCall == false, let call = self.currentCall, !self.busyTone, self.receivedRetract == false {
-                //DDLogInfo("***** CXProvider:CXEndCallAction: about to cancelCall")
                 self.cancelCall(call)
             }
         } else if let call = activeCall {
-            //print("***** performEndCallAction: with activeCall")
             call.disconnect()
             gcdelegate?.disconnectCall(false)
         }
@@ -1326,7 +1235,6 @@ extension CallManager : CXProviderDelegate {
            currentCall.callUuid == action.callUUID,
            currentCall.callstatus == .waiting,
            self.receivedRetract == false {
-            //DDLogInfo("***** CXProvider:CXEndCallAction: awaitingCallResponse")
             self.handleRejectCall() //IOSM-515 derivative
         }
 
@@ -1336,7 +1244,6 @@ extension CallManager : CXProviderDelegate {
         self.waitingToAnswerCall = false
         let hasActiveCall = self.isCallActive()
         if !hasActiveCall || (hasActiveCall && activeCallInvite == nil) {
-            //DDLogInfo("***** performEndCallAction: nullifying currentCall")
             self.currentUuid = nil
             self.notificationUuid = nil
             self.currentCall = nil
@@ -1348,7 +1255,6 @@ extension CallManager : CXProviderDelegate {
         self.receivedRetract = false
         clearPendingCall(uuid: action.callUUID)
         action.fulfill()
-        //DDLogInfo("***** CXProvider:CXEndCallAction: end")
     }
     
     func finalizeVoiceCall() {
@@ -1370,12 +1276,6 @@ extension CallManager : CXProviderDelegate {
         
         gcdelegate?.muteAudio(action.isMuted)
         
-        /*if let call = activeCalls[action.callUUID.uuidString] {
-            call.isMuted = action.isMuted
-            action.fulfill()
-        } else {
-            action.fail()
-        }*/
         
         action.fulfill()
     }
@@ -1397,13 +1297,6 @@ extension CallManager : CXProviderDelegate {
             gcdelegate?.holdCall(true)
         }
         
-        /*if let call = activeCalls[action.callUUID.uuidString] {
-            call.isOnHold = action.isOnHold
-
-            /** Explicitly enable the TVOAudioDevice.
-            * This is workaround for an iOS issue where the `provider(_:didActivate:)` method is not called
-            * when un-holding a VoIP call after an ended PSTN call.
-            */ https://developer.apple.com/forums/thread/694836
             if !call.isOnHold {
                 audioDevice.isEnabled = true
                 activeCall = call
@@ -1460,16 +1353,7 @@ extension CallManager {
                 DDLogError("StartCallAction transaction request failed: \(error.localizedDescription)")
                 return
             }
-            //DDLogInfo("StartCallAction transaction request successful")
             
-            /*let callUpdate = CXCallUpdate()
-            callUpdate.remoteHandle = callHandle
-            callUpdate.supportsDTMF = true
-            callUpdate.supportsHolding = true
-            callUpdate.supportsGrouping = false
-            callUpdate.supportsUngrouping = false
-            callUpdate.hasVideo = false
-            self.callKitProvider.reportCall(with: uuid, updated: callUpdate)*/
         }
     }
     
@@ -1479,10 +1363,8 @@ extension CallManager {
         }
         
         let appDelegate = UIApplication.shared.delegate as? OTRAppDelegate
-        //print("***** performMakeVoiceCall with \(client ?? "")")
-        appDelegate?.openPhoneCallController(contact)//client ?? "")
+        appDelegate?.openPhoneCallController(contact)
         if let callVC = appDelegate?.callWindow?.rootViewController?.presentedViewController as? VoiceCallViewController, let tcall = self.currentCall {
-            //print("***** UUID tcall: \(tcall.callUuid)")
             
             let connectOptions = ConnectOptions(accessToken: accessToken) { builder in
                 builder.params = [callVC.CALL_TO: self.currentCall?.receiver ?? "",
@@ -1494,7 +1376,6 @@ extension CallManager {
             let call = TwilioVoiceSDK.connect(options: connectOptions, delegate: callVC)
             activeCall = call
             
-            //self.reportCallConnected(uuid: tcall.callUuid, connectTime: Date())
             callVC.setConnectedCall(tcall, activeCall:call, with:self.currentCall?.calltitle ?? "")
         }
     }
@@ -1505,7 +1386,6 @@ extension CallManager {
         //set UI as the delegate
         
         guard let callInvite = activeCallInvite else {
-            //DDLogInfo("***** No CallInvite matches the UUID")
             return
         }
         
@@ -1539,10 +1419,8 @@ extension CallManager {
         }
         
         let appDelegate = UIApplication.shared.delegate as? OTRAppDelegate
-        //print("***** performAnswerVoiceCall")
-        appDelegate?.openPhoneCallController(contact)//calltitle)
+        appDelegate?.openPhoneCallController(contact)
         if let callVC = appDelegate?.callWindow?.rootViewController?.presentedViewController as? VoiceCallViewController, let tcall = self.currentCall {
-            //print("***** UUID tcall: \(tcall.callUuid)")
             let call = callInvite.accept(options: acceptOptions, delegate: callVC)
             activeCall = call
             self.reportCallConnected(uuid: tcall.callUuid, connectTime: Date())
@@ -1555,7 +1433,6 @@ extension CallManager {
     func dialedDigit(_ digit: String) {
         if let curCall = self.activeCall {
             curCall.sendDigits(digit)
-            //print("**** dialed digit: \(digit)")
         }
     }
     
@@ -1566,14 +1443,11 @@ extension CallManager {
             if tcall.isVoice {
                 self.performAnswerVoiceCall()
             } else if OTRProtocolManager.sharedInstance().isAccountIdConnected(acct.uniqueId) {
-                //DDLogInfo("***** handleAnswerCall, with current call and account connected")
                 self.acceptCall(tcall)
             } else {
                 self.waitingToAnswerCall = true
-                //DDLogInfo("***** handleAnswerCall, with current call and account NOT connected")
             }
         } else {
-            //DDLogInfo("***** handleAnswerCall, with no current call")
             self.waitingToAnswerCall = true
             var calltitle = self.incomingCallHandle?.value ?? ""
             DispatchQueue.main.async {
@@ -1587,8 +1461,6 @@ extension CallManager {
     func handleBusyCall() { //IOSM-515
         if let acct = self.cAccount, let bid = self.busyId {
             if OTRProtocolManager.sharedInstance().isAccountIdConnected(acct.uniqueId), let bcall = self.alternateCall {
-                //let bcall = TwilioCall()
-                //bcall.callid = bid
                 self.rejectCall(bcall, busy: true)
             } else {
                 self.waitingToRespondBusy = true
@@ -1609,10 +1481,8 @@ extension CallManager {
     @objc func handleLoginSuccess() {
         if self.waitingToAnswerCall {
             if let tcall = self.currentCall {
-                //self.callTimeout?.cancel()
                 self.acceptCall(tcall)
             } else {
-                //DDLogInfo("***** handleLoginSuccess, still waiting for call info")
                 return
             }
         } else if (self.waitingToRespondBusy) { //IOSM-515
@@ -1630,9 +1500,7 @@ extension CallManager {
     }
     
     @objc func audioRouteChange(_ notification:Notification) {
-        //if (IPAD)
         //    return;
-        //var headphonesConnected = false
         
         let session = AVAudioSession.sharedInstance()
         let newRoute = session.currentRoute
@@ -1830,7 +1698,6 @@ extension CallManager {
             if self.waitingToAnswerCall,
                let answerAction = self.unconnectedAnswerCallAction,
                answerAction.callUUID == uuid {
-                //DDLogInfo("***** beginIncomingCallIfReady and was waitingToAnswerCall")
                 self.callTimeout?.cancel()
                 self.currentCall?.answerCallAction = answerAction
                 self.currentCall?.callKitAnswerFulfilled = true
@@ -1839,7 +1706,6 @@ extension CallManager {
                 self.unconnectedAnswerCallAction = nil
             }
         } else if self.currentCall?.callUuid != uuid {
-            //DDLogInfo("***** beginIncomingCallIfReady and already had current call, should be busy?")
             let call = TwilioCall()
             call.callid = callId
             call.caller = callerJidString
@@ -1904,10 +1770,8 @@ extension CallManager {
             callUpdate.hasVideo = true
         }
             
-        //DDLogInfo("***** reportIncomingCallFromNotification reportNewIncomingCall uuid \(uuid), in other call \(inOtherCall)")
         callKitProvider.reportNewIncomingCall(with: uuid, update: callUpdate) { error in
             if error == nil {
-                //DDLogInfo("***** Incoming call successfully reported.")
                 
                 if inOtherCall && !suppressBusy {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -1936,7 +1800,6 @@ extension CallManager {
     }
     
     func handleJMIPropose(uuid: UUID, callId: String, caller: String, callType: CallType) {
-        //DDLogInfo("***** handleJMIPropose with uuid \(uuid.uuidString)")
         if retractedCallIds.contains(callId) {
             DDLogInfo("***** handleJMIPropose returning because call was retracted")
             return
@@ -1967,7 +1830,6 @@ extension CallManager {
             call.outgoing = false
             call.isCaller = false
             
-            //print("***** reportIncomingCall about to getMAtchingContact for \(caller)")
             if isVoice, let contact = TwilioBackendManager.sharedMgr().getMatchingContact(caller) {
                 call.calltitle = contact.name
                 call.contact = contact
@@ -1978,7 +1840,6 @@ extension CallManager {
             self.awaitingCallResponse = true
             
         } else { //call exists
-            //DDLogInfo("***** we think we have current call, should be busy?")
             inCall = true
         }
             
@@ -1992,7 +1853,6 @@ extension CallManager {
         callUpdate.supportsUngrouping = false
         callUpdate.hasVideo = false
             
-        //DDLogInfo("***** reportIncomingCall reportNewIncomingCall")
         callKitProvider.reportNewIncomingCall(with: uuid, update: callUpdate) { error in
             if error == nil {
                 DDLogInfo("***** Incoming call successfully reported.")
@@ -2057,7 +1917,6 @@ extension CallManager {
         callUpdate.supportsGrouping = false
         callUpdate.supportsUngrouping = false
         callUpdate.hasVideo = false
-        //DDLogInfo("***** reportNewIncomingCall Report MAM Call Response")
 
         callKitProvider.reportNewIncomingCall(with: uuid, update: callUpdate) { error in
             if status == "accept" {
@@ -2110,7 +1969,7 @@ extension CallManager {
     
     @objc public func reportCallAccepted(_ from:String, callid:String, deviceid:String) {
         //might need to match up uuid or something with current call from notification
-        if let tcall = self.currentCall { //}, let acct = self.cAccount {
+        if let tcall = self.currentCall {
             //set call id?
             self.currentCall?.remoteDeviceId = deviceid
             self.currentCall?.receiver = from
@@ -2130,21 +1989,6 @@ extension CallManager {
         }
     }
     
-    /*
-     <iq from='romeo@montague.example/orchard'
-         id='ih28sx61'
-         to='juliet@capulet.example/phone'
-         type='set'>
-     <jingle xmlns='urn:xmpp:jingle:1'
-               action='session-initiate'
-               initiator='romeo@montague.example/orchard'
-               sid='ca3cf894-5325-482f-a412-a6e9f832298d'>
-         <content creator='initiator' name='voice'>
-           <description xmlns='urn:xmpp:jingle:apps:rtp:1' media='audio'>
-             <payload-type id='96' name='speex' clockrate='16000'/>
-             <payload-type id='97' name='speex' clockrate='8000'/>
-             ...
-     */
     private func prepareSessionInitiate(_ to:String, callId:String, deviceId:String) {
         //offerSDP
         self.performBlock(async: true){
@@ -2153,15 +1997,12 @@ extension CallManager {
             guard let acct = self.cAccount, let xmpp = OTRProtocolManager.shared.xmppManager(forChatAccount: acct) else { return }
             
             webClient.offer(completion: { (sdp) in
-                //DDLogDebug("***** WebRTC offer completion")
-                //print("***** Offer SDP: \(sdp.sdp)")
                 self.currentCall?.localSDP = sdp.sdp
                 
                 if let bundle = xmpp.omemoSignalCoordinator?.fetchMyBundle() {
                     let mediaDescriptions = JingleUtility.parseSDP(sdp.sdp)
                     self.currentCall?.localMedia = mediaDescriptions
                     if mediaDescriptions.count > 0, let media = mediaDescriptions.first, let fingerprint = media.fingerprint {
-                        //let senderDeviceId = NSNumber(value: bundle.deviceId)
                         if let encryptedElement = xmpp.omemoSignalCoordinator?.getPayloadForCall(fingerprint, buddyjid: tojid.bare, deviceId: deviceId, senderDeviceId: bundle.deviceId) {
                             var encryptedVideoElement:XMLElement?
                             if mediaDescriptions.count > 1 {
@@ -2169,8 +2010,6 @@ extension CallManager {
                             }
                             
                             let jingleElement = JingleUtility.generateJingle(from: sdp.sdp, jingleType:.sessioninitiate, initiator: myjid, responder:nil, sessionID: callId, encryptedAudioElement: encryptedElement, encryptedVideoElement: encryptedVideoElement)
-                            //print("***** \(jingleElement)")
-                            //print("***** LocalSdp: \(localSDP)")
                             
                             let iq = XMPPIQ.init(iqType: XMPPIQ.IQType.set, to: tojid, elementID: callId, child: jingleElement)
                             iq.addAttribute(withName: "from", stringValue: myjid)
@@ -2189,16 +2028,8 @@ extension CallManager {
         }
     }
     
-    /*
-     <jingle xmlns='urn:xmpp:jingle:1'
-               action='session-accept'
-               initiator='romeo@montague.lit/orchard'
-               responder='juliet@capulet.lit/balcony'
-               sid='a73sjjvkla37jfea'>
-     */
     private func prepareSessionAnswer(_ to:XMPPJID, sdp:String) {
         self.performBlock(async: true){
-            //DDLogInfo("***** prepareSessionAnswer")
             guard let myjid = self.xmppStream?.myJID?.full, let call = self.currentCall, let rid = call.remoteDeviceId else { return }
             
             guard let acct = self.cAccount, let xmpp = OTRProtocolManager.shared.xmppManager(forChatAccount: acct) else { return }
@@ -2207,7 +2038,6 @@ extension CallManager {
                 let mediaDescriptions = JingleUtility.parseSDP(sdp)
                 self.currentCall?.localMedia = mediaDescriptions
                 if mediaDescriptions.count > 0, let media = mediaDescriptions.first, let fingerprint = media.fingerprint {
-                    //let senderDeviceId = NSNumber(value: bundle.deviceId)
                     //need remote deviceId, should be in initiate? or previous messaging?
                     
                     //NEED TO RUN GET PAYLOAD FOR CALL TWICE IF WE HAVE VIDEO AND AUDIO
@@ -2219,7 +2049,6 @@ extension CallManager {
                         }
                         
                         let jingleElement = JingleUtility.generateJingle(from: sdp, jingleType:.sessionanswer, initiator: to.full, responder: myjid, sessionID: callid, encryptedAudioElement: encryptedElement, encryptedVideoElement: encryptedVideoElement)
-                        //print("***** \(jingleElement)")
                         
                         let iq = XMPPIQ.init(iqType: XMPPIQ.IQType.set, to: to, elementID: callid, child: jingleElement)
                         iq.addAttribute(withName: "from", stringValue: myjid)
@@ -2232,7 +2061,6 @@ extension CallManager {
                             let transportInfo = JingleUtility.generateTransportInfo(candidates: call.iceCandidates, ufrag: ufrag, pwd: pwd, initiator: to.full, responder: myjid, sessionID: callid)
                             let tiq = XMPPIQ.init(iqType: XMPPIQ.IQType.set, to: to, elementID: callid, child: transportInfo)
                             tiq.addAttribute(withName: "from", stringValue: myjid)
-                            //DDLogInfo("***** prepareSessionAnswer sending transportInfo: \(transportInfo)")
                             self.sendXmppElement(tiq)
                         }
                         return
@@ -2260,7 +2088,6 @@ extension CallManager {
         self.performBlock(async: true){
             webClient.upgradeToVideoOffer(isCaller: call.isCaller, completion: { (sdp) in
                 DDLogDebug("WebRTC upgrade to video offer completion")
-                //print("***** SDP received for upgrade offer: \(sdp.sdp)")
                 self.currentCall?.localSDP = sdp.sdp
                 
                 if let bundle = xmpp.omemoSignalCoordinator?.fetchMyBundle() {
@@ -2268,7 +2095,6 @@ extension CallManager {
                     self.currentCall?.localMedia = mediaDescriptions
                     if mediaDescriptions.count > 0, let media = mediaDescriptions.first, let fingerprint = media.fingerprint {
                         
-                        //let senderDeviceId = NSNumber(value: bundle.deviceId)
                         if let encryptedElement = xmpp.omemoSignalCoordinator?.getPayloadForCall(fingerprint, buddyjid: tojid.bare, deviceId: deviceId, senderDeviceId: bundle.deviceId), let myjid = self.xmppStream?.myJID?.full {
                             var encryptedVideoElement:XMLElement?
                             if mediaDescriptions.count > 1 {
@@ -2277,12 +2103,9 @@ extension CallManager {
                             
                             //No need for local media I think, just remove audio content
                             let jingleElement = JingleUtility.generateJingle(from: sdp.sdp, jingleType:.contentadd, initiator: myjid, responder:nil, sessionID: callId, encryptedAudioElement: encryptedElement, encryptedVideoElement: encryptedVideoElement)
-                            //print("***** \(jingleElement)")
-                            //print("***** Local: \(localSDP)")
                             
                             let iq = XMPPIQ.init(iqType: XMPPIQ.IQType.set, to: tojid, elementID: callId, child: jingleElement)
                             iq.addAttribute(withName: "from", stringValue: myjid)
-                            //self.currentCall?.callstatus = .connecting
                             self.sendXmppElement(iq)
                             return
                             
@@ -2322,7 +2145,6 @@ extension CallManager {
         
             webClient.upgradeToVideoAnswer(isCaller: call.isCaller, completion: { (sdp) in
                 DDLogDebug("WebRTC upgrade to video answer completion")
-                //print("***** SDP received after upgrade answer: \(sdp.sdp)")
                 let realsdp = sdp.sdp
                 self.currentCall?.localSDP = realsdp
                 self.currentCall?.audioOnly = false
@@ -2331,7 +2153,6 @@ extension CallManager {
                     let mediaDescriptions = JingleUtility.parseSDP(realsdp)
                     self.currentCall?.localMedia = mediaDescriptions
                     if mediaDescriptions.count > 0, let media = mediaDescriptions.first, let fingerprint = media.fingerprint {
-                        //let senderDeviceId = NSNumber(value: bundle.deviceId)
                         if let encryptedElement = xmpp.omemoSignalCoordinator?.getPayloadForCall(fingerprint, buddyjid: to.bare, deviceId: deviceId, senderDeviceId: bundle.deviceId) {
                             var encryptedVideoElement:XMLElement?
                             if mediaDescriptions.count > 1 {
@@ -2340,12 +2161,9 @@ extension CallManager {
                             
                             //No need for local media I think, just remove audio content
                             let jingleElement = JingleUtility.generateJingle(from: sdp.sdp, jingleType:.contentaccept, initiator: myjid, responder:nil, sessionID: callId, encryptedAudioElement: encryptedElement, encryptedVideoElement: encryptedVideoElement)
-                            //print("***** sendVideoUpgradeResponse \(jingleElement)")
-                            //print("***** sendVideoUpgradeResponse Local: \(realsdp)")
                             
                             let iq = XMPPIQ.init(iqType: XMPPIQ.IQType.set, to: to, elementID: callId, child: jingleElement)
                             iq.addAttribute(withName: "from", stringValue: myjid)
-                            //self.currentCall?.callstatus = .connecting
                             self.sendXmppElement(iq)
                             //start video?
                             return
@@ -2357,40 +2175,16 @@ extension CallManager {
         }
     }
     
-    /*
-     <iq from='juliet@capulet.lit/balcony'
-         id='ws71bf94'
-         to='romeo@montague.lit/orchard'
-         type='set'>
-       <jingle xmlns='urn:xmpp:jingle:1'
-               action='session-terminate'
-               initiator='romeo@montague.lit/orchard'
-               sid='a73sjjvkla37jfea'>
-         <reason>
-           <success/>
-           <text>Sorry, gotta go!</text>
-         </reason>
-       </jingle>
-     </iq>
-     */
     func sendSessionTerminate(_ call:TwilioCall, to:XMPPJID) {
         //make sure this is called from asyncBlock
-        //self.performBlock(async: true){
         guard let myjid = self.xmppStream?.myJID?.full, let callid = call.callid else {
-            //DDLogInfo("***** sendSessionTerminate but returning early")
             return
         }
         
-        /*var initiator = myjid
-        if call.isCaller == false {
-            initiator = to.full
-        }*/
         
-        //DDLogDebug("***** sendSessionTerminate")
         
         let jingleElement = XMLElement(name: "jingle", xmlns: JingleUtility.JINGLE)
         jingleElement.addAttribute(withName: "action", stringValue: "session-terminate")
-        //jingleElement.addAttribute(withName: "initiator", stringValue: initiator)
         jingleElement.addAttribute(withName: "sid", stringValue: callid)
             
         let reason = XMLElement(name: "reason")
@@ -2404,20 +2198,16 @@ extension CallManager {
         iq.addAttribute(withName: "from", stringValue: myjid)
         self.currentCall?.callstatus = .disconnected
         self.sendXmppElement(iq)
-        //DDLogInfo("***** sendSessionTerminate done")
-        //}
     }
     
     func processIncomingCandidates(_ candidates: [String: [String]]?) {
         guard let call = self.currentCall, let remoteCandidates = (candidates ?? self.currentCall?.remoteIceCandidates) else {
             return
         }
-        //print("***** processIncomingCandidates")
         
         for mediaType in remoteCandidates.keys {
             let candidateAr = remoteCandidates[mediaType] ?? []
             for candidate in candidateAr {
-                //print("***** processIncomingCandidates remote candidate: \(candidate)")
                 let rtcCandidate = RTCIceCandidate(sdp: candidate, sdpMLineIndex: 0, sdpMid: mediaType)
                 call.webrtcClient?.setRemoteCandidate(rtcCandidate, completion: { (error) in
                     if let error = error {
@@ -2433,16 +2223,12 @@ extension CallManager {
         
     
     @objc public func reportCallRejected(_ from:XMPPJID, callid:String) {
-        // if in room, no reason to close call here.
         // handles the case of a second phone also waiting
         if let tdel = gcdelegate {
             if (!tdel.isConnected()) {
                 if let uuid = self.currentUuid {
                     //IOSM-545 if group call just let caller hang up if needed
                     if self.currentCall?.isGroup == true {
-                        /*if let title = self.currentCall?.calltitle { //IOSM-527b
-                            sendJoinMessage(from, callid: callid, calltitle: title)
-                        }*/
                         return
                     }
                     
@@ -2451,7 +2237,6 @@ extension CallManager {
                     performEndCallAction(uuid: uuid, userInitiated: false)
                 }
             } else if self.currentCall?.isGroup == true, let title = self.currentCall?.calltitle {
-                //sendJoinMessage(from, callid: callid, calltitle: title) //IOSM-527b
             }
         }
     }
@@ -2473,7 +2258,6 @@ extension CallManager {
     @objc public func reportCallBusy() {
         DDLogDebug("reportCallBusy")
         if (self.busyTone == true) {
-            //DDLogDebug("reportCallBusy already active with busy Tone")
             return //busy already in progress
         }
         
@@ -2482,7 +2266,7 @@ extension CallManager {
             player = try AVAudioPlayer(contentsOf: soundUrl, fileTypeHint: AVFileType.mp3.rawValue)
             player?.numberOfLoops = 2
         } catch _ {
-            return // if it doesn't exist, don't play it
+            return
         }
 
         guard let player = player else { return }
@@ -2502,7 +2286,7 @@ extension CallManager {
         do {
             player = try AVAudioPlayer(contentsOf: soundUrl, fileTypeHint: AVFileType.wav.rawValue)
         } catch _ {
-            return // if it doesn't exist, don't play it
+            return
         }
 
         guard let player = player else { return }
@@ -2521,11 +2305,9 @@ extension CallManager {
             performEndCallAction(uuid: uuid, userInitiated: false)
         } else {
             //no uuid so just cancel everything?
-            //DDLogInfo("***** reportCallCancelled no uuid")
         }
     }
     
-    //IOSM-527b (next 4)
     @objc public func reportCallEnded() { //non call originators
         callToJoin = nil
         self.statusDelegate?.joinStatusUpdated(false)
@@ -2542,7 +2324,7 @@ extension CallManager {
     }
     
     func performSendJoinAction(callid:String, calltitle:String) { //call originator
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { //if still connected after 3 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
             if let curcall = self.currentCall, curcall.isCaller {
                 //send join message. but to who? Original group or only one person? Much easier to send to group.
                 if let names = self.currentCall?.receiver?.components(separatedBy: ",") {
@@ -2598,7 +2380,6 @@ extension CallManager {
                 TwilioBackendManager.sharedMgr().queryCallHistory(4)
             }
         }
-        //DDLogInfo("***** performEndCallAction with \(uuid) and userInitiated \(userInitiated)")
         userInitiatedDisconnect = userInitiated
         
         let endCallAction = CXEndCallAction(call: uuid)
@@ -2610,7 +2391,6 @@ extension CallManager {
                 return
             }
 
-            //DDLogInfo("EndCallAction transaction request successful")
         }
     }
     
@@ -2628,7 +2408,6 @@ extension CallManager {
                 return
             }
 
-            //DDLogInfo("EndCallAction transaction request successful")
         }
     }
     
@@ -2636,7 +2415,7 @@ extension CallManager {
         self.isBusy = false
         self.busyTone = false
         
-        if !userInitiatedDisconnect { //}, let error = error {
+        if !userInitiatedDisconnect {
             var reason = CXCallEndedReason.remoteEnded
 
             if error != nil {
@@ -2711,7 +2490,6 @@ extension CallManager {
                     DDLogError("SetMutedCallAction transaction request failed: \(error.localizedDescription)")
                     return
                 }
-                //DDLogInfo("SetMutedCallAction transaction request successful")
             }
         }
     }
@@ -2727,7 +2505,6 @@ extension CallManager {
         }
         
         speakerChoice = isSelected ? .speaker : .receiver
-        //self.tvoaudioDevice.block = {
             do {
                 let audioSession = AVAudioSession.sharedInstance()
                 
@@ -2743,9 +2520,7 @@ extension CallManager {
             } catch {
                 DDLogInfo("Fail: \(error.localizedDescription)")
             }
-        //}
         
-        //self.tvoaudioDevice.block()
     }
     
     public func performSpeakerAction(selection: SpeakerChoice) {
@@ -2762,11 +2537,9 @@ extension CallManager {
             if session.currentRoute.outputs.contains(where: { $0.portType == .builtInSpeaker }) {
                 // Speaker is currently on → turn it off
                 try session.overrideOutputAudioPort(.none)
-                //speakerButton.setTitle("Speaker Off", for: .normal)
             } else {
                 // Speaker is off → turn it on
                 try session.overrideOutputAudioPort(.speaker)
-                //speakerButton.setTitle("Speaker On", for: .normal)
             }
         } catch {
             print("Failed to toggle speaker: \(error)")
@@ -2790,7 +2563,7 @@ extension CallManager {
     
     @objc public func performVideoAction() {
         if self.currentCall?.audioOnly == true {
-            return //won't do upgrade from the CallKit screen
+            return
         }
         
         DDLogInfo("Set Video On")
@@ -3043,18 +2816,7 @@ extension CallManager {
         return formatter.date(from: expires)
     }
     
-    /*
-     <message from='romeo@montague.example/orchard'
-              to='juliet@capulet.example'
-              type='chat'>
-       <propose xmlns='urn:xmpp:jingle-message:0' id='ca3cf894-5325-482f-a412-a6e9f832298d'>
-         <description xmlns='urn:xmpp:jingle:apps:rtp:1' media='audio'/>
-       </propose>
-       <store xmlns="urn:xmpp:hints"/>
-     </message>
-     */
     func sendJmiPropose(audioOnly:Bool) {
-        //DDLogInfo("***** Proposing new call via JMI")
         if let call = self.currentCall, let callid = call.callid, let receiver = call.receiver, let tojid = XMPPJID(string: receiver), let fromjid = self.xmppStream?.myJID?.full {
             let proposeElement = XMLElement(name: "propose", xmlns: CallManager.JINGLE_MESSAGE)
             proposeElement.addAttribute(withName: "id", stringValue: callid)
@@ -3075,14 +2837,6 @@ extension CallManager {
         }
     }
     
-    /*
-     <message from='juliet@capulet.example/phone'
-              to='romeo@montague.example'
-              type='chat'>
-       <ringing xmlns='urn:xmpp:jingle-message:0' id='ca3cf894-5325-482f-a412-a6e9f832298d'/>
-       <store xmlns="urn:xmpp:hints"/>
-     </message>
-     */
     public func sendJmiRinging() {
         guard let call = self.currentCall, let callid = call.callid, let callerjid = call.callerFullJID ?? call.caller, let tojid = XMPPJID(string: callerjid) else { return}
         
@@ -3117,7 +2871,6 @@ extension CallManager: NotificationDelegate {
                 DDLogInfo("***** Call invite received from verified caller number!")
             }
         }
-        //DDLogInfo("***** Call invite received with uuid \(callInvite.uuid) and sid \(callInvite.callSid)!")
         
         activeCallInvite = callInvite
         if let from = callInvite.from?.replacingOccurrences(of: "client:", with: "") {
@@ -3125,7 +2878,6 @@ extension CallManager: NotificationDelegate {
             let onCall = (self.currentCall != nil)
             self.reportIncomingCall(uuid: callInvite.uuid, callId: callId, caller: from, isVoice: true) { _ in
                 if self.activeCall != nil || onCall {
-                    //DDLogInfo("***** ending call from callInviteReceived")
                     self.endedCall = true
                     let endCallAction = CXEndCallAction(call: callInvite.uuid)
                     let transaction = CXTransaction(action: endCallAction)
@@ -3150,7 +2902,6 @@ extension CallManager: NotificationDelegate {
 
 extension CallManager: CXCallObserverDelegate {
     public func callObserver(_ callObserver: CXCallObserver, callChanged call: CXCall) {
-        //
     }
     
     // Method to check if there's any active call
@@ -3180,7 +2931,6 @@ extension CallManager: WebRTCClientDelegate {
         guard let call = self.currentCall else { return }
                 
         if let sdpMid = candidate.sdpMid, let iceCandidate = JingleUtility.parseIceCandidate(candidate.sdp) {
-            //print("***** didDiscoverLocalCandidate with mid \(sdpMid) and SDP: \(candidate.sdp)")
             self.syncQueue.sync {
                 if var candidates = self.currentCall?.iceCandidates[sdpMid] {
                     candidates.append(iceCandidate)
@@ -3210,7 +2960,6 @@ extension CallManager: WebRTCClientDelegate {
                 let transportInfo = JingleUtility.generateTransportInfo(candidates: [sdpMid:[iceCandidate]], ufrag: ufrag, pwd: pwd, initiator: initiator, responder: responder, sessionID: callid)
                 let iq = XMPPIQ.init(iqType: XMPPIQ.IQType.set, to: tojid, elementID: self.xmppStream?.generateUUID, child: transportInfo)
                 iq.addAttribute(withName: "from", stringValue: myjid)
-                //DDLogInfo("***** didDiscoverLocalCandidate sending: \(transportInfo)")
                 self.sendXmppElement(iq)
             }
         }
@@ -3218,11 +2967,9 @@ extension CallManager: WebRTCClientDelegate {
     
     func webRTCClient(_ client: WebRTCClient, didChangeConnectionState state: RTCIceConnectionState) {
         guard let call = self.currentCall, let uuid = call.callUuid else { return }
-        //if call.status == .finished { return}
         
         DDLogDebug("New RTCIceConnectionState \(state)")
         //we *always* want to cancel the running iceRestart timer once the state changes
-        //if(self.cancelWaitUntilIceRestart != nil)
             
         switch(state) {
         case .connected, .completed:
@@ -3274,16 +3021,12 @@ extension CallManager: WebRTCClientDelegate {
             DDLogDebug("New WebRTC ICE state: closed")
             break
         case .new:
-            //DDLogInfo("New WebRTC ICE state: new")
             break
         case .checking:
-            //DDLogInfo("New WebRTC ICE state: checking")
             break
         case .count:
-            //DDLogInfo("New WebRTC ICE state: count")
             break
         default:
-            //DDLogInfo("New WebRTC ICE state: UNKNOWN")
             break
         }
     }
@@ -3304,7 +3047,6 @@ extension CallManager: WebRTCClientDelegate {
     }
     
     func webRTCClient(_ client: WebRTCClient, didReceiveData data: Data) {
-        //
     }
     
     func webRTCClient(_ client: WebRTCClient, didAddVideo video: Bool) {

@@ -1,10 +1,6 @@
-//
-//  OTRSplitViewCoordinator.swift
 //  ChatSecure
-//
 //  Created by David Chiles on 11/30/15.
 //  Copyright © 2015 Chris Ballinger. All rights reserved.
-//
 
 import Foundation
 
@@ -111,10 +107,6 @@ open class OTRSplitViewCoordinator: NSObject, ConversationViewControllerDelegate
         //iPad check where there are two navigation controllers and we want the second one
         if splitVC.viewControllers.count > 1 && ((splitVC.viewControllers[1] as? UINavigationController)?.viewControllers.contains(cvc)) ?? false {
             //IOSM#20
-            //let navController = UINavigationController(rootViewController: cvc)
-            //navController.topViewController!.navigationItem.leftBarButtonItem = splitVC.displayModeButtonItem;
-            //navController.topViewController!.navigationItem.leftItemsSupplementBackButton = true;
-            //splitVC.viewControllers[1] = navController
             //redo this for current!
             splitVC.showDetailViewController(cvc, sender: nil)
         } else if splitVC.viewControllers.count == 1 && ((splitVC.viewControllers.first as? UINavigationController)?.viewControllers.contains(cvc)) ?? false {
@@ -148,7 +140,6 @@ open class OTRSplitViewCoordinator: NSObject, ConversationViewControllerDelegate
     public func groupBuddiesSelected(_ composeViewController: OTRComposeGroupViewController, buddyUniqueIds: [String], groupName: String) {
         
         var accountId:String? = nil
-        //let randomItem = Int(arc4random() % UInt32(buddyUniqueIds.count))
         let buddyKey = buddyUniqueIds[0]
         accountId = ChatBuddyModel.getBuddy(uniqueId: buddyKey)?.accountUniqueId
         
