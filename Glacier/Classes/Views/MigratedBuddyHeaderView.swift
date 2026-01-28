@@ -1,6 +1,10 @@
+//
+//  MigratedBuddyHeaderView.swift
 //  ChatSecure
+//
 //  Created by N-Pex on 2017-04-19.
 //  Copyright © 2017 Chris Ballinger. All rights reserved.
+//
 
 import UIKit
 

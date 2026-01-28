@@ -1,11 +1,19 @@
+//
+//  AttachmentsInputBarView.swift
 //  Glacier
+//
 //  Created by andyfriedman on 8/21/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
+//
+//  CameraInputBarAccessoryView.swift
 //  ChatExample
+//
 //  Created by Mohannad on 12/25/20.
 //  Modified by andyfriedman on 8/21/23.
 //  Copyright © 2020 MessageKit. All rights reserved.
+//
 
 import InputBarAccessoryView
 import UIKit
@@ -28,6 +36,7 @@ extension AttachmentsInputBarViewDelegate {
 class AttachmentsInputBarView: InputBarAccessoryView {
     
   // MARK: Lifecycle
+    //var attachmentPicker: OTRAttachmentPicker?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -94,6 +103,7 @@ extension AttachmentsInputBarView: PHPickerViewControllerDelegate {
 extension AttachmentsInputBarView: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
   @objc
   func showImagePickerControllerActionSheet() {
+      //self.attachmentPicker?.showAlertController(fromSourceView: self)
       let photoLibraryAction = UIAlertAction(title: "Choose From Library", style: .default) { [weak self] _ in
           self?.showImagePickerController(sourceType: .photoLibrary)
       }
@@ -114,6 +124,7 @@ extension AttachmentsInputBarView: UIImagePickerControllerDelegate, UINavigation
   func showImagePickerController(sourceType: UIImagePickerController.SourceType) {
       let imgPicker = UIImagePickerController()
       imgPicker.delegate = self
+      //imgPicker.allowsEditing = true
       imgPicker.sourceType = sourceType
     
       if sourceType == .photoLibrary {
@@ -132,13 +143,17 @@ extension AttachmentsInputBarView: UIImagePickerControllerDelegate, UINavigation
     didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any])
   {
     if let editedImage = info[UIImagePickerController.InfoKey.editedImage] as? UIImage {
+      // self.sendImageMessage(photo: editedImage)
       inputPlugins.forEach { _ = $0.handleInput(of: editedImage) }
     }
     else if let originImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage {
       inputPlugins.forEach { _ = $0.handleInput(of: originImage) }
+      // self.sendImageMessage(photo: originImage)
     } else if let videoUrl = info[.mediaURL] as? NSURL {
         //handleVideo
+        //self.handleVideoPicked(videoUrl)
         (self.delegate as? AttachmentsInputBarViewDelegate)?.didChooseVideo(with: videoUrl as URL)
+        //inputPlugins.forEach { _ = $0.handleInput(of: videoUrl) }
     }
     getRootViewController()?.dismiss(animated: true, completion: nil)
     inputAccessoryView?.isHidden = false

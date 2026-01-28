@@ -1,6 +1,10 @@
+//
+//  ShareViewController.swift
 //  ShareExtension
+//
 //  Created by Scott Fister on 4/24/17.
 //  Copyright © 2017 Scott Fister. All rights reserved.
+//
 import UIKit
 import Social
 import MobileCoreServices
@@ -9,6 +13,7 @@ import LinkPresentation
 
 class ShareViewController: SLComposeServiceViewController, ShareExtensionDelegate {
     
+    //private var url: NSURL?
     private var userConversations = [Conversation]()
     fileprivate var selectedConversation: Conversation?
     private var dataInterface: GlacierShareDataInterface?
@@ -25,6 +30,8 @@ class ShareViewController: SLComposeServiceViewController, ShareExtensionDelegat
     private var provider = LPMetadataProvider()
     private var sharectr: Int = 0
     private var hud:MBProgressHUD?
+    //private var disGroup:DispatchGroup?
+    //private var linkView = LPLinkView()
     
     override func isContentValid() -> Bool {
         // Do validation of contentText and/or NSExtensionContext attachments here
@@ -70,6 +77,7 @@ class ShareViewController: SLComposeServiceViewController, ShareExtensionDelegat
     override func loadPreviewView() -> UIView! {
         var previewView = super.loadPreviewView()
         if (previewView == nil && !isText) { 
+            //return self.linkView
             if let glacierImage = UIImage(named: "Safari", in: GlacierInfo.resourcesBundle, compatibleWith: nil) {
                 var image = glacierImage
                 image = glacierImage.withTintColor(UIColor.label)
@@ -155,23 +163,10 @@ class ShareViewController: SLComposeServiceViewController, ShareExtensionDelegat
                         attached.loadItem(forTypeIdentifier: kUTTypeText as String, options: nil, completionHandler: { (results, error) in
                             let text = results as! String
                             self.textString = text
+                            //_ = self.isContentValid()
                         })
                     }
                     
-                })
-            } else if attachment.isURL {
-                attachment.loadItem(forTypeIdentifier: kUTTypeURL as String, options: nil, completionHandler: { (results, error) in
-                    if let url = results as! URL? {
-                        self.textString = url.absoluteString
-                        self.urlString = url.absoluteString
-                        self.getLinkPreview(url)
-                    }
-                })
-            } else if attachment.isText {
-                self.isText = true
-                attachment.loadItem(forTypeIdentifier: kUTTypeText as String, options: nil, completionHandler: { (results, error) in
-                    let text = results as! String
-                    self.textString = text
                 })
             }
         }
@@ -180,6 +175,8 @@ class ShareViewController: SLComposeServiceViewController, ShareExtensionDelegat
     private func getLinkPreview(_ url:URL) {
         guard LinkPreviewHelper.isPermittedLinkPreviewUrl(url) else { return }
 
+        //self.linkView.removeFromSuperview()
+        //self.linkView = LPLinkView(url: url)
 
         DispatchQueue.main.async{ [weak self] in
             guard let self = self else { return }
@@ -235,6 +232,7 @@ class ShareViewController: SLComposeServiceViewController, ShareExtensionDelegat
             }
         }
         
+        //disGroup = DispatchGroup()
         sharectr = 1
         self.hud = nil
         
@@ -258,6 +256,7 @@ class ShareViewController: SLComposeServiceViewController, ShareExtensionDelegat
             present(alert, animated: true, completion: nil)
             return
         }
+        //_ = [ NSExtensionJavaScriptFinalizeArgumentKey : [ "statusMessage" : "Done Sending" ]]
         
         if (sharectr > 1) {
             sharectr = sharectr-1

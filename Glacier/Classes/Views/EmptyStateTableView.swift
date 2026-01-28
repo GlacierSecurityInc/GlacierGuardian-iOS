@@ -1,5 +1,11 @@
+//
+//  EmptyStateTableView.swift
+//
 //  Created by Sauvik Dolui on 13/10/17 as SDStateTableView
+//    see https://github.com/sauvikdolui/SDStateTableView
+//
 //  Modified by andyfriedman on 5/19/23.
+//
 
 import Foundation
 public enum TableViewState {
@@ -32,6 +38,8 @@ public class EmptyStateTableView: UITableView {
     }
     
     /// Determines whether scrolling is enabled even when there is not data
+    ///
+    /// Note:   Default value is false, i.e. scrolling is not available when there is not data
     @IBInspectable
     public var shouldScrollWithNoData: Bool = false {
         didSet {
@@ -331,6 +339,7 @@ public extension UIView {
     }
     
     
+    //
     func _layoutWith(size: CGSize?, topLeftOffset: CGPoint) {
         
         _setSize(size: size)

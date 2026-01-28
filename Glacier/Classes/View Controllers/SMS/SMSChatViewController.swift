@@ -1,6 +1,10 @@
+//
+//  SMSChatViewController.swift
 //  Glacier
+//
 //  Created by andyfriedman on 8/18/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import InputBarAccessoryView
 import MessageKit
@@ -32,10 +36,14 @@ class SMSChatViewController: MessagesViewController, MessagesDataSource {
     lazy var floaty = Floaty()
     var phoneButton:UIButton = UIButton(type: .custom)
     
+    //open lazy var chatInputBar = AttachmentsInputBarView()
     
+    //private var dataSource: MessageDataSource!
     private var msgCancellable: DatabaseCancellable?
     
+    //private enum SMSSectionID: Differentiable, CaseIterable {
     //    case first
+    //}
 
     private typealias SMSSection = ArraySection<Int64, SMSChatMessage>
     private var smsdata:[SMSSection] = []
@@ -46,6 +54,7 @@ class SMSChatViewController: MessagesViewController, MessagesDataSource {
                 // whenever this dataInput gets assigned a new data, this block of code will run and update the collectionView or tableView with the new changes in the data set.
                 var changeset = StagedChangeset(source: self.smsdata, target: newValue)
                 
+                //there is a bug that when elements are deleted and then added (0 elements in a section), it crashes with InternalInconsistencyException. We try to change added/deleted to updated. This is a bit hacky because we assume if the collections are the same size and have same first element id, this is the scenario
                 var deleteds:[DifferenceKit.ElementPath] = []
                 var dindex = 0
                 var addeds:[DifferenceKit.ElementPath] = []
@@ -139,6 +148,7 @@ class SMSChatViewController: MessagesViewController, MessagesDataSource {
             action: #selector(backTapped)
         )
         
+        //self.attachmentPicker = OTRAttachmentPicker.init(parentViewController: self, delegate: self)
         configureMessageCollectionView()
         configureMessageInputBar()
         
@@ -174,9 +184,11 @@ class SMSChatViewController: MessagesViewController, MessagesDataSource {
             self.getAvatarImages()
             self.messagesCollectionView.setContentOffset(CGPointZero, animated: false)
             self.messageInputBar.inputTextView.placeholder = "Send SMS message"
+            //self.smsdata = [ArraySection(model: .first, elements: [])]
             
             self.observeConversations()
             
+            //self.inputToolbar?.contentView?.textView.isEditable = true
         }
     }
 
@@ -288,11 +300,13 @@ class SMSChatViewController: MessagesViewController, MessagesDataSource {
         messagesCollectionView.messageCellDelegate = self
 
         scrollsToLastItemOnKeyboardBeginsEditing = true // default false
+        //meeaintainPositionOnInputBarHeightChanged = true // default false
         showMessageTimestampOnSwipeLeft = true // default false
       
         messagesCollectionView.messagesLayoutDelegate = self
         messagesCollectionView.messagesDisplayDelegate = self
 
+        //messagesCollectionView.refreshControl = refreshControl
     }
     
     func textCellSizeCalculator(for _: MessageType, at _: IndexPath, in _: MessagesCollectionView) -> CellSizeCalculator? {
@@ -346,11 +360,16 @@ class SMSChatViewController: MessagesViewController, MessagesDataSource {
         var asec:[SMSSection] = []
         for msg in messages {
             asec.append(ArraySection(model: msg.id!, elements: [msg]))
+            //asec.insert(ArraySection(model: msg.id!, elements: [msg]), at: 0)
         }
         
         self.dataInput = asec
         
+        //self.dataInput = [ArraySection(model: .first, elements: messages)]
         
+        //if self.isLastSectionVisible() == true {
+        //  self.messagesCollectionView.scrollToLastItem(animated: true)
+        //}
     }
     
     private func observeConversations() {
@@ -359,7 +378,7 @@ class SMSChatViewController: MessagesViewController, MessagesDataSource {
         msgCancellable?.cancel()
         
         if let convid = self.conversation?.uniqueId {
-            request = SMSChatMessage.all().filter(Column("conversationId") == convid)
+            request = SMSChatMessage.all().filter(Column("conversationId") == convid)//.order(Column("messageDate").asc)
         } else {
             return
         }
@@ -415,7 +434,7 @@ class SMSChatViewController: MessagesViewController, MessagesDataSource {
     }
 
     func numberOfSections(in _: MessagesCollectionView) -> Int {
-        self.dataInput.count
+        self.dataInput.count //self.dataInput[0].elements.count
     }
     
     
@@ -490,6 +509,7 @@ class SMSChatViewController: MessagesViewController, MessagesDataSource {
 
 extension SMSChatViewController {
     @objc func didSelectPhoneButton(sender: Any!) {
+        //var callBuddies:[String] = []
         guard let callnum = self.conversation?.grdbRecord?.remoteNumber, let name = self.navigationItem.title else {
             return
         }
@@ -619,6 +639,7 @@ extension SMSChatViewController: InputBarAccessoryViewDelegate {
             return
         }
 
+        //let components = inputBar.inputTextView.components
         inputBar.inputTextView.text = String()
         inputBar.invalidatePlugins()
         // Send button activity animation
@@ -633,6 +654,7 @@ extension SMSChatViewController: InputBarAccessoryViewDelegate {
     
         inputBar.sendButton.stopAnimating()
         inputBar.inputTextView.placeholder = "Send SMS message"
+        //self.insertMessages(components)
         self.messagesCollectionView.scrollToLastItem(animated: true)
     }
     
@@ -707,6 +729,10 @@ extension SMSChatViewController: MessagesDisplayDelegate {
                         let mediaSize = ChatMediaItem.normalizeWidth(width: img.image.size.width, height: img.image.size.height)
                         resizedImage = img.image.scaleImageWith(newSize: mediaSize)
                         idata = resizedImage.jpegData(dataSize: .unlimited)
+                        //if chatimg.curSize != resizedImage.size {
+                        //    chatimg.setSize(size: resizedImage.size)
+                        //    chatimg.save {}
+                        //}
                         
                         let optionsInfo:KingfisherOptionsInfo = [.cacheMemoryOnly,
                                                                  .memoryCacheExpiration(.days(14)),
@@ -716,6 +742,7 @@ extension SMSChatViewController: MessagesDisplayDelegate {
                         GlacierImageCache.shared().store(resizedImage, original: idata, forKey: thumbnailKey, options: options, toDisk: false, completionHandler: {_ in
                             
                             let resource = KF.ImageResource(downloadURL: imageURL, cacheKey: thumbnailKey)
+                            //imageView.kf.indicatorType = .activity
                             imageView.kf.setImage(with: resource, options: optionsInfo) { result in
                                 switch result {
                                 case .success(_):
@@ -766,6 +793,7 @@ extension SMSChatViewController: AttachmentsInputBarViewDelegate {
     }
     
     func didChooseVideo(with url: URL) {
+        //
     }
     
     func inputBar(_ inputBar: InputBarAccessoryView, didPressSendButtonWith attachments: [AttachmentManager.Attachment]) {

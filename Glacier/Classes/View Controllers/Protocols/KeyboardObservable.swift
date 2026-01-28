@@ -1,6 +1,10 @@
+//
+//  KeyboardObservable.swift
 //  Glacier
+//
 //  Created by Prem Pratap Singh on 21/11/25.
 //  Copyright © 2025 Glacier. All rights reserved.
+//
 
 /**
  KeyboardObservable protocol provides the API for getting keyboard's current height property. Any UIViewController that needs

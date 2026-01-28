@@ -1,8 +1,11 @@
+//
+//  CoreDetailsViewController.swift
 //  Created by Andy Friedman on 1/28/20.
 //  Copyright © 2020 Glacier Security. All rights reserved.
 
 import UIKit
 import NetworkExtension
+//import SystemConfiguration.CaptiveNetwork
 
 open class CoreDetailsViewController: UITableViewController {
     
@@ -163,6 +166,7 @@ open class CoreDetailsViewController: UITableViewController {
             selectedRow = indexPath.row
             
             if selectedRow == 0 {
+                //hidden = true
                 handleHideSelection(indexPath)
             } else {
                 hidden = false
@@ -254,6 +258,8 @@ open class CoreDetailsViewController: UITableViewController {
             if let error = error {
                 ErrorPresenter.showErrorAlert(error: error, from: self)
             }
+            //self?.ssids.removeAll()
+            //self?.tableView.reloadData()
         }
     }
     
@@ -271,6 +277,7 @@ open class CoreDetailsViewController: UITableViewController {
             if let error = error {
                 ErrorPresenter.showErrorAlert(error: error, from: self)
             }
+            //self?.tableView.reloadData()
         }
     }
 }

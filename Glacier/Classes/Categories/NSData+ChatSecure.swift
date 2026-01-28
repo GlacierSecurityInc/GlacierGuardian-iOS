@@ -1,6 +1,10 @@
+//
+//  NSData+ChatSecure.swift
 //  ChatSecure
+//
 //  Created by David Chiles on 2/16/17.
 //  Copyright © 2017 Chris Ballinger. All rights reserved.
+//
 
 import Foundation
 
@@ -12,14 +16,19 @@ public extension NSData {
 }
 
 public extension Data {
+    //https://stackoverflow.com/questions/39075043/how-to-convert-data-to-hex-string-in-swift/40089462#40089462
     func toHexString() -> String {
         return map { String(format: "%02hhx", $0) }.joined()
     }
 }
 
+// http://stackoverflow.com/a/26502285/805882
 public extension NSString {
     
     /// Create `Data` from hexadecimal string representation
+    ///
+    /// This takes a hexadecimal representation and creates a `Data` object. Note, if the string has any spaces or non-hex characters (e.g. starts with '<' and with a '>'), those are ignored and only hex characters are processed.
+    ///
     /// - returns: Data represented by this hexadecimal string.
     
     @objc func dataFromHex() -> Data? {

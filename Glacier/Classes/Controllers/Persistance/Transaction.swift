@@ -1,9 +1,14 @@
+//
+//  Transaction.swift
 //  Glacier
+//
 //  Created by andyfriedman on 1/9/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import GRDB
+//import LibSignalClient
 
 // MARK: - Any*Transaction
 
@@ -93,6 +98,7 @@ public class GRDBWriteTransaction: GRDBReadTransaction {
                                                      block: @escaping TransactionFinalizationBlock) {
         guard !removedFinalizationKeys.contains(key) else {
             // We shouldn't be adding finalizations for removed keys,
+            // e.g. touching removed entities.
             DDLogDebug("Finalization unexpectedly added for removed key.")
             return
         }
@@ -102,6 +108,9 @@ public class GRDBWriteTransaction: GRDBReadTransaction {
             return
         }
         if transactionFinalizationBlocks[key] != nil {
+            //if !DebugFlags.reduceLogChatter {
+            //    Logger.verbose("De-duplicating.")
+            //}
         }
         // Always overwrite; we want to use the _last_ block.
         // For example, in the case of touching thread, a given
@@ -137,6 +146,8 @@ public extension GRDBWriteTransaction {
         }
     }
 
+    // This has significant perf benefits over database.execute()
+    // for queries that we perform repeatedly.
     func executeWithCachedStatement(sql: String,
                                     arguments: StatementArguments = StatementArguments()) {
         do {
@@ -165,7 +176,10 @@ public extension GRDB.Database {
 // MARK: -
 
 private func handleFatalDatabaseError(_ error: Error) -> Never {
+    //DatabaseCorruptionState.flagDatabaseCorruptionIfNecessary(
+    //    userDefaults: CurrentAppContext().appUserDefaults(),
     //    error: error
+    //)
     fatalError("Error: \(error)")
 }
 

@@ -1,6 +1,10 @@
+//
+//  SecurityCenterTableViewController.swift
 //  Glacier
+//
 //  Created by andyfriedman on 3/1/22.
 //  Copyright © 2022 Glacier. All rights reserved.
+//
 //IOSM#19
 
 import UIKit
@@ -123,6 +127,7 @@ open class SecurityCenterTableViewController: UITableViewController {
         securityTable.estimatedRowHeight = CGFloat(80)
         securityTable.rowHeight = UITableView.automaticDimension
         
+        //self.doSecurityChecks() //moved to ViewDidAppear
     }
     
     open override func viewDidAppear(_ animated: Bool) { //IOSM#99
@@ -193,6 +198,7 @@ open class SecurityCenterTableViewController: UITableViewController {
                 shielded = false
             } else if IOSSecuritySuite.amIDebugged() {
                 systemContent.secondaryText = "Shows signs of being debugged"
+                //shielded = false
             } else if IOSSecuritySuite.amIReverseEngineered() {
                 systemContent.secondaryText = "Shows signs of being reverse engineered"
                 shielded = false

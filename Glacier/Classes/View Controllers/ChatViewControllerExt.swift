@@ -1,6 +1,10 @@
+//
+//  ChatViewControllerExt.swift
 //  Glacier
+//
 //  Created by andyfriedman on 11/6/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import PureLayout
@@ -28,6 +32,10 @@ import MapKit
     var lastLoc:CLLocationCoordinate2D?
     var awaitingLocationPermission = false
     let annotation = MKPointAnnotation()
+    //var pointAnnotationManager:PointAnnotationManager?
+    //let puck = Puck2DConfiguration.makeDefault()
+    //private var locationTrackingCancellation: AnyCancelable?
+    //let locationProvider = AppleLocationProvider()
     
     // expiring messages
     var timePickerView:UIPickerView?
@@ -62,6 +70,7 @@ import MapKit
         self.hourglassButton.addTarget(self, action: #selector(hourglassButtonTouched), for: UIControl.Event.touchUpInside)
         
         // share location
+        //self.locReady = false;
         self.btnMapShare = UIBarButtonItem(title: "Locating...", style: .plain, target: self, action: #selector(shareLocation))
         self.lastLoc = kCLLocationCoordinate2DInvalid
         self.initMapStuff()
@@ -78,6 +87,7 @@ import MapKit
         self.mapView = MKMapView(frame: self.view.bounds)
         self.mapView?.overrideUserInterfaceStyle = .dark
         self.mapView?.delegate = self
+        //LocationManager.shared().addLocationDelegate(self)
         self.mapView?.userTrackingMode = .follow
         self.mapView?.showsUserLocation = true
         self.locationManager.delegate = self
@@ -85,6 +95,7 @@ import MapKit
 
     deinit {
         NotificationCenter.default.removeObserver(self)
+        //LocationManager.shared().removeLocationDelegate(self)
     }
 
     open override func viewWillAppear(_ animated:Bool) {
@@ -109,9 +120,11 @@ import MapKit
             }
         } else {
             self.locationManager.stopUpdatingLocation()
+            //LocationManager.shared().toggleLocationUpdates(false)
             if self.locbar != nil {
                 self.cancelLocation()
             }
+            //print("***** Turned OFF location I think")
         }
     }
 
@@ -164,6 +177,10 @@ import MapKit
         if let holdBtn = self.hold2TalkButton {
             let offset = 1.0
             holdBtn.autoPinEdgesToSuperviewEdges()
+            //holdBtn.autoPinEdge(.leading, to:.leading, of:textView, withOffset:0)
+            //holdBtn.autoPinEdge(.trailing, to:.trailing, of:textView, withOffset:0)
+            //holdBtn.autoPinEdge(.top, to:.top, of:textView, withOffset:0)
+            //holdBtn.autoPinEdge(.bottom, to:.bottom, of:textView, withOffset:0)
             let tvwidth = textView.widthAnchor
             holdBtn.widthAnchor.constraint(equalTo: tvwidth).isActive = true
         }
@@ -238,6 +255,7 @@ import MapKit
         self.removePush2TalkButton()
         self.removeRecordingBackgroundView()
         self.removeTrashViewItems()
+        //self.messageInputBar.contentView.leftBarButtonItem = nil
     }
 
     // MARK: OTRHoldToTalkViewStateDelegate
@@ -321,6 +339,7 @@ import MapKit
                     do {
                         try FileManager.default.removeItem(atPath: urlpath)
                     } catch {
+                        //
                     }
                 }
             } else {
@@ -359,6 +378,7 @@ import MapKit
             do {
                 try FileManager.default.removeItem(atPath: urlpath)
             } catch {
+                //
             }
         }
         self.removeTrashViewItems()
@@ -436,7 +456,9 @@ import MapKit
     func attachmentPicker(_ attachmentPicker:OTRAttachmentPicker, shareLocationButtonPressed locationURL:URL)
     {
         self.dsQueue.async {
+            //if self.locationTrackingCancellation == nil {
                 self.turnOnOffLocation(true)
+            //}
             
             if self.needsLocationPermission() {
                 self.awaitingLocationPermission = true //IOSM#26
@@ -460,13 +482,18 @@ import MapKit
         if let userLocation = mapView.view(for: mapView.userLocation) {
             userLocation.isHidden = false
         }
+        //mapView.camera.centerCoordinateDistance = 3000
         
         self.view.insertSubview(mapView, belowSubview:locbar)
         mapView.autoPinEdgesToSuperviewEdges(with: .zero)
         
-        if let latestLoc = self.lastLoc {
+        if let latestLoc = self.lastLoc {//self.mapView?.location.latestLocation {
             self.btnMapShare?.title = "Share Location"
             
+            //let coordinate = CLLocationCoordinate2DMake(latestLoc.latitude, latestLoc.longitude)
+            //mapView.removeAnnotation(annotation)
+            //annotation.coordinate = coordinate
+            //mapView.addAnnotation(annotation)
             
         }
     }
@@ -474,6 +501,7 @@ import MapKit
     func addLocationViewBtns(_ shareable:Bool) {
         self.locbar = UIToolbar.init(forAutoLayout: ())
         guard let locbar = self.locbar else {return}
+        //locbar.sizeToFit()
         var barItems:[UIBarButtonItem] = []
         
         let btnCancel = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(cancelLocation))
@@ -513,6 +541,7 @@ import MapKit
 
     @objc func cancelLocation() {
         self.mapView?.userTrackingMode = .none
+        //mapView?.removeAnnotation(annotation)
         
         self.awaitingLocationPermission = false
         self.locbar?.removeFromSuperview()
@@ -555,9 +584,11 @@ import MapKit
         mapView.userTrackingMode = .none
         
         let coordinate = CLLocationCoordinate2DMake(latd, lond)
+        //mapView.setCenter(coordinate, animated: true)
         
         mapView.removeAnnotation(annotation)
         
+        //var annotation = PointAnnotation(coordinate: coordinate)
         annotation.coordinate = coordinate
         
         var text = self.getThreadName()
@@ -570,9 +601,12 @@ import MapKit
         }
 
         mapView.addAnnotation(annotation)
+        //self.mapView?.camera.centerCoordinate = coordinate
         var region = MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 2, longitudeDelta: 2))
         self.mapView?.region = region
         
+        //let camera = MKMapCamera(lookingAtCenter: coordinate, fromDistance: 1000, pitch: 0, heading: 0)
+        //mapView.setCamera(camera, animated: true)
     }
     //END share location functions
 
@@ -583,11 +617,12 @@ import MapKit
         messageInputBar.inputTextView.text = nil
         
         let keyboardImg = UIImage(systemName: "keyboard")?.withRenderingMode(.alwaysTemplate)
-        messageInputBar.sendButton.image = keyboardImg
-        messageInputBar.sendButton.title = nil
+        messageInputBar.sendButton.image = keyboardImg// setImage(keyboardImg, for: .normal)
+        messageInputBar.sendButton.title = nil// setTitle(nil, for: .normal)
         messageInputBar.sendButton.tintColor = UIColor.bubbleBlue()
         messageInputBar.sendButton.isEnabled = true
         self.addPush2TalkButton()
+        //self.inputToolbar.contentView.setNeedsUpdateConstraints()
     }
 
     // expiring message related functions here to end
@@ -618,6 +653,7 @@ import MapKit
             self.timePickerView?.addSubview(lblHeader)
         }
         
+        //self.inputToolbar.contentView.rightBarButtonItem = self.sendButton
         
         self.timePickerTextField = UITextField(frame: CGRectZero)
         self.view.addSubview(self.timePickerTextField!)
@@ -654,6 +690,7 @@ import MapKit
         self.updateTimeButton()
     }
 
+    // called when initializing view or reentering view (viewWillAppear)
     func updateTimeButton() {
         
         switch self.currentTimeSelectedRow()
@@ -793,7 +830,9 @@ extension ChatViewControllerExt : CLLocationManagerDelegate {
             if let last = self.lastLoc, CLLocationCoordinate2DIsValid(last) {
                 self.mapView?.camera.centerCoordinate = last
             }
+            //if let account = self.getAccount(), account.trackingOn == false {
                 self.locationManager.startUpdatingLocation()
+            //}
         }
     }
 }

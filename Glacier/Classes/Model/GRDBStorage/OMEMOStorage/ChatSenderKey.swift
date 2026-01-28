@@ -1,11 +1,16 @@
+//
+//  ChatSenderKey.swift
 //  Glacier
+//
 //  Created by andyfriedman on 12/13/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import GRDB
 
 public struct ChatSenderKey: GRDBRecord, TableRecord {
+    //public protocol ChatThread: AnyObject {
     public var id: Int64?
     public var uniqueId: String
     var accountKey: String
@@ -13,6 +18,7 @@ public struct ChatSenderKey: GRDBRecord, TableRecord {
     var deviceId: Int32
     var groupId: String
     var senderKey: Data
+    //var modified: Date?
     
     public init(accountKey:String, name:String, deviceId:Int32, groupId:String, senderKey:Data) {
         self.uniqueId = Self.uniqueKey(from: accountKey, name: name, deviceId: deviceId, groupId: groupId)

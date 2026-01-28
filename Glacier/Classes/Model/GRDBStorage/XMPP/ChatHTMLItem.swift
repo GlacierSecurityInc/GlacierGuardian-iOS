@@ -1,6 +1,10 @@
+//
+//  ChatHTMLItem.swift
 //  Glacier
+//
 //  Created by andyfriedman on 9/21/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import MessageKit
@@ -17,12 +21,16 @@ import Kingfisher
     static let contentPreviewWidth: CGFloat = 250
     static let contentPreviewHeight: CGFloat = 168
     
+    //static let htmlQueue = DispatchQueue(label: "HTML Queue")
     private static var fetching = Set<String>()
     lazy private var provider = LPMetadataProvider()
     private var metadata:LPLinkMetadata?
     var linkView = LPLinkView()
+    //let imgSize = CGSize(width: Self.contentPreviewWidth, height: Self.contentPreviewHeight)
     
+    //let placeholderImage = UIImage()
     
+    //self.grdbRecord?.mediaType = ChatMediaType.htmlItem.rawValue
     required public init(filename: String, mimetype: String?, isIncoming: Bool) {
         super.init(filename: filename, mimetype: mimetype, isIncoming: isIncoming)
         self.curSize = CGSize(width: Self.contentPreviewWidth, height: Self.contentPreviewHeight)
@@ -48,7 +56,7 @@ extension ChatHTMLItem: MediaItem {
         if let hstr = self.getFilename(), let hurl = URL(string: hstr.trimmingCharacters(in: .whitespaces)) {
             return hurl
         }
-        return nil
+        return nil //self.mediaServerURL()
     }
     
     public var image: UIImage? {
@@ -58,6 +66,7 @@ extension ChatHTMLItem: MediaItem {
         
         let thumbnailKey = "\(parentKey)-thumb"
         if let chatImg = cache.retrieveImageInMemoryCache(forKey: thumbnailKey) {
+            //print("***** Image is in cache with size \(chatImg.size)")
             return chatImg
         }
         
@@ -71,6 +80,7 @@ extension ChatHTMLItem: MediaItem {
             return UIImage()
         }
         
+        //let thumbnailKey =  String(format: "%@-thumb", parentKey)
         preview.setFile(self.grdbRecord!.filename)
         preview.configure(titleText: "", fileName: "", shouldShowIcon: false)
         
@@ -94,6 +104,7 @@ extension ChatHTMLItem: MediaItem {
     }
     
     public var size: CGSize {
+        //print("***** Getting size with cursize \(self.curSize)")
         if let msize = self.mediaSize {
             return msize
         }
@@ -103,6 +114,7 @@ extension ChatHTMLItem: MediaItem {
         let thumbnailKey = "\(parentKey)-thumb"
         
         if let chatImg = cache.retrieveImageInMemoryCache(forKey: thumbnailKey) {
+            //print("***** html size for \(parentKey) is \(chatImg.size)")
             return chatImg.size
         }
         
@@ -127,6 +139,7 @@ extension ChatHTMLItem: MediaItem {
         } else {
             self.linkView.backgroundColor = UIColor.bubbleBlue()
             self.linkView.tintColor = UIColor.bubbleBlue()
+            //self.linkView.setOutgoing(true)
         }
                 
         let renderer = UIGraphicsImageRenderer(size: self.linkView.bounds.size)
@@ -225,6 +238,7 @@ extension ChatHTMLItem: MediaItem {
             self.save {}
             if let budid = buddyId {
                 OTRMediaFileManager.sharedInstance().setData(data, forChatItem: self, buddyUniqueId: budid, completion: { (bytesWritten, error) in
+                    //print("***** html stored in mediaServer with bytesWritten \(bytesWritten)")
                     Self.htmlCache.removeObject(forKey: self.uniqueId as NSString)
                 }, completionQueue: nil)
             }
@@ -264,6 +278,7 @@ extension ChatHTMLItem {
             cacheImage.title = title
             cacheImage.url = url
             
+            //self.htmlCache.setObject(cacheImage, forKey: identifier as NSString)
             
         } else {
             self.removeHtmlItemWithIdentifier(identifier)

@@ -1,6 +1,10 @@
+//
+//  String+NameInitials.swift
 //  Glacier
+//
 //  Created by Prem Pratap Singh on 12/11/25.
 //  Copyright © 2025 Glacier. All rights reserved.
+//
 
 import Foundation
 

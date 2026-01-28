@@ -1,6 +1,10 @@
+//
+//  DNSDetailsViewController.swift
 //  Glacier
+//
 //  Created by andyfriedman on 9/24/24.
 //  Copyright © 2024 Glacier. All rights reserved.
+//
 
 import UIKit
 import WireGuardKit
@@ -54,6 +58,7 @@ open class DnsDetailsViewController: UITableViewController {
                 self.tunnelDnsCell.detailTextLabel?.text = dns
                 self.saveUpdatedTunnel()
             }
+            //self.startSpinner()
             //runtimeConfig?
             self.tableView.reloadData()
         }))
@@ -94,6 +99,7 @@ open class DnsDetailsViewController: UITableViewController {
                 self.tunnelDnsCell.detailTextLabel?.text = dns
                 self.saveUpdatedTunnel()
             }
+            //self.startSpinner()
             //runtimeConfig?
             self.tableView.reloadData()
         }))

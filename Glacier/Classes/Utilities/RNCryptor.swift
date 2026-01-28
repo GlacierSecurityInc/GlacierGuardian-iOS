@@ -1,12 +1,20 @@
+//
+//  RNCryptor.swift
+//
 //  Copyright © 2015 Rob Napier. All rights reserved.
+//
 //  This code is licensed under the MIT License:
+//
 //  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
 //  the rights to use, copy, modify, merge, publish, distribute, sublicense,
 //  and/or sell copies of the Software, and to permit persons to whom the
 //  Software is furnished to do so, subject to the following conditions:
+//
 //  The above copyright notice and this permission notice shall be included in
 //  all copies or substantial portions of the Software.
+//
 //  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 //  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 //  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -14,6 +22,7 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
+//
 
 import Foundation
 import CommonCrypto
@@ -22,19 +31,33 @@ import CommonCrypto
 /// The `RNCryptorType` protocol defines generic API to a mutable,
 /// incremental, password-based encryptor or decryptor. Its generic
 /// usage is as follows:
+///
+///     let cryptor = Encryptor(password: "mypassword")
+///     // or Decryptor()
+///
+///     var result = Data()
+///     for data in datas {
+///         result.appendData(try cryptor.update(data))
+///     }
+///     result.appendData(try cryptor.final())
+///
+///  After calling `finalData()`, the cryptor is no longer valid.
 public protocol RNCryptorType {
 
     /// Creates and returns a cryptor.
+    ///
     /// - parameter password: Non-empty password string. This will be interpretted as UTF-8.
     init(password: String)
 
     /// Updates cryptor with data and returns processed data.
+    ///
     /// - parameter data: Data to process. May be empty.
     /// - throws: `Error`
     /// - returns: Processed data. May be empty.
     func update(withData data: Data) throws -> Data
 
     /// Returns trailing data and invalidates the cryptor.
+    ///
     /// - throws: `Error`
     /// - returns: Trailing data
     func finalData() throws -> Data
@@ -43,7 +66,10 @@ public protocol RNCryptorType {
 public extension RNCryptorType {
     /// Simplified, generic interface to `RNCryptorType`. Takes a data,
     /// returns a processed data. Generally you should use
+    /// `RNCryptor.encrypt(data:withPassword:)`, or
+    /// `RNCryptor.decrypt(data:withPassword:)` instead, but this is useful
     /// for code that is neutral on whether it is encrypting or decrypting.
+    ///
     /// - throws: `Error`
     fileprivate func oneshot(data: Data) throws -> Data {
         var result = try update(withData: data)
@@ -64,6 +90,7 @@ public enum RNCryptor {
         /// Unrecognized data format. Usually this means the data is corrupt.
         case unknownHeader = 2
 
+        /// `final()` was called before sufficient data was passed to `update(withData:)`
         case messageTooShort
 
         /// Memory allocation failure. This should never happen.
@@ -99,10 +126,12 @@ public enum RNCryptor {
     /// A encryptor for the latest data format. If compatibility with other RNCryptor
     /// implementations is required, you may wish to use the specific encryptor version rather
     /// than accepting "latest."
+    ///
     public final class Encryptor: RNCryptorType {
         private let encryptor: EncryptorV3
 
         /// Creates and returns a cryptor.
+        ///
         /// - parameter password: Non-empty password string. This will be interpretted as UTF-8.
         public init(password: String) {
             precondition(password != "")
@@ -110,6 +139,7 @@ public enum RNCryptor {
         }
 
         /// Updates cryptor with data and returns processed data.
+        ///
         /// - parameter data: Data to process. May be empty.
         /// - returns: Processed data. May be empty.
         public func update(withData data: Data) -> Data {
@@ -117,6 +147,7 @@ public enum RNCryptor {
         }
 
         /// Returns trailing data and invalidates the cryptor.
+        ///
         /// - returns: Trailing data
         public func finalData() -> Data {
             return encryptor.finalData()
@@ -138,6 +169,7 @@ public enum RNCryptor {
         private let password: String
 
         /// Creates and returns a cryptor.
+        ///
         /// - parameter password: Non-empty password string. This will be interpretted as UTF-8.
         public init(password: String) {
             assert(password != "")
@@ -152,6 +184,7 @@ public enum RNCryptor {
         }
 
         /// Updates cryptor with data and returns processed data.
+        ///
         /// - parameter data: Data to process. May be empty.
         /// - throws: `Error`
         /// - returns: Processed data. May be empty.
@@ -180,6 +213,7 @@ public enum RNCryptor {
         }
 
         /// Returns trailing data and invalidates the cryptor.
+        ///
         /// - throws: `Error`
         /// - returns: Trailing data
         public func finalData() throws -> Data {
@@ -204,6 +238,8 @@ public extension RNCryptor {
         /// Generate a key from a password and salt
         /// - parameters:
         ///     - password: Password to convert
+        ///     - salt: Salt. Generally constructed with RNCryptor.randomDataOfLength(FormatV3.saltSize)
+        /// - returns: Key of length FormatV3.keySize
         public static func makeKey(forPassword password: String, withSalt salt: Data) -> Data {
 
             let passwordArray = password.utf8.map(Int8.init)
@@ -238,6 +274,7 @@ public extension RNCryptor {
     }
 
     /// Format version 3 encryptor. Use this to ensure a specific format verison
+    /// or when using keys (which are inherrently versions-specific). To use
     /// "the latest encryptor" with a password, use `Encryptor` instead.
     final class EncryptorV3 : RNCryptorType {
         private let engine: Engine
@@ -245,6 +282,7 @@ public extension RNCryptor {
         private var pendingHeader: Data?
 
         /// Creates and returns an encryptor.
+        ///
         /// - parameter password: Non-empty password string. This will be interpretted as UTF-8.
         public convenience init(password: String) {
             self.init(
@@ -255,9 +293,19 @@ public extension RNCryptor {
         }
 
         /// Creates and returns an encryptor using keys.
+        ///
         /// - Attention: This method requires some expertise to use correctly.
+        ///              Most users should use `init(password:)` which is simpler
         ///              to use securely.
+        ///
+        /// Keys should not be generated directly from strings (`.dataUsingEncoding()` or similar).
+        /// Ideally, keys should be random (`Cryptor.randomDataOfLength()` or some other high-quality
+        /// random generator. If keys must be generated from strings, then use `FormatV3.keyForPassword(salt:)`
+        /// with a random salt, or just use password-based encryption (that's what it's for).
+        ///
         /// - parameters:
+        ///     - encryptionKey: AES-256 key. Must be exactly FormatV3.keySize (kCCKeySizeAES256, 32 bytes)
+        ///     - hmacKey: HMAC key. Must be exactly FormatV3.keySize (kCCKeySizeAES256, 32 bytes)
         public convenience init(encryptionKey: Data, hmacKey: Data) {
             self.init(encryptionKey: encryptionKey, hmacKey: hmacKey, iv: RNCryptor.randomData(ofLength: V3.ivSize))
         }
@@ -268,6 +316,7 @@ public extension RNCryptor {
         }
 
         /// Updates cryptor with data and returns encrypted data.
+        ///
         /// - parameter data: Data to process. May be empty.
         /// - returns: Processed data. May be empty.
         public func update(withData data: Data) -> Data {
@@ -276,6 +325,7 @@ public extension RNCryptor {
         }
 
         /// Returns trailing data and invalidates the cryptor.
+        ///
         /// - returns: Trailing data
         public func finalData() -> Data {
             var result = handle(data: engine.finalData())
@@ -329,30 +379,39 @@ public extension RNCryptor {
     }
 
     /// Format version 3 decryptor. This is required in order to decrypt
+    /// using keys (since key configuration is version-specific). For password
     /// decryption, `Decryptor` is generally preferred, and will call this
     /// if appropriate.
     final class DecryptorV3: VersionedDecryptorType {
+        //
         // Static methods
+        //
         fileprivate static let preambleSize = 1
         fileprivate static func canDecrypt(preamble: Data) -> Bool {
             assert(preamble.count >= 1)
             return preamble[0] == 3
         }
 
+        //
         // Private properties
+        //
         private var buffer = Data()
         private var decryptorEngine: DecryptorEngineV3?
         private let credential: Credential
 
 
         /// Creates and returns a decryptor.
+        ///
         /// - parameter password: Non-empty password string. This will be interpretted as UTF-8.
         public init(password: String) {
             credential = .password(password)
         }
 
         /// Creates and returns a decryptor using keys.
+        ///
         /// - parameters:
+        ///     - encryptionKey: AES-256 key. Must be exactly FormatV3.keySize (kCCKeySizeAES256, 32 bytes)
+        ///     - hmacKey: HMAC key. Must be exactly FormatV3.keySize (kCCKeySizeAES256, 32 bytes)
         public init(encryptionKey: Data, hmacKey: Data) {
             precondition(encryptionKey.count == V3.keySize)
             precondition(hmacKey.count == V3.hmacSize)
@@ -367,6 +426,7 @@ public extension RNCryptor {
         }
 
         /// Updates cryptor with data and returns encrypted data.
+        ///
         /// - parameter data: Data to process. May be empty.
         /// - returns: Processed data. May be empty.
         public func update(withData data: Data) throws -> Data {
@@ -387,6 +447,7 @@ public extension RNCryptor {
         }
 
         /// Returns trailing data and invalidates the cryptor.
+        ///
         /// - returns: Trailing data
         public func finalData() throws -> Data {
             guard let result = try decryptorEngine?.finalData() else {
@@ -395,7 +456,9 @@ public extension RNCryptor {
             return result
         }
 
+        //
         // Private functions
+        //
 
         private var requiredHeaderSize: Int {
             switch credential {
@@ -455,8 +518,8 @@ public extension RNCryptor {
 }
 
 internal enum CryptorOperation: CCOperation {
-    case encrypt = 0
-    case decrypt = 1
+    case encrypt = 0 // CCOperation(kCCEncrypt)
+    case decrypt = 1 // CCOperation(kCCDecrypt)
 }
 
 internal final class Engine {
@@ -532,6 +595,9 @@ internal final class Engine {
         }
 
         // Note that since iOS 6, CCryptor will never return padding errors or other decode errors.
+        // I'm not aware of any non-catastrophic (MemoryAllocation) situation in which this
+        // can fail. Using assert() just in case, but we'll ignore errors in Release.
+        // https://devforums.apple.com/message/920802#920802
         assert(result == CCCryptorStatus(kCCSuccess), "RNCRYPTOR BUG. PLEASE REPORT. (\(result)")
 
         buffer.count = dataOutMoved
@@ -610,6 +676,7 @@ private protocol VersionedDecryptorType: RNCryptorType {
 }
 
 private extension Collection {
+    // Split collection into ([pass], [fail]) based on predicate.
     func splitPassFail(forPredicate predicate: (Iterator.Element) -> Bool) -> ([Iterator.Element], [Iterator.Element]) {
         var pass: [Iterator.Element] = []
         var fail: [Iterator.Element] = []
@@ -658,13 +725,13 @@ internal final class OverflowingBuffer {
         result.append(data.subdata(in: 0..<toSend))
 
         buffer.count = 0
-        buffer.append(data.subdata(in: toSend..<data.count))
+        buffer.append(data.subdata(in: toSend..<data.count)) // TODO: Appending here to avoid later buffer growth, but maybe just buffer = data.subdata would be better
         return result
     }
 
     private func sendSome(data: Data) -> Data {
         let toSend = (buffer.count + data.count) - capacity
-        assert(toSend > 0)
+        assert(toSend > 0) // If it were <= 0, we would have extended the array
         assert(toSend < buffer.count) // If we would have sent everything, replaceBuffer should have been called
 
         let result = buffer.subdata(in: 0..<toSend)
@@ -687,7 +754,7 @@ private func isEqualInConsistentTime(trusted: Data, untrusted: Data) -> Bool {
     // The point of this routine is XOR the bytes of each data and accumulate the results with OR.
     // If any bytes are different, then the OR will accumulate some non-0 value.
     
-    var result: UInt8 = untrusted.count == trusted.count ? 0 : 1
+    var result: UInt8 = untrusted.count == trusted.count ? 0 : 1  // Start with 0 (equal) only if our lengths are equal
     for (i, untrustedByte) in untrusted.enumerated() {
         // Use mod to wrap around ourselves if they are longer than we are.
         // Remember, we already broke equality if our lengths are different.

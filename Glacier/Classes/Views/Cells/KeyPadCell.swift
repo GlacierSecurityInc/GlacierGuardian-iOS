@@ -1,6 +1,10 @@
+//
+//  KeyPadCell.swift
 //  NumPadLBTA
+//
 //  Created by Brian Voong on 3/19/19.
 //  Copyright © 2019 Brian Voong. All rights reserved.
+//
 
 import UIKit
 
@@ -15,8 +19,8 @@ class KeyPadCell: UICollectionViewCell {
         }
     }
 
-    fileprivate let defaultBGColor = UIColor.systemGray4
-    fileprivate let highlightColor = UIColor.systemGray
+    fileprivate let defaultBGColor = UIColor.systemGray4//UIColor(white: 0.9, alpha: 1)
+    fileprivate let highlightColor = UIColor.systemGray//UIColor(white: 0.9, alpha: 1)
     private lazy var longPressRecognizer: UILongPressGestureRecognizer = {
         let recognizer = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
         recognizer.minimumPressDuration = 0.5

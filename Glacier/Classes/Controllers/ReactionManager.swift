@@ -1,6 +1,10 @@
+//
+//  ReactionManager.swift
 //  Glacier
+//
 //  Created by Prem Pratap Singh on 07/10/25.
 //  Copyright © 2025 Glacier. All rights reserved.
+//
 
 import Foundation
 import XMPPFramework

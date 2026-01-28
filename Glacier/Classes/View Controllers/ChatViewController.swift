@@ -1,6 +1,10 @@
+//
+//  ChatViewController.swift
 //  Glacier
+//
 //  Created by andyfriedman on 9/6/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import UIKit
 import SwiftUI
@@ -20,6 +24,7 @@ import LinkPresentation
 import MapKit
 import XMPPFramework
 import MCEmojiPicker
+//import DifferenceKit
 
 @objc open class ChatViewController: MessagesViewController, MessagesDataSource, CallStatusDelegateProtocol, KeyboardObservable {
     
@@ -49,6 +54,7 @@ import MCEmojiPicker
     var fromAvatar: Avatar?
     var toAvatar: Avatar?
     
+    //let supplementaryViewHandler:SupplementaryViewHandler?
     var threadKey:String?
     var xmppMgr:XMPPManager?
     var account:ChatAccountModel?
@@ -78,10 +84,13 @@ import MCEmojiPicker
     fileprivate var loadingMessages = false
     fileprivate var loadingMoreMessages = false
     fileprivate var messagePage = 1
+    //fileprivate var currentIndexPath:IndexPath?
+    //fileprivate var currentMessage:ChatMessage?
     fileprivate var messagesAdded = 0
     fileprivate var updatedSource = false
     fileprivate var initRequest = false
     fileprivate var justSent = false
+    //fileprivate var waitingToObserve = false
     fileprivate let messageSizeCache:NSCache<NSString, GlacierValue> = NSCache.init()
     fileprivate let messageBottomCache:NSCache<NSString, GlacierFloat> = NSCache.init()
     fileprivate let cellTopCache:NSCache<NSString, GlacierFloat> = NSCache.init()
@@ -108,6 +117,8 @@ import MCEmojiPicker
     var accountAvatarImage:UIImage?
     fileprivate var originalAudioCategory:AVAudioSession.Category?
     
+    //NSAttributedString.Key.font: UIFontMetrics(forTextStyle: .caption2).scaledFont(for: UIFont.systemFont(ofSize: 10))
+    //UIFont.preferredFont(forTextStyle: .caption2)
     fileprivate let attrs = [NSAttributedString.Key.font: UIFontMetrics(forTextStyle: .caption2).scaledFont(for: UIFont.systemFont(ofSize: 10)), NSAttributedString.Key.foregroundColor: UIColor.lightGray]
     fileprivate let faattrs = [NSAttributedString.Key.font:UIFont(name: kFontAwesomeFont, size: 11) ?? UIFont.systemFont(ofSize: 11), NSAttributedString.Key.foregroundColor: UIColor.lightGray]
     
@@ -115,6 +126,7 @@ import MCEmojiPicker
                                             .memoryCacheExpiration(.days(14)),
                                              .memoryCacheAccessExtendingExpiration(.cacheTime)]
 
+    //var currentmgr:XMPPManager?
     var loginStatusToken: NSKeyValueObservation?
     
     private var chatMessages:[ChatMessage] = []
@@ -162,9 +174,11 @@ import MCEmojiPicker
         messagesCollectionView.messagesCollectionViewFlowLayout.setMessageOutgoingAvatarPosition(pos)
         zeroTextLayout = ZeroSizeCalculator(layout: messagesCollectionView.messagesCollectionViewFlowLayout)
 
+        //self.additionalContentInset = UIEdgeInsets(top: 20, left: 0, bottom: 0, right: 0)
         self.showConnStatus = true
         
         //for expiring message timer
+        //self.exptf = TTTTimeIntervalFormatter()
         ChatViewController.exptf.futureDeicticExpression = "left"
         ChatViewController.exptf.usesAbbreviatedCalendarUnits = true
  
@@ -183,6 +197,7 @@ import MCEmojiPicker
         
         
         self.titleView.subtitleLabel.text = nil
+        //self.inputToolbar.contentView.textView.pasteDelegate = self
         
         self.statusCtr = 0
         self.statusTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(updateStatusTimer), userInfo: nil, repeats: true)
@@ -196,6 +211,7 @@ import MCEmojiPicker
         }
         
         ////// Attachment Button //////
+        //self.inputToolbar.contentView.leftBarButtonItem = nil
         self.cameraButton.titleLabel?.font = UIFont(name: kFontAwesomeFont, size: 20)
         self.cameraButton.titleLabel?.textAlignment = NSTextAlignment.center
         let cameraIconChar: UniChar = 0xf030
@@ -209,6 +225,7 @@ import MCEmojiPicker
         let chevronRightChar: UniChar = 0xf054
         self.moreOptionsButton.setTitle(String(format: "%C", chevronRightChar), for: .normal)
         self.moreOptionsButton.tintColor = UIColor.bubbleBlue()
+        //self.inputToolbar.contentView.leftBarButtonItem = self.moreOptionsButton
         
         self.attachButton.frame = CGRectMake(0, 0, 32, 32)
         self.attachButton.titleLabel?.font = UIFont(name: kFontAwesomeFont, size: 20)
@@ -252,6 +269,7 @@ import MCEmojiPicker
         self.statusTapGestureRecognizer.numberOfTapsRequired = 1
         
         if xmppManager() != nil {
+            //self.xmppMgr = xmpp  //IOSM#22 change to _currentmgr
             loginStatusToken = self.xmppMgr?.observe(\.loginStatus, options: [.new, .old], changeHandler: {[weak self](xmpp, change) in
                 self?.setConnectionStatus()
             })
@@ -283,6 +301,7 @@ import MCEmojiPicker
       }
     
     open override func viewWillAppear(_ animated: Bool) {
+        //self.currentIndexPath = nil
         super.viewWillAppear(animated)
         
         if let navigationController = self.navigationController {
@@ -320,6 +339,7 @@ import MCEmojiPicker
         self.showConnStatus = true
         self.setConnectionStatus()
         
+        //self.messageSizeCache.removeAllObjects()
     }
     
     open override func viewWillDisappear(_ animated: Bool) {
@@ -340,6 +360,7 @@ import MCEmojiPicker
     }
     
     open override func viewWillLayoutSubviews() {
+        //self.currentIndexPath = nil
         super.viewWillLayoutSubviews()
     }
     
@@ -415,6 +436,7 @@ import MCEmojiPicker
             }
         }
         self.latestDateDisplayed = latestDisplayed
+        //print("***** showCount \(showCount), endIndex \(endIndex), asec size \(asec.count), first \(asec[0].elements[0].text), final \(asec[asec.count-1].elements[0].text)")
         
         let needsTimer = (self.latestdata.count == 0 && messages.count > 0)
         self.latestdata = asec
@@ -433,7 +455,9 @@ import MCEmojiPicker
         
         
         if self.updatedSource == false {
+            //DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 self.updatedSource = true
+            //}
         }
     }
     
@@ -555,7 +579,7 @@ import MCEmojiPicker
             }
 
             let beforeContentSize = self.messagesCollectionView.contentSize
-            if self.loadingMoreMessages {
+            if self.loadingMoreMessages { //} || (diffcount > 0 && addcount <= 1){
                 self.messagesCollectionView.setContentOffset(self.messagesCollectionView.contentOffset, animated: false) // stop scrolling
             }
             self.initRequest = false
@@ -591,9 +615,11 @@ import MCEmojiPicker
                             }
                         }
                     }
+                    //print("***** reload ips: \(ips)")
                     if reconfigure == true {
                         self.messagesCollectionView.reconfigureItems(at: ips)
                     } else {
+                        //print("***** something didn't match, reload sections instead")
                         self.messagesCollectionView.reloadSections(reloadIndexSet)
                     }
                 }
@@ -621,16 +647,19 @@ import MCEmojiPicker
                     }
                 }
                 if ips.count > 0 {
+                    //print("***** update ips: \(ips)")
                     if reconfigure == true {
                         self.messagesCollectionView.reconfigureItems(at: ips)
                     } else {
+                        //print("***** something didn't match, reload sections instead")
                         self.messagesCollectionView.reloadSections(reloadIndexSet)
                     }
                 }
             }
             
-            if self.loadingMoreMessages {
+            if self.loadingMoreMessages { //} || (diffcount > 0 && addcount <= 1) {
                 self.loadingMoreMessages = false
+                //}
                 let afterContentSize = self.messagesCollectionView.contentSize
                 let contentOffset = self.messagesCollectionView.contentOffset
                 // reset the contentOffset after data is updated
@@ -683,6 +712,7 @@ import MCEmojiPicker
         self.messageBottomCache.removeObject(forKey: cmsgid)
         self.cellTopCache.removeObject(forKey: cmsgid)
         
+        //print("***** loadMoreMessages page \(self.messagePage), startIndex \(startIndex), endIndex \(endIndex), asec size \(asec.count), first \(asec[0].elements[0].text), final \(asec[asec.count-1].elements[0].text)")
         
         var latest = [ChatMessage]()
         if self.latestdata.count > 0 {
@@ -701,6 +731,7 @@ import MCEmojiPicker
     func isLastSectionVisible() -> Bool {
         guard !self.shownMessages.isEmpty else { return false }
         
+        //let lastIndexPath = IndexPath(item: self.dataInput[0].elements.count - 1, section: 0)
         let lastIndexPath = IndexPath(item: 0, section: self.shownMessages.count - 1)
         return messagesCollectionView.indexPathsForVisibleItems.contains(lastIndexPath)
     }
@@ -715,6 +746,7 @@ import MCEmojiPicker
             let textView = self.messageInputBar.inputTextView
             if textView.text.count == 0 && oldText.count > 0 {
                 textView.text = oldText
+                //self.receivedTextViewChanged(textView)
             }
             
             if oldText.count > 0 {
@@ -756,6 +788,14 @@ import MCEmojiPicker
                         self.titleView.dynConnectingView.stopAnimating()
                         self.titleView.dynConnectingView.isHidden = true
                         
+                        //if self.chatMsgCancellable == nil, self.waitingToObserve == false {
+                            //self.waitingToObserve = true
+                            //self.addUploadHUD("Retrieving data...", tapToCancel: false)
+                            //DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                                //self.removeUploadHUD()
+                                //self.observeConversations()
+                            //}
+                        //}
                     }
                     else {
                         self.handleConnectingStatus(protocolExists: true)
@@ -770,6 +810,7 @@ import MCEmojiPicker
     }
     
     func handleConnectingStatus(protocolExists: Bool) {
+        //DDLogWarn(@"*** handleConnectingStatus with statusCtr %d", _statusCtr);
         self.showConnStatus = true
         
         if OTRAppDelegate.appDelegate.isProxyDetected() == true {
@@ -777,12 +818,14 @@ import MCEmojiPicker
             return
         }
         
+        //if the timer doesn't exist here we need to recreate it. Happens on loss of network conenction.
         if (self.statusTimer == nil && protocolExists) { //IOSM#22
             self.statusCtr = 0
             self.statusTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(updateStatusTimer), userInfo: nil, repeats: true)
         }
         
         if (self.statusCtr < 4) {
+            //self.titleView.subtitleLabel.text = nil; //IOSM#60
             self.refreshTitleView()
             self.titleView.dynConnectingView.isHidden = true
         } else if (self.statusCtr < 6) {
@@ -805,7 +848,7 @@ import MCEmojiPicker
                     self.titleView.subtitleLabel.text = "Trying again"
                     self.retryLogin()
                 }
-            } else {
+            } else { // don't think this should be possible, but just in case
                 self.titleView.subtitleLabel.text = "Problems initializing account"
             }
         }
@@ -925,12 +968,14 @@ import MCEmojiPicker
             return
         }
         
+        //getThread(key: key, collection: collection)
         if var thread = getBuddy(), ChatRoomModel.getXMPPRoom(uniqueId: thread.uniqueId) != nil {
             thread.currentMessageText = text
             thread.storeInGRDB()
             
             if let xmpp = xmppManager(), let xMessage = xmpp.getInactiveMessage(thread.uniqueId) {
                 xmpp.sendChatStateMessage(xMessage)
+                //xmpp.sendChatState(.inactive, buddyUniqueId: thread.uniqueId)
             }
         }
     }
@@ -957,16 +1002,18 @@ import MCEmojiPicker
     private func drawCellsIfNeeded() {
         if self.redrawSet.count > 0 {
             var ips:[IndexPath] = []
+            //var iset:IndexSet = []
             let reset = self.redrawSet
             self.redrawSet.removeAll()
             let latestCnt = self.shownMessages.count
             for idx in reset {
                 if latestCnt > idx.section {
                     ips.append(idx)
+                    //iset.insert(idx.section)
                 }
             }
             
-            self.messagesCollectionView.reconfigureItems(at: ips)
+            self.messagesCollectionView.reconfigureItems(at: ips) // reloadSections(iset)
         }
     }
 
@@ -998,6 +1045,7 @@ import MCEmojiPicker
     
     @objc func updateStatusTimer()
     {
+        //DDLogWarn(@"*** statusCtr %d", _statusCtr);
         if (self.statusCtr < 22 && self.showConnStatus) { //IOSM-395 added &&
             self.statusCtr+=1
         } else {
@@ -1091,8 +1139,10 @@ import MCEmojiPicker
         self.phoneButton.setTitleColor(UIColor.lightGray, for: UIControl.State.disabled)
         let phoneIconChar: UniChar = 0xf095
         self.phoneButton.setTitle(String(format: "%C", phoneIconChar), for: .normal)
+        //self.phoneButton.addTarget(self, action: #selector(didSelectPhoneButton), for: UIControl.Event.touchUpInside)
         
         
+        //self.phoneButton.setImage(UIImage(systemName: "phone.fill"), for: .normal)
         
         var actions:[UIAction] = []
         let phoneImage = UIImage(systemName: "phone.fill")
@@ -1105,6 +1155,7 @@ import MCEmojiPicker
         }))
                 
         let callMenu = UIMenu(title:"", children:actions)
+        //callBarButton.menu = callMenu
         
         self.phoneButton.menu = callMenu
         self.phoneButton.showsMenuAsPrimaryAction = true
@@ -1127,6 +1178,7 @@ import MCEmojiPicker
         if key != self.threadKey {
             //try to nullify existing MessageContainerView, MediaMessageCell, etc
             self.chatMessages.removeAll()
+            //self.currentIndexPath = nil
             let oldKey = self.threadKey
             
             self.threadKey = key
@@ -1140,6 +1192,8 @@ import MCEmojiPicker
             self.latestDateDisplayed = nil
             self.updatedSource = false
             self.retriedSet.removeAll()
+            //self.messageSizeCache.removeAllObjects()
+            //ChatMediaItemModel.clearMediaCache()
             
             if let bkey = key {
                 self.buddy = ChatBuddy.getBuddy(uniqueId: bkey)
@@ -1156,13 +1210,21 @@ import MCEmojiPicker
             chatMsgCancellable?.cancel()
             chatMsgCancellable = nil
             self.chatMessages.removeAll()
+            //self.dsQueue.async {
                 self.initialRequest()
+            //}
             
             self.getAvatarImages()
+            //if (self.xmppMgr?.loginStatus == OTRLoginStatus.authenticated) {
                 self.observeConversations()
+            //} else { //timer or wait for login and then timer
+            //    waitingToObserve = false
+            //}
             self.saveChatThreadIfNeeded()
             
+            // Clear out old state (don't just alloc a new object, we have KVOs attached to this!)
             self.state.reset()
+            //self.showTypingIndicator = false
             
             // This is set to nil so the refreshTitleView: method knows to reset username instead of last seen time
             self.titleView.subtitleLabel.text = nil
@@ -1171,6 +1233,7 @@ import MCEmojiPicker
             if oldKey != key {
                 self.saveCurrentMessageText(self.messageInputBar.inputTextView.text, key: oldKey)
                 self.messageInputBar.inputTextView.text = nil
+                //self.receivedTextViewChanged(self.messageInputBar.inputTextView)
             }
             
             if let key = self.threadKey {
@@ -1203,6 +1266,7 @@ import MCEmojiPicker
     }
     
     func findBuddyLocation(_ buddyloc:String, with message:ChatMessage) {
+        //override if desired
     }
 
     public override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -1276,6 +1340,7 @@ import MCEmojiPicker
         let message = self.shownMessages[indexPath.section]
         let key = message.uniqueId as NSString
         
+        //if message.mediaItemUniqueId == nil
         if indexPath.section < self.shownMessages.count - 2, let sizeValue = self.messageSizeCache.object(forKey: key) {
             return sizeValue.cgsize
         }
@@ -1313,6 +1378,7 @@ import MCEmojiPicker
     }
     
     public func messageForItem(at indexPath: IndexPath, in messagesCollectionView: MessageKit.MessagesCollectionView) -> MessageKit.MessageType {
+        //return self.dataInput[0].elements[indexPath.row]
         
         var message = self.shownMessages[indexPath.section]
         
@@ -1323,7 +1389,7 @@ import MCEmojiPicker
         
         let finalMsg = message
         
-        return finalMsg
+        return finalMsg//self.dataInput[indexPath.section].elements[indexPath.row]
     }
     
     public func nextMessageForItem(at indexPath: IndexPath) -> MessageKit.MessageType? {
@@ -1371,14 +1437,21 @@ import MCEmojiPicker
 
     public func cellBottomLabelAttributedText(for _: MessageType, at indexPath: IndexPath) -> NSAttributedString? {
         return nil
+        //NSAttributedString(string: "Read", attributes: [
+            //NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 10),
+            //NSAttributedString.Key.foregroundColor: UIColor.darkGray,
+        //])
         
+        //let attributedString = NSMutableAttributedString(string: "")
     }
 
     public func messageTopLabelAttributedText(for message: MessageType, at _: IndexPath) -> NSAttributedString? {
-        return nil
+        //let name = message.sender.displayName
+        return nil //NSAttributedString(string: name, attributes: [NSAttributedString.Key.font: UIFont.preferredFont(forTextStyle: .caption1)])
     }
 
     public func messageBottomLabelAttributedText(for message: MessageType, at indexPath: IndexPath) -> NSAttributedString? {
+        //let dateString = MessageKitDateFormatter.shared.string(from: message.sentDate)
         guard let message = message as? ChatMessage else { return nil }
         let attributedString = NSMutableAttributedString(string: "")
         
@@ -1393,18 +1466,22 @@ import MCEmojiPicker
             attributedString.append(deliveryString)
         }
         
+        //if let mediaKey = message.mediaItemUniqueId, let mediaItemModel = ChatMediaItemModel.getMediaItem(with: mediaKey), let mediaItem = mediaItemModel.grdbRecord, let progress = mediaItem.transferProgress {
         if message.mediaItemUniqueId != nil, let progress = message.transferProgress, progress < 1.0 {
             let percentProgress = progress * 100
+            //print("***** percentProgress \(percentProgress) for IP \(indexPath.section)")
             var progressString:String?
             var insertIndex = 0;
+            //let font = UIFont(name: kFontAwesomeFont, size: 12)
             if message.type == ChatMessageType.incoming.rawValue {
-                if let merror = message.error{
+                if let merror = message.error{//} as? NSError {
                     let nsErr = NSError(domain: merror.errDomain, code: merror.errCode)
                     if !nsErr.isUserCanceledError, !nsErr.isAutomaticDownloadError {
                         let clockChar: UniChar = 0xf017
-                        let progressString = String(format: " %C ", clockChar)
+                        let progressString = String(format: " %C ", clockChar) //IOSM#57 from WAITING_STRING()
                         
                         let attrStr = NSAttributedString(string: progressString, attributes: attrs)
+                        //NSAttributedString(string: progressString, attributes: [NSAttributedString.Key.font:font ?? UIFont.systemFont(ofSize: 12)])
                         attributedString.append(attrStr)
                         return attributedString
                     }
@@ -1673,10 +1750,11 @@ import MCEmojiPicker
     
     //IOSM-527b doesn't this depend on what the current conversation is?
     public func joinStatusUpdated(_ join: Bool) {
+        //NSString *callname = [xmpp.callManager getCallToJoin];
     }
     
     open override func collectionView( _ collectionView: UICollectionView, canPerformAction action: Selector, forItemAt indexPath:IndexPath, withSender sender: Any?) -> Bool {
-        return false
+        return false //overridden for long press
     }
     
     @objc private func didLongPress(_ longGestureRecognizer: UILongPressGestureRecognizer) {
@@ -1854,6 +1932,8 @@ import MCEmojiPicker
                 let idNumber = NSNumber.init(integerLiteral: Int(bundle.deviceId))
                 let currentDevice = ChatOmemoDevice(deviceId: idNumber, trustLevel: OMEMOTrustLevel.trustedUser, parentKey: account.uniqueId, parentCollection: ChatAccountModel.collection(), publicIdentityKeyData: bundle.identityKey, lastSeenDate: xmpp.getLastConnected())
                 if let acctRec = account.grdbRecord, let bareJid = XMPPJID(string: acctRec.username), var curdevices = xmpp.omemoSignalCoordinator?.fetchDeviceIds(for: bareJid) {
+                    //let removedDevices = [currentDevice.deviceId]
+                    //let nsDevices:NSArray = devices as NSArray
                     
                     let removeId = NSNumber(value:currentDevice.deviceId)
                     let iset = curdevices.enumerated().lazy
@@ -1890,6 +1970,7 @@ import MCEmojiPicker
                         DispatchQueue.global().async {
                             for buddy in buddiesArray {
                                 xmpp.omemoSignalCoordinator?.prepareSessionForBuddy(buddy.uniqueId, completion: { (success:Bool) in
+                                    //
                                 })
                             }
                         }
@@ -2080,6 +2161,7 @@ extension ChatViewController: MessageCellDelegate {
             playbackSpeed = rate
         }
         
+        //let astate = audioPlaybackController.state
         guard audioPlaybackController.state != .stopped else {
             // There is no audio sound playing - prepare to start playing for given audio message
             audioPlaybackController.playSound(for: message, in: cell, speed: playbackSpeed)
@@ -2170,9 +2252,11 @@ public extension ChatViewController {
 extension ChatViewController { //call stuff
     //this should spawn a menu of audio/video
     func didSelectPhoneButton(callType: CallType) {
+        //var owner:ChatThread?
         var callBuddies:[String] = []
         if let xmppMgr = xmppManager(), let buddy = self.getBuddy() {
             callBuddies.append(buddy.username)
+            //owner = buddy
             
             if callBuddies.count == 0 {
                 return
@@ -2199,7 +2283,7 @@ extension ChatViewController { //call stuff
                 handleVideoDenied()
                 return
             } else {
-                if xmppMgr.callManager.makeCall(callBuddies, name:self.getThreadName()!, callType: callType) == true {
+                if xmppMgr.callManager.makeCall(callBuddies, name:self.getThreadName()!, callType: callType) == true { //IOSM#70 if
                     // add "outgoing" message to thread
                     let message = "\(ChatRoomMessage.StringConstants.outgoingCall.text) - \(Date().formattedAsShortWeekdayTime())"
                     self.addCallUpdate(message, mgr: xmppMgr, buddy: buddy)
@@ -2214,7 +2298,17 @@ extension ChatViewController { //call stuff
             }
             
             //IOSM-509 prevent accidental hot mic
+            //let alert = UIAlertController(title: "Start Call?", message: nil, preferredStyle: .alert)
+            //let callAction = UIAlertAction(title: "Call", style: .default, handler: { alert in
+                //if xmppMgr.callManager.makeCall(callBuddies, name:self.getThreadName()!) == true { //IOSM#70 if
                     // add "outgoing" message to thread
+                    //self.addCallUpdate("You called", mgr: xmppMgr, buddy: buddy)
+                //}
+            //})
+            //let cancelAction = UIAlertAction(title: "Cancel", style: .default, handler: nil)
+            //alert.addAction(callAction)
+            //alert.addAction(cancelAction)
+            //self.present(alert, animated: true, completion: nil)
         }
     }
     
@@ -2303,6 +2397,7 @@ extension ChatViewController { //XMPP stuff
         if let buddy = self.getBuddy() {
             let buddyModel = ChatBuddyModel(buddy: buddy)
             // Update Buddy Status
+            //let previousState = self.state.isThreadOnline
             self.state.isThreadOnline = (buddyModel.status != ThreadStatus.offline)
                     
                     
@@ -2396,12 +2491,14 @@ extension ChatViewController { //XMPP stuff
         guard message.type == ChatMessageType.outgoing.rawValue else { return nil }
         let deliveryStatusString = NSMutableAttributedString(string: "")
         
-        if message.dateSent == nil {
+        //var deliveryStatusString:String?
+        if message.dateSent == nil { //} && ![message messageMediaItemKey]) { //IOSM#57
             // Waiting to send message. This message is in the queue.
             let clockChar: UniChar = 0xf017
             let clockString = String(format: " %C", clockChar)
             deliveryStatusString.append(NSAttributedString(string: clockString, attributes: faattrs))
-        } else if message.displayed {
+        } else if message.displayed {//}&& !(message is RoomMessage) { //IOSM-443 and IOSM#8
+            //let checkChar: UniChar = 0xf00c
             if let buddy = getBuddy(),
                let dateDisplayed = message.dateDisplayed, dateDisplayed == self.latestDateDisplayed {
                 if let chatThread = ChatThread.getChatThread(threadId: buddy.chatThreadId), chatThread.shouldShowReadReceipts {
@@ -2412,8 +2509,11 @@ extension ChatViewController { //XMPP stuff
                     deliveryStatusString.append(NSAttributedString(string: " Delivered", attributes: attrs))
                 }
             }
-        } else if message.delivered {
+        } else if message.delivered {//}&& !(message is RoomMessage){
             deliveryStatusString.append(NSAttributedString(string: " Delivered", attributes: attrs))
+            //let checkChar: UniChar = 0xf00c
+            //let checkString = String(format: " %C", checkChar)
+            //deliveryStatusString.append(NSAttributedString(string: checkString, attributes: faattrs))
         }
         
         return deliveryStatusString
@@ -2583,9 +2683,13 @@ extension ChatViewController: AttachmentsInputBarViewDelegate {
                 self.handleVideoPicked(url)
             case .data(_):
                 continue
+                //self.sendPhoto(image, asJPEG: true, shouldResize: true, info: nil)
             case .other(_):
                 continue
             }
+            //if case .image(let image) = item {
+           //     self.sendPhoto(image, asJPEG: true, shouldResize: true, info: nil)
+            //}
         }
         
         inputBar.invalidatePlugins()
@@ -2626,6 +2730,7 @@ extension ChatViewController: AttachmentsInputBarViewDelegate {
             return
         }
 
+        //let components = inputBar.inputTextView.components
         inputBar.inputTextView.text = String()
         inputBar.invalidatePlugins()
         // Send button activity animation
@@ -2651,6 +2756,7 @@ extension ChatViewController: AttachmentsInputBarViewDelegate {
     
         inputBar.sendButton.stopAnimating()
         inputBar.inputTextView.placeholder = "Send encrypted message"
+        //self.insertMessages(components)
         self.messagesCollectionView.scrollToLastItem(animated: true)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.messagesCollectionView.scrollToLastItem(animated: true)
@@ -2664,8 +2770,10 @@ extension ChatViewController: AttachmentsInputBarViewDelegate {
         let hasText = textView.text.count > 0
         if (hasText) {
             messageInputBar.sendButton.image = nil
+            //self.isTyping()
         } else {
             (self as? ChatViewControllerExt)?.updateTimeButton()
+            //self.didFinishTyping()
         }
         
         if let untrimmed = self.messageInputBar.inputTextView.text, untrimmed.hasSuffix("\n"), OTRSettingsManager.bool(forOTRSettingKey: "kOTREnterToSendKey") {
@@ -2692,6 +2800,7 @@ extension ChatViewController: AttachmentsInputBarViewDelegate {
         do {
             let vidurl = URL(fileURLWithPath: tmpPath)
             try fileManager.copyItem(at: url, to:vidurl)
+            //let newurl = URL(fileURLWithPath: tmpPath)
             DispatchQueue.main.async {
                 self.sendVideoURL(vidurl)
             }
@@ -2706,6 +2815,7 @@ extension ChatViewController: AttachmentsInputBarViewDelegate {
             let budModel = ChatBuddyModel(buddy: buddy)
             let outMsg = budModel.outgoingMessage(text: text)
             
+            //let outMsg = thread.outgoingOMEMOMessage(withText: text)
             if let chatMsg = outMsg as? ChatMessageModel {
                 if let expires = buddy.expiresIn {
                     chatMsg.messageExpires = expires
@@ -2726,6 +2836,8 @@ extension ChatViewController: AttachmentsInputBarViewDelegate {
     
     //IOSM-579
     func convertBadLinksText(_ text: String) -> String {
+        //let newtext = text.replacingOccurrences(of: "http://", with: "https://")
+        //check out espn.com and suntrust.com and let me know
         let types: NSTextCheckingResult.CheckingType = [.link]
         let detector = try! NSDataDetector(types: types.rawValue)
         var badurls = true
@@ -2737,7 +2849,7 @@ extension ChatViewController: AttachmentsInputBarViewDelegate {
             for match in matches {
                 guard let matchrange = Range(match.range, in: newText) else { continue }
                 if match.resultType == NSTextCheckingResult.CheckingType.link {
-                    if let urlstr = match.url?.absoluteString, urlstr.lowercased().hasPrefix("http:
+                    if let urlstr = match.url?.absoluteString, urlstr.lowercased().hasPrefix("http://"), let rangescheme = urlstr.lowercased().range(of: "http:") {
                         badurls = true
                         let newurl = urlstr.replacingCharacters(in: rangescheme, with: "https:")
                         newText = newText.replacingCharacters(in: matchrange, with: newurl)
@@ -2774,6 +2886,7 @@ extension ChatViewController: AttachmentsInputBarViewDelegate {
     
     //IOSM-486, IOSM-557
     func send(htmlURL:URL) {
+        //guard let htmlURL = htmlURL else { return; }
         //check urls for jpg, etc, if so use sendImageFilePath
         let ustr = htmlURL.absoluteString.lowercased()
         if ustr.hasSuffix("jpg") || ustr.hasSuffix("jpeg") || ustr.hasSuffix("png") {
@@ -2830,11 +2943,15 @@ extension ChatViewController: MessagesDisplayDelegate {
     }
 
     public func detectorAttributes(for detector: DetectorType, and _: MessageType, at _: IndexPath) -> [NSAttributedString.Key: Any] {
+        //switch detector {
+        //case .hashtag, .mention: return [.foregroundColor: UIColor.blue]
+        //default: return MessageLabel.defaultAttributes
+        //}
         return ChatViewController.detectorAttributes
     }
 
     public func enabledDetectors(for _: MessageType, at _: IndexPath, in _: MessagesCollectionView) -> [DetectorType] {
-        [.url]
+        [.url]//, .address, .phoneNumber, .date, .transitInformation, .mention, .hashtag]
     }
 
   // MARK: - All Messages
@@ -2893,6 +3010,7 @@ extension ChatViewController: MessagesDisplayDelegate {
         if let imageURL = imageURL {
             imageView.kf.indicatorType = .activity
             let thumbnailKey =  String(format: "%@-thumb", chatMsg.uniqueId)
+            //print("***** imageURL: \(imageURL) and message: \(chatMsg.text)")
             let resource = KF.ImageResource(downloadURL: imageURL, cacheKey: thumbnailKey)
             if GlacierImageCache.shared().isCached(forKey: thumbnailKey) {
                 imageView.kf.setImage(with: resource, options: optionsInfo)
@@ -2903,6 +3021,8 @@ extension ChatViewController: MessagesDisplayDelegate {
                     imageView.image = chatimg.placeholderImage
                     return
                 }
+                //var ops = optionsInfo
+                //ops.append(.callbackQueue(.dispatch(self.dsQueue)))
                 
                 KingfisherManager.shared.retrieveImage(with: resource, options: optionsInfo) { result in
                     //if is not gif
@@ -2939,11 +3059,15 @@ extension ChatViewController: MessagesDisplayDelegate {
                         let options = KingfisherParsedOptionsInfo(self.optionsInfo)
                         
                         GlacierImageCache.shared().store(resizedImage, original: idata, forKey: thumbnailKey, options: options, toDisk: false, completionHandler: {_ in
+                            //ChatMessage.touch(chatMsg.uniqueId)
                             
                             imageView.kf.setImage(with: resource, options: self.optionsInfo) { result in
                                 switch result {
                                 case .success(_):
                                     ChatMessage.touch(chatMsg.uniqueId)
+                                    //if self.shownMessages.count > ip.section {
+                                    //    self.messagesCollectionView.reconfigureItems(at: [ip])
+                                    //}
                                 case .failure(_):
                                     break
                                 }
@@ -2964,6 +3088,7 @@ extension ChatViewController: MessagesDisplayDelegate {
                         if let data = fileimage.jpegData(compressionQuality: 1.0) {
                             if data.count < 10000 { //didn't really render, retry
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    //print("***** about to reconfigure")
                                     imageView.kf.indicator?.stopAnimatingView()
                                     if self.shownMessages.count > ip.section {
                                         self.messagesCollectionView.reconfigureItems(at: [ip])
@@ -3027,6 +3152,7 @@ extension ChatViewController: MessagesDisplayDelegate {
                                         imageView.image = resizedImage
 
                                         if let data = resizedImage.jpegData(compressionQuality: 1.0), data.count < 10000 { //didn't really render, retry
+                                            //print("***** try to re-get html image")
                                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                                 if self.shownMessages.count > ip.section {
                                                     self.messagesCollectionView.reconfigureItems(at: [ip])
@@ -3161,6 +3287,7 @@ extension ChatViewController: MessagesLayoutDelegate {
         
         var height:CGFloat = 0
         if let next = nextMessageForItem(at: ip), mtype.sender.senderId == next.sender.senderId {
+            //let nextip = IndexPath(item: ip.row, section: ip.section+1)
             if let nextmessage = next as? ChatMessage, let cur = mtype as? ChatMessage, let at = messageBottomLabelAttributedText(for: mtype, at: ip), at.length > 0 {
                 if (cur.displayed && !nextmessage.displayed) || (cur.delivered && !nextmessage.delivered) {
                     height = 16

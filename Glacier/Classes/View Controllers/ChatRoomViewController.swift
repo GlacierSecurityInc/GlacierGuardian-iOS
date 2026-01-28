@@ -1,6 +1,10 @@
+//
+//  ChatRoomViewController.swift
 //  Glacier
+//
 //  Created by andyfriedman on 10/13/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import UIKit
 import SwiftUI
@@ -41,6 +45,7 @@ import MCEmojiPicker
     var fromAvatar: Avatar?
     var toAvatars:[String:Avatar] = [:]
     
+    //let supplementaryViewHandler:SupplementaryViewHandler?
     var threadKey:String?
     var xmppMgr:XMPPManager?
     var account:ChatAccountModel?
@@ -70,12 +75,15 @@ import MCEmojiPicker
     fileprivate var messagePage = 1
     fileprivate var messagesAdded = 0
     fileprivate var curMessagesAdded = 0
+    //fileprivate var currentIndexPath:IndexPath?
+    //fileprivate var currentMessage:ChatRoomMessage?
     fileprivate var displayedJidsTimer:Timer?
     fileprivate var displayUpdateNeeded = false
     fileprivate var reloadNeeded = true
     fileprivate var justSent = false
     fileprivate var updatedRoomSource = false
     fileprivate var initRequest = false
+    //fileprivate var waitingToObserve = false
     fileprivate let messageSizeCache:NSCache<NSString, GlacierValue> = NSCache.init()
     fileprivate let messageBottomCache:NSCache<NSString, GlacierFloat> = NSCache.init()
     fileprivate let cellTopCache:NSCache<NSString, GlacierFloat> = NSCache.init()
@@ -94,6 +102,7 @@ import MCEmojiPicker
     var statusTapGestureRecognizer:UITapGestureRecognizer!
     var uploadHUD:MBProgressHUD?
 
+    //var phoneButton:UIButton = UIButton(type: .custom)
     var accountAvatarImage:UIImage?
     lazy var agrumeVC = ImageViewHelper()
     
@@ -112,6 +121,7 @@ import MCEmojiPicker
                                             .memoryCacheExpiration(.days(14)),
                                             .memoryCacheAccessExtendingExpiration(.cacheTime)]
 
+    //var currentmgr:XMPPManager?
     var loginStatusToken: NSKeyValueObservation?
     
     private var chatRoomMessages:[ChatRoomMessage] = []
@@ -159,6 +169,8 @@ import MCEmojiPicker
         self.displayedTextAttributes = [NSAttributedString.Key.font: UIFont.italicSystemFont(ofSize: 10.0), NSAttributedString.Key.foregroundColor: UIColor.lightGray, NSAttributedString.Key.paragraphStyle: paragraphStyleLeft]
         self.nameTextAttributes = [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 10.0), NSAttributedString.Key.foregroundColor: UIColor.lightGray, NSAttributedString.Key.paragraphStyle: paragraphStyleLeft]
         
+        //messagesCollectionView.messagesCollectionViewFlowLayout.setMessageOutgoingCellBottomLabelAlignment(T##newAlignment: LabelAlignment##LabelAlignment)
+        //let lal:NSTextAlignment = .left
         
         let pos = AvatarPosition(vertical: .messageBottom)
         messagesCollectionView.messagesCollectionViewFlowLayout.setMessageIncomingAvatarPosition(pos)
@@ -171,6 +183,7 @@ import MCEmojiPicker
             self.displayedJidsTimer?.tolerance = 0.5
         }
         
+        //self.additionalContentInset = UIEdgeInsets(top: 20, left: 0, bottom: 0, right: 0)
         self.showConnStatus = true
         self.displayedNeedsUpdate = false
  
@@ -191,14 +204,18 @@ import MCEmojiPicker
 
         self.titleView.dynConnectingView.isHidden = true
         
+        //if reloadNeeded {
             self.messagesCollectionView.reloadData()
+            //self.messagesCollectionView.layoutIfNeeded()
             
             self.messagesCollectionView.scrollToLastItem(animated: false)
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 self.messagesCollectionView.scrollToLastItem(animated: false)
             }
+        //}
         
         ////// Attachment Button //////
+        //self.inputToolbar.contentView.leftBarButtonItem = nil
         self.cameraButton.titleLabel?.font = UIFont(name: kFontAwesomeFont, size: 20)
         self.cameraButton.titleLabel?.textAlignment = NSTextAlignment.center
         let cameraIconChar: UniChar = 0xf030
@@ -212,6 +229,7 @@ import MCEmojiPicker
         let chevronRightChar: UniChar = 0xf054
         self.moreOptionsButton.setTitle(String(format: "%C", chevronRightChar), for: .normal)
         self.moreOptionsButton.tintColor = UIColor.bubbleBlue()
+        //self.inputToolbar.contentView.leftBarButtonItem = self.moreOptionsButton
         
         self.attachButton.frame = CGRectMake(0, 0, 32, 32)
         self.attachButton.titleLabel?.font = UIFont(name: kFontAwesomeFont, size: 20)
@@ -247,6 +265,7 @@ import MCEmojiPicker
         self.statusTapGestureRecognizer.numberOfTapsRequired = 1
         
         if xmppManager() != nil {
+            //self.currentmgr = xmpp  //IOSM#22 change to _currentmgr
             loginStatusToken = self.xmppMgr?.observe(\.loginStatus, options: [.new, .old], changeHandler: {[weak self](xmpp, change) in
                 self?.setConnectionStatus()
             })
@@ -266,6 +285,7 @@ import MCEmojiPicker
         self.tryToMarkAllMessagesAsRead()
         
         //IOSM#8
+        //self.updateDisplayedMessage()
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             self.loadingMessages = false
@@ -278,6 +298,7 @@ import MCEmojiPicker
     }
     
     open override func viewWillAppear(_ animated: Bool) {
+        //self.currentIndexPath = nil
         super.viewWillAppear(animated)
         
         if let navigationController = self.navigationController {
@@ -353,7 +374,7 @@ import MCEmojiPicker
     private func observeConversations() {
         guard let convid = self.threadKey else {return}
 
-        let roomRequest = ChatRoomMessage.all().filter(Column("roomUniqueId") == convid).order(Column("messageDate").desc)
+        let roomRequest = ChatRoomMessage.all().filter(Column("roomUniqueId") == convid).order(Column("messageDate").desc)//.filter(Column("messageText") != nil)
             
         roomMsgCancellable = ValueObservation
             .tracking(roomRequest.fetchAll(_:))
@@ -370,6 +391,7 @@ import MCEmojiPicker
     }
     
     private func updateRoomDataSource(from messages: [ChatRoomMessage]) {
+        //curMessagesAdded = 0
         let diffcnt = messages.count - self.chatRoomMessages.count
         if self.updatedRoomSource, diffcnt > 0 {
             self.messagesAdded += diffcnt
@@ -407,9 +429,14 @@ import MCEmojiPicker
         }
         
         if self.updatedRoomSource == false {
+            //DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 self.updatedRoomSource = true
+            //}
         }
         
+        //dsQueue.async {
+        //    self.checkDisplayedJids()//maybe only if legit changes
+        //}
     }
     
     private enum MessagePresentationCategory {
@@ -571,12 +598,15 @@ import MCEmojiPicker
                             }
                         }
                     }
+                    //print("***** reload ips: \(ips)")
                     if reconfigure == true {
                         self.messagesCollectionView.reconfigureItems(at: ips)
                     } else {
+                        //print("***** something didn't match, reload sections instead")
                         self.messagesCollectionView.reloadSections(reloadIndexSet)
                     }
                 }
+                //self.messagesCollectionView.reloadData()
             } else {
                 var reconfigure = true
                 var ips:[IndexPath] = []
@@ -601,9 +631,11 @@ import MCEmojiPicker
                     }
                 }
                 if ips.count > 0 {
+                    //print("***** update ips: \(ips)")
                     if reconfigure == true {
                         self.messagesCollectionView.reconfigureItems(at: ips)
                     } else {
+                        //print("***** something didn't match, reload sections instead")
                         self.messagesCollectionView.reloadSections(reloadIndexSet)
                     }
                 }
@@ -611,6 +643,7 @@ import MCEmojiPicker
             
             if self.loadingMoreMessages {
                 self.loadingMoreMessages = false
+                //}
                 let afterContentSize = self.messagesCollectionView.contentSize
                 let contentOffset = self.messagesCollectionView.contentOffset
                 // reset the contentOffset after data is updated
@@ -646,7 +679,7 @@ import MCEmojiPicker
             var i = 0
             
             var changedMsgs:[ChatRoomMessage] = []
-            for roomMsg in self.chatRoomMessages {
+            for roomMsg in self.chatRoomMessages { //}.reversed() {
                 i+=1
                 let msgModel = ChatRoomMessageModel(message: roomMsg)
                 if i >= ChatRoomViewController.kOTRMessagePageSize {
@@ -759,16 +792,18 @@ import MCEmojiPicker
     private func drawCellsIfNeeded() {
         if self.redrawSet.count > 0 {
             var ips:[IndexPath] = []
+            //var iset:IndexSet = []
             let reset = self.redrawSet
             self.redrawSet.removeAll()
             let latestCnt = self.shownMessages.count
             for idx in reset {
                 if latestCnt > idx.section {
                     ips.append(idx)
+                    //iset.insert(idx.section)
                 }
             }
             
-            self.messagesCollectionView.reconfigureItems(at: ips)
+            self.messagesCollectionView.reconfigureItems(at: ips) // reloadSections(iset)
         }
     }
 
@@ -798,6 +833,7 @@ import MCEmojiPicker
         
         self.titleView.dynConnectingView.stopAnimating()
         self.titleView.subtitleLabel.text = nil
+        //self.resetOptionsButton()
     }
     
     func setThreadKey(_ key: String?) {
@@ -808,6 +844,7 @@ import MCEmojiPicker
         }
         
         if key != self.threadKey {
+            //self.currentIndexPath = nil
             let oldKey = self.threadKey
             
             self.threadKey = key
@@ -837,14 +874,24 @@ import MCEmojiPicker
             roomMsgCancellable = nil
             self.chatRoomMessages.removeAll()
             
+            //self.dsQueue.async {
                 self.initialRequest()
+            //}
             
             self.getAvatarImages()
+            //DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            //if (self.xmppMgr?.loginStatus == OTRLoginStatus.authenticated) {
                 self.observeConversations()
+            //} else { //timer or wait for login and then timer
+            //    waitingToObserve = false
+            //}
             
+            //self.resetDataSource()
             self.saveChatThreadIfNeeded()
             
+            // Clear out old state (don't just alloc a new object, we have KVOs attached to this!)
             self.state.reset()
+            //self.showTypingIndicator = false
             
             // This is set to nil so the refreshTitleView: method knows to reset username instead of last seen time
             self.titleView.subtitleLabel.text = nil
@@ -856,6 +903,7 @@ import MCEmojiPicker
             if oldKey != key {
                 self.saveCurrentMessageText(self.messageInputBar.inputTextView.text, key: oldKey)
                 self.messageInputBar.inputTextView.text = nil
+                //self.receivedTextViewChanged(self.messageInputBar.inputTextView)
             }
             
             if let key = self.threadKey {
@@ -866,7 +914,10 @@ import MCEmojiPicker
                 self.sender = ChatUser(senderId: "", displayName: "")
             }
             
+            //self.messagesCollectionView.reloadData()
+            //self.messagesCollectionView.layoutIfNeeded()
             
+            //self.resetOptionsButton()
             self.setupTopRightButtons()
             self.updateState()
             
@@ -963,11 +1014,14 @@ import MCEmojiPicker
             
         self.navigationItem.rightBarButtonItem = groupItem //nil
         // changed pin to phone
+        //let items = [groupItem, phoneItem]
+        //self.navigationItem.rightBarButtonItems = items
     }
     
     func resetOptionsButton() {
         self.microphoneButton.removeFromSuperview()
         self.attachButton.removeFromSuperview()
+        //self.inputToolbar?.contentView.leftBarButtonItem = self.moreOptionsButton
     }
     
     func getAttachmentPicker() -> OTRAttachmentPicker {
@@ -987,12 +1041,14 @@ import MCEmojiPicker
             return
         }
         
+        //getThread(key: key, collection: collection)
         if var thread = getRoom(), ChatRoomModel.getXMPPRoom(uniqueId: thread.uniqueId) != nil {
             thread.currentMessageText = text
             thread.storeInGRDB()
             
             if let xmpp = xmppManager(), let xMessage = xmpp.getInactiveMessage(thread.uniqueId) {
                 xmpp.sendChatStateMessage(xMessage)
+                //xmpp.sendChatState(.inactive, buddyUniqueId: thread.uniqueId)
             }
         }
     }
@@ -1003,6 +1059,7 @@ import MCEmojiPicker
             let textView = self.messageInputBar.inputTextView
             if textView.text.count == 0 && oldText.count > 0 {
                 textView.text = oldText
+                //self.receivedTextViewChanged(textView)
             }
             
             if oldText.count > 0 {
@@ -1028,12 +1085,16 @@ import MCEmojiPicker
             self.titleView.titleLabel.text = namecomponents.first
         }
         
+        //if let title = titleView.titleLabel.text {
+            //self.titleView.titleLabel.text = "#" + title
+        //}
         
         self.titleView.titleImageView.image = nil
     }
     
     @objc func updateStatusTimer()
     {
+        //DDLogWarn(@"*** statusCtr %d", _statusCtr);
         if (self.statusCtr < 22 && self.showConnStatus) { //IOSM-395 added &&
             self.statusCtr+=1
         } else {
@@ -1045,6 +1106,7 @@ import MCEmojiPicker
             self.setConnectionStatus()
         }
         
+        //self.updateForDisplayedMessages()
     }
     
     func configureMessageCollectionView() {
@@ -1363,6 +1425,14 @@ import MCEmojiPicker
                         self.titleView.dynConnectingView.isHidden = true
                         
                         //observeConversations if needed
+                        //if self.roomMsgCancellable == nil, self.waitingToObserve == false {
+                        //    self.waitingToObserve = true
+                        //    self.addUploadHUD("Retrieving data...", tapToCancel: false)
+                        //    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        //        self.removeUploadHUD()
+                        //        self.observeConversations()
+                        //    }
+                        //}
                     }
                     else {
                         self.handleConnectingStatus(protocolExists: true)
@@ -1377,6 +1447,7 @@ import MCEmojiPicker
     }
 
     func handleConnectingStatus(protocolExists: Bool) {
+        //DDLogWarn(@"*** handleConnectingStatus with statusCtr %d", _statusCtr);
         self.showConnStatus = true
         
         if OTRAppDelegate.appDelegate.isProxyDetected() == true {
@@ -1384,12 +1455,14 @@ import MCEmojiPicker
             return
         }
         
+        //if the timer doesn't exist here we need to recreate it. Happens on loss of network conenction.
         if (self.statusTimer == nil && protocolExists) { //IOSM#22
             self.statusCtr = 0
             self.statusTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(updateStatusTimer), userInfo: nil, repeats: true)
         }
         
         if (self.statusCtr < 4) {
+            //self.titleView.subtitleLabel.text = nil; //IOSM#60
             self.refreshTitleView()
             self.titleView.dynConnectingView.isHidden = true
         } else if (self.statusCtr < 6) {
@@ -1412,7 +1485,7 @@ import MCEmojiPicker
                     self.titleView.subtitleLabel.text = "Trying again"
                     self.retryLogin()
                 }
-            } else {
+            } else { // don't think this should be possible, but just in case
                 self.titleView.subtitleLabel.text = "Problems initializing account"
             }
         }
@@ -1461,9 +1534,11 @@ import MCEmojiPicker
     
     //IOSM-527b doesn't this depend on what the current conversation is?
     public func joinStatusUpdated(_ join: Bool) {
+        //NSString *callname = [xmpp.callManager getCallToJoin];
     }
     
     func findBuddyLocation(_ buddyloc:String, with message:ChatRoomMessage) {
+        //override if desired
     }
 
     open override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -1513,6 +1588,7 @@ import MCEmojiPicker
         }
         
         if let tcell = cell as? TextMessageCell {
+            //let msg = self.shownMessages[indexPath.section]
             if let txt = msg.messageText {
                 if txt.starts(with: "Message cannot be decrypted"), let fontDesc = tcell.messageLabel.font.fontDescriptor.withSymbolicTraits(.traitItalic) {
                     // making the new font; size:0 means 'keep the size as is'
@@ -1557,6 +1633,7 @@ import MCEmojiPicker
     {
         let message = self.shownMessages[indexPath.section]
         let key = message.uniqueId as NSString
+        //if message.mediaItemUniqueId == nil
         if indexPath.section < self.shownMessages.count - 2, let sizeValue = self.messageSizeCache.object(forKey: key) {
             return sizeValue.cgsize// cgSizeValue
         }
@@ -1596,6 +1673,7 @@ import MCEmojiPicker
     public func nextMessageForItem(at indexPath: IndexPath) -> MessageKit.MessageType? {
         
         if self.shownMessages.count > indexPath.section+1 {
+            //let nextip = IndexPath(item: indexPath.row, section: indexPath.section+1)
             return self.shownMessages[indexPath.section+1]
         }
         
@@ -1637,6 +1715,7 @@ import MCEmojiPicker
                 updateString = self.getFormattedSystemOrMemberUpdate(updateString: updateString)
                 if text.length > 0 {
                     text.append(NSAttributedString(string: "\n"))
+                    //updateString = "\n" + updateString
                 }
                 text.append(NSAttributedString(string: updateString, attributes:attrs))
             }
@@ -1662,10 +1741,11 @@ import MCEmojiPicker
         while let scannedStr: String = scanner.scanUpToCharacters(from: CharacterSet.whitespaces) {
             if (currentLine.count + scannedStr.count) <= lineLength {
                 currentLine.append(scannedStr + " ")
-            } else {
+            } else { // Need to break line and start new one
                 resultString.append(currentLine + "\n")
                 currentLine = scannedStr + " "
             }
+            //let nunya = scanner.scanCharacters(from: CharacterSet.whitespaces)
         }
         
         if currentLine.count > 0 {
@@ -1725,15 +1805,17 @@ import MCEmojiPicker
             let percentProgress = progress * 100
             var progressString:String?
             var insertIndex = 0;
+            //let font = UIFont(name: kFontAwesomeFont, size: 12)
             
             if message.state == ChatRoomMessageState.received.rawValue, progress < 1 {
-                if let merror = message.error{
+                if let merror = message.error{//} as? NSError {
                     let nsErr = NSError(domain: merror.errDomain, code: merror.errCode)
                     if !nsErr.isUserCanceledError, !nsErr.isAutomaticDownloadError {
                         let clockChar: UniChar = 0xf017
-                        let progressString = String(format: " %C ", clockChar)
+                        let progressString = String(format: " %C ", clockChar) //IOSM#57 from WAITING_STRING()
                         
                         let attrStr = NSAttributedString(string: progressString, attributes: attrs)
+                        //NSAttributedString(string: progressString, attributes: [NSAttributedString.Key.font:font ?? UIFont.systemFont(ofSize: 12)])
                         attributedString.append(attrStr)
                         return attributedString
                     }
@@ -1771,7 +1853,7 @@ import MCEmojiPicker
     }
     
     open override func collectionView( _ collectionView: UICollectionView, canPerformAction action: Selector, forItemAt indexPath:IndexPath, withSender sender: Any?) -> Bool {
-        return false
+        return false //overridden for long press
     }
     
     @objc private func didLongPress(_ longGestureRecognizer: UILongPressGestureRecognizer) {
@@ -1904,7 +1986,7 @@ import MCEmojiPicker
     }
     
     override open func collectionView(_: UICollectionView, shouldShowMenuForItemAt indexPath: IndexPath) -> Bool {
-        return false
+        return false //overridden for long press
     }
     
     func deleteMessage(at indexPath: IndexPath) {
@@ -1936,7 +2018,7 @@ import MCEmojiPicker
     /** Currently uses clock for queued, and checkmark for delivered. */
     func deliveryStatusString(for message:ChatRoomMessage) -> NSAttributedString? {
         let deliveryStatusString = NSMutableAttributedString(string: "")
-        if message.sentDate == nil {
+        if message.sentDate == nil { //} && ![message messageMediaItemKey]) { //IOSM#57
             // Waiting to send message. This message is in the queue.
             let clockChar: UniChar = 0xf017
             let clockString = String(format: " %C", clockChar)
@@ -1948,6 +2030,7 @@ import MCEmojiPicker
     
     //IOSM-486, IOSM-557
     func send(htmlURL:URL) {
+        //guard let htmlURL = htmlURL else { return; }
         //check urls for jpg, etc, if so use sendImageFilePath
         let ustr = htmlURL.absoluteString.lowercased()
         if ustr.hasSuffix("jpg") || ustr.hasSuffix("jpeg") || ustr.hasSuffix("png") {
@@ -2077,6 +2160,8 @@ import MCEmojiPicker
                         let idNumber = NSNumber.init(integerLiteral: Int(bundle.deviceId))
                         let currentDevice = ChatOmemoDevice(deviceId: idNumber, trustLevel: OMEMOTrustLevel.trustedUser, parentKey: account.uniqueId, parentCollection: ChatAccountModel.collection(), publicIdentityKeyData: bundle.identityKey, lastSeenDate: xmpp.getLastConnected())
                         if let bareJid = account.bareJID, var curdevices = xmpp.omemoSignalCoordinator?.fetchDeviceIds(for: bareJid, transaction: transaction) {
+                            //let removedDevices = [currentDevice.deviceId]
+                            //let nsDevices:NSArray = devices as NSArray
                             
                             let removeId = NSNumber(value:currentDevice.deviceId)
                             let iset = curdevices.enumerated().lazy
@@ -2122,6 +2207,7 @@ import MCEmojiPicker
                     DispatchQueue.global().async {
                         for buddy in buddiesArray {
                             xmpp.omemoSignalCoordinator?.prepareSessionForBuddy(buddy.uniqueId, completion: { (success:Bool) in
+                                    //
                             })
                         }
                     }
@@ -2392,7 +2478,10 @@ extension ChatRoomViewController { //call stuff
             //IOSM-509 prevent accidental hot mic
             let alert = UIAlertController(title: "Start Call?", message: nil, preferredStyle: .alert)
             let callAction = UIAlertAction(title: "Call", style: .default, handler: { alert in
+                //if xmppMgr.callManager.makeCall(callBuddies, name:self.getThreadName()!) == true { //IOSM#70 if
                     // add "outgoing" message to thread
+                    //self.addCallUpdate("You called", mgr: xmppMgr, room: room)
+                //}
             })
             let cancelAction = UIAlertAction(title: "Cancel", style: .default, handler: nil)
             alert.addAction(callAction)
@@ -2476,9 +2565,13 @@ extension ChatRoomViewController: AttachmentsInputBarViewDelegate {
                 self.handleVideoPicked(url)
             case .data(_):
                 continue
+                //self.sendPhoto(image, asJPEG: true, shouldResize: true, info: nil)
             case .other(_):
                 continue
             }
+            //if case .image(let image) = item {
+           //     self.sendPhoto(image, asJPEG: true, shouldResize: true, info: nil)
+            //}
         }
         
         inputBar.invalidatePlugins()
@@ -2522,6 +2615,7 @@ extension ChatRoomViewController: AttachmentsInputBarViewDelegate {
             return
         }
         
+        //let components = inputBar.inputTextView.components
         inputBar.inputTextView.text = String()
         inputBar.invalidatePlugins()
         // Send button activity animation
@@ -2550,6 +2644,7 @@ extension ChatRoomViewController: AttachmentsInputBarViewDelegate {
         if self.room?.isPublic == true {
             inputBar.inputTextView.placeholder = "Send message"
         }
+        //self.insertMessages(components)
         self.messagesCollectionView.scrollToLastItem(animated: true)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.messagesCollectionView.scrollToLastItem(animated: true)
@@ -2581,6 +2676,7 @@ extension ChatRoomViewController: AttachmentsInputBarViewDelegate {
         do {
             let vidurl = URL(fileURLWithPath: tmpPath)
             try fileManager.copyItem(at: url, to:vidurl)
+            //let newurl = URL(fileURLWithPath: tmpPath)
             DispatchQueue.main.async {
                 self.sendVideoURL(vidurl)
             }
@@ -2634,6 +2730,8 @@ extension ChatRoomViewController: AttachmentsInputBarViewDelegate {
     
     //IOSM-579
     func convertBadLinksText(_ text: String) -> String {
+        //let newtext = text.replacingOccurrences(of: "http://", with: "https://")
+        //check out espn.com and suntrust.com and let me know
         let types: NSTextCheckingResult.CheckingType = [.link]
         let detector = try! NSDataDetector(types: types.rawValue)
         var badurls = true
@@ -2645,7 +2743,7 @@ extension ChatRoomViewController: AttachmentsInputBarViewDelegate {
             for match in matches {
                 guard let matchrange = Range(match.range, in: newText) else { continue }
                 if match.resultType == NSTextCheckingResult.CheckingType.link {
-                    if let urlstr = match.url?.absoluteString, urlstr.lowercased().hasPrefix("http:
+                    if let urlstr = match.url?.absoluteString, urlstr.lowercased().hasPrefix("http://"), let rangescheme = urlstr.lowercased().range(of: "http:") {
                         badurls = true
                         let newurl = urlstr.replacingCharacters(in: rangescheme, with: "https:")
                         newText = newText.replacingCharacters(in: matchrange, with: newurl)
@@ -2738,6 +2836,8 @@ extension ChatRoomViewController { //XMPP stuff
         }
         
         if let prev = self.prevMessageForItem(at: indexPath) as? ChatRoomMessage {
+        //let previp = IndexPath(row: 0, section: indexPath.section-1)
+        //if let prev = self.messageAt(previp) {
             let timediff = message.messageDate.timeIntervalSince(prev.messageDate)
             if (timediff > ChatRoomViewController.kOTRMessageSentDateShowTimeInterval) {
                 return true
@@ -2840,7 +2940,7 @@ extension ChatRoomViewController: MessagesDisplayDelegate {
     }
 
     public func enabledDetectors(for _: MessageType, at _: IndexPath, in _: MessagesCollectionView) -> [DetectorType] {
-        [.url]
+        [.url]//, .address, .phoneNumber, .date, .transitInformation, .mention, .hashtag]
     }
 
   // MARK: - All Messages
@@ -2856,6 +2956,7 @@ extension ChatRoomViewController: MessagesDisplayDelegate {
 
     public func configureAvatarView(_ avatarView: AvatarView, for message: MessageType, at indexPath: IndexPath, in mcv: MessagesCollectionView) {
         
+        //guard let rmessage = message as? ChatRoomMessage else { return }
         
         if let next = nextMessageForItem(at: indexPath), message.sender.senderId == next.sender.senderId {
             avatarView.isHidden = true
@@ -2973,6 +3074,7 @@ extension ChatRoomViewController: MessagesDisplayDelegate {
                         if let data = fileimage.jpegData(compressionQuality: 1.0) {
                             if data.count < 10000 { //didn't really render, retry
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    //print("***** about to reconfigure")
                                     imageView.kf.indicator?.stopAnimatingView()
                                     if self.shownMessages.count > ip.section {
                                         self.messagesCollectionView.reconfigureItems(at: [ip])
@@ -3042,6 +3144,7 @@ extension ChatRoomViewController: MessagesDisplayDelegate {
                                         let resizedImage = htmlImg.scaleImageWith(newSize: mediaSize)
 
                                         imageView.image = resizedImage
+                                        //imageView.layoutIfNeeded()
 
                                         self.dsQueue.async {
                                             htmlfile.storeInCache(resizedImage, thumbnailKey: thumbnailKey, messageId: chatMsg.uniqueId, buddyId: chatMsg.roomUniqueId, found:false, completion: {[weak self] _ in
@@ -3101,6 +3204,7 @@ extension ChatRoomViewController: MessagesDisplayDelegate {
         if audioPlaybackController.audioPlayer?.isPlaying == true { return }
         
         if let audioItem = media as? ChatAudioItem {
+            //let dtext = cell.durationLabel.text
             if audioItem.duration > 0.0 {
                 cell.durationLabel.text = self.audioProgressTextFormat(audioItem.duration, for: cell, in: self.messagesCollectionView)
             } else {

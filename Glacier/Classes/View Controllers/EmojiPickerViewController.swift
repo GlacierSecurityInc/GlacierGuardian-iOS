@@ -1,6 +1,10 @@
+//
+//  EmojiPickerViewController.swift
 //  Glacier
+//
 //  Created by Prem Pratap Singh on 11/11/25.
 //  Copyright © 2025 Glacier. All rights reserved.
+//
 
 import UIKit
 import MCEmojiPicker

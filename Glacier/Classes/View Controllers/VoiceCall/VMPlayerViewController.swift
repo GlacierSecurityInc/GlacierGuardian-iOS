@@ -1,6 +1,10 @@
+//
+//  VMPlayerViewController.swift
 //  Glacier
+//
 //  Created by andyfriedman on 3/4/25.
 //  Copyright © 2025 Glacier. All rights reserved.
+//
 
 import UIKit
 import AVFoundation
@@ -37,18 +41,21 @@ class VMPlayerViewController: UIViewController {
     var playIconChar: UniChar!
     var pauseIconChar: UniChar!
     var speakerOnIconChar: UniChar!
+    //var speakerOffIconChar: UniChar!
     var vmUpdateDelegate: VMUpdateDelegate?
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         setupUI()
+        //loadVoicemailData()
         setupAudioPlayer()
         startAudioPlayerObserver()
     }
     
     // Setup UI
     func setupUI() {
+        //self.view.backgroundColor = .white
         
         // Caller Name Label
         callerNameLabel = UILabel()
@@ -92,6 +99,7 @@ class VMPlayerViewController: UIViewController {
         playPauseButton.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 4.0, leading: 8.0, bottom: 4.0, trailing: 8.0)
         playPauseButton.titleLabel?.font = UIFont(name: kFontAwesomeFont, size: 22)
         playPauseButton.titleLabel?.textAlignment = NSTextAlignment.center
+        //playPauseButton.tintColor = .blue
         playPauseButton.setTitleColor(.appleBlue(), for: UIControl.State.normal)
         if self.traitCollection.userInterfaceStyle == .dark {
             playPauseButton.setTitleColor(.white, for: UIControl.State.normal)
@@ -110,7 +118,9 @@ class VMPlayerViewController: UIViewController {
         speakerButton.titleLabel?.textAlignment = NSTextAlignment.center
         speakerButton.tintColor = .lightGray
         speakerButton.setTitleColor(.white, for: UIControl.State.normal)
+        //let speakerIconChar: UniChar = 0xf04b
         speakerOnIconChar = 0xf028//  f6a8
+        //speakerOffIconChar = 0xf026 //f2e2
         speakerButton.setTitle(String(format: "%C", speakerOnIconChar), for: .normal)
         
         speakerButton.backgroundColor = .systemGray
@@ -309,6 +319,7 @@ class VMPlayerViewController: UIViewController {
         preDurationLabel.text = formattedDuration(currentTime)
         postDurationLabel.text = "-"+formattedDuration(voicemailDuration - currentTime)
         let progress = Float(currentTimeFl) / Float(voicemailDuration)
+        //print("***** progress \(progress) with \(currentTime)/\(voicemailDuration)")
         progressBar.setProgress(progress, animated: true)
     }
     

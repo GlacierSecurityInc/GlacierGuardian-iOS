@@ -1,6 +1,10 @@
+//
+//  OTRBuddyInfoCheckableCell.swift
 //  ChatSecure
+//
 //  Created by N-Pex on 2017-08-16.
 //  Copyright © 2017 Chris Ballinger. All rights reserved.
+//
 
 import UIKit
 import XLForm

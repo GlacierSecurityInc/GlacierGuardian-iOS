@@ -1,6 +1,10 @@
+//
+//  WebRTCCallVideoView.swift
 //  Glacier
+//
 //  Created by andyfriedman on 5/5/25.
 //  Copyright © 2025 Glacier. All rights reserved.
+//
 
 import Foundation
 import WebRTC
@@ -44,10 +48,13 @@ class WebRTCCallVideoView: UICollectionView {
         delegate = self
     }
 
+    //deinit { call.removeObserver(self) }
     
     func addParticipant(videoView: RTCMTLVideoView, name: String?, image: UIImage?) {
         //create a VideoView here and add it
+        //let videoView = RTCMTLVideoView(frame: .zero)
         let callParticipant = WebRTCCallParticipant(view: videoView, image:image, name:name)
+        //callParticipant.participant.delegate = callParticipant
         callParticipant.participantView.delegate = self
         participantsArray.append(callParticipant)
         self.backgroundColor = GlobalTheme.shared.lightThemeColor
@@ -203,6 +210,8 @@ class WebRTCVideoGridCell: UICollectionViewCell {
         mutedView.isHidden = !participant.isMuted
         
         // check if videoEnabled
+        //var hide = false
+        //hideAvatar(hide: hide)
         
         callParticipant = participant
     }
@@ -262,6 +271,8 @@ extension WebRTCVideoGridCell: CallVideoCellDelegate {
 }
 
 class WebRTCCallParticipant : NSObject {
+    //let participant: RemoteParticipant!
+    //let buddy: ChatBuddyModel!
     let participantView: RTCMTLVideoView!
     var participantImage: UIImage?
     var participantName: String?
@@ -269,6 +280,7 @@ class WebRTCCallParticipant : NSObject {
     weak var callCellDelegate: CallVideoCellDelegate?
     
     public init(view: RTCMTLVideoView, image: UIImage?, name: String?) {
+        //buddy = remoteParticipant
         participantView = view
         participantImage = image
         participantName = name

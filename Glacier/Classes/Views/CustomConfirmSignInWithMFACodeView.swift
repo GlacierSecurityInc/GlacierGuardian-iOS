@@ -1,6 +1,10 @@
+//
+//  CustomConfirmSignInWithMFACodeView.swift
 //  Glacier
+//
 //  Created by andyfriedman on 10/14/25.
 //  Copyright © 2025 Glacier. All rights reserved.
+//
 
 
 import SwiftUI
@@ -11,6 +15,7 @@ import Authenticator
 struct CustomConfirmSignInWithMFACodeView: View {
     @ObservedObject var state: ConfirmSignInWithCodeState
 
+    //@State private var code: String = ""
     @FocusState private var isFocused: Bool
 
     // Resend timer
@@ -53,6 +58,7 @@ struct CustomConfirmSignInWithMFACodeView: View {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                         isFocused = true
                     }
+                    //startResendCountdown()
                 }
 
             // Paste from SMS helper
@@ -106,6 +112,7 @@ struct CustomConfirmSignInWithMFACodeView: View {
 
     private func resend() {
         Task {
+            //try? await state. resendCode()
             startResendCountdown()
         }
     }
@@ -157,6 +164,7 @@ struct CustomConfirmSignInWithMFACodeView: View {
             if lastClipboard != code {
                 lastClipboard = code
                 state.confirmationCode = code
+                //submit()
             }
         }
     }

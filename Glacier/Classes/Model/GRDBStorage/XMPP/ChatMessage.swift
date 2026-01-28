@@ -1,6 +1,10 @@
+//
+//  ChatMessage.swift
 //  Glacier
+//
 //  Created by andyfriedman on 9/11/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import GRDB
@@ -504,6 +508,7 @@ extension ChatMessageModel {
     }
     
     @objc public static func markAllUnreadMessages(for threadId:String, completion: @escaping (_ updatedMessages: [ChatMessageModel]) -> ()) {
+        //var markable:[ChatMessageModel] = []
         var messages:[ChatMessage] = []
         DBManager.sharedDB().grdbStorage.asyncWrite(block: { transaction in
             do {
@@ -512,6 +517,7 @@ extension ChatMessageModel {
                 let req = ChatMessage
                     .filter(Column("buddyUniqueId") == threadId)
                     .filter(Column("read") == false)
+                //.filter(Column("type") == MessageType.incoming.rawValue)
                 messages = try req.fetchAll(transaction.database)
                 try req.updateAll(transaction.database, [Column("read").set(to: true), Column("readDate").set(to: now), Column("modified").set(to: now)])
                 
@@ -551,10 +557,12 @@ extension ChatMessageModel {
             try DBManager.sharedDB().grdbStorage.read(block: { transaction in
                 let records = try ChatMessage
                     .filter(Column("read") == false)
+                    //.filter(Column("type") != ChatMessageType.outgoing.rawValue)
                     .fetchAll(transaction.database)
                 for rec in records {
-                    let msg = ChatMessageModel(message: rec)
+                    let msg = ChatMessageModel(message: rec) //} as? IncomingChatMessage {
                         msgs.append(msg)
+                    //}
                 }
             })
         } catch {
@@ -692,6 +700,7 @@ extension ChatMessageModel {
             try DBManager.sharedDB().grdbStorage.read(block: { transaction in
                 if let record = try ChatMessage
                     .filter(Column("buddyUniqueId") == threadId)
+                    //.filter(Column("type") != MessageType.download.rawValue)
                     .order(Column("date").desc)
                     .fetchOne(transaction.database) {
                     message = ChatMessageModel(message: record)
@@ -869,6 +878,7 @@ extension ChatMessageModel {
             try DBManager.sharedDB().grdbStorage.read(block: { transaction in
                 count = try ChatMessage
                     .filter(Column("buddyUniqueId") == threadId)
+                    //.filter(Column("type") != MessageType.download.rawValue)
                     .fetchCount(transaction.database)
             })
         } catch {
@@ -927,6 +937,7 @@ struct ChatMessage: GRDBRecord, TableRecord {
     var msgSenderId: String
     var msgSenderDisplayName: String
     
+    //var messageSecurityInfo: Data?
     var messageSecurity: Int?
     var omemoDeviceKey: String?
     var modified: Date?
@@ -967,6 +978,7 @@ struct ChatMessage: GRDBRecord, TableRecord {
                     .filter(Column("buddyUniqueId") == buddyId)
                     .order(Column("date").desc)
                     .limit(limit)
+                    //.order(Column("date").asc)
                     .fetchAll(transaction.database)
                 //return messages
             })
@@ -974,6 +986,7 @@ struct ChatMessage: GRDBRecord, TableRecord {
             DDLogError("error: allChatMessages \(error)")
         }
         
+        //let messages:[ChatMessage] = []
         return messages
     }
     
@@ -1027,10 +1040,15 @@ extension ChatMessage {
         request(for: ChatMessage.buddy)
     }
     
+    //static let chatThread = hasOne(ChatThread.self, through: buddy, using: ChatBuddy.thread)
+    //var chatThread: QueryInterfaceRequest<ChatThread> {
+    //    request(for: ChatMessage.chatThread)
+    //}
 }
 
 extension ChatMessage: MessageType {
     /// The sender of the message.
+    /// public var sender: SenderType {
     public var sender: SenderType {
         get {
             return ChatUser(senderId: self.msgSenderId, displayName: self.msgSenderDisplayName)
@@ -1060,6 +1078,7 @@ extension ChatMessage: MessageType {
                     } else if mediaRec.mediaType == ChatMediaType.audioItem.rawValue, let audioRec = item as? ChatAudioItem {
                         return MessageKind.audio(audioRec)
                     } else if mediaRec.mediaType == ChatMediaType.htmlItem.rawValue, let htmlRec = item as? ChatHTMLItem, ChatMessageModel.disableHTMLDownload == false {
+                        //return MessageKind.linkPreview(htmlRec)
                         return MessageKind.photo(htmlRec)
                     } else if mediaRec.mediaType == ChatMediaType.fileItem.rawValue, let fileRec = item as? ChatFileItem {
                         return MessageKind.photo(fileRec)
@@ -1067,6 +1086,7 @@ extension ChatMessage: MessageType {
                 }
             }
 #endif
+            //print("***** printing url \(String(describing: self.url)) and text \(String(describing: self.text))")
             let txt = self.text ?? " "
             if txt.starts(with: "geo:") {
                 let geoless = txt.replacingOccurrences(of: "geo:", with: "", options: .regularExpression)
@@ -1088,6 +1108,7 @@ extension ChatMessage: MessageType {
                     } else if mediaRec.mediaType == ChatMediaType.audioItem.rawValue, let audioRec = item as? ChatAudioItem {
                         return MessageKind.audio(audioRec)
                     } else if mediaRec.mediaType == ChatMediaType.htmlItem.rawValue, let htmlRec = item as? ChatHTMLItem, ChatRoomMessageModel.disableHTMLDownload == false {
+                        //return MessageKind.linkPreview(htmlRec)
                         return MessageKind.photo(htmlRec)
                     } else if mediaRec.mediaType == ChatMediaType.fileItem.rawValue, let fileRec = item as? ChatFileItem {
                         return MessageKind.photo(fileRec)

@@ -1,6 +1,10 @@
+//
+//  SMSChatAccount.swift
 //  Glacier
+//
 //  Created by andyfriedman on 9/4/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import GRDB
@@ -149,6 +153,7 @@ struct SMSChatAccount: GRDBRecord, TableRecord {
         self.phoneNumber = phoneNumber
         self.twilioId = twilioId
         self.displayName = displayName
+        //self.color = color
         if let color = color {
             self.color = UIColor.StringFromUIColor(color: color)
         }

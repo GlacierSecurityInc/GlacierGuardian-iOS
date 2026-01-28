@@ -1,6 +1,10 @@
+//
+//  UserReactionDetailsViewController.swift
 //  Glacier
+//
 //  Created by Prem Pratap Singh on 28/10/25.
 //  Copyright © 2025 Glacier. All rights reserved.
+//
 
 import UIKit
 

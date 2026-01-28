@@ -1,6 +1,10 @@
+//
+//  XMPPManager.swift
 //  ChatSecureCore
+//
 //  Created by Chris Ballinger on 11/27/17.
 //  Copyright © 2017 Chris Ballinger. All rights reserved.
+//
 
 import Foundation
 import XMPPFramework
@@ -47,11 +51,13 @@ public extension XMPPMessageArchiveManagement {
         }
         
         if let since = since {
+            //NSLog("***** fetchHistory since \(since)")
             let xmppDateString = (since as NSDate).xmppDateTimeString
             
             let start = XMPPMessageArchiveManagement.field(withVar: "start", type: nil, andValue: xmppDateString)
             fields.append(start)
         }
+        //print("***** retrieving \(archiveJID ?? xmppStream?.myJID?.bareJID) from \(since)")
         retrieveMessageArchive(at: archiveJID ?? xmppStream?.myJID?.bareJID, withFields: fields, with: nil)
     }
     
@@ -100,6 +106,9 @@ public extension XMPPManager {
                 for buddy in allBuddies {
                     self.disconnectBuddy(buddy, transaction: transaction)
                 }
+                //if (!self.streamManagementDelegate.streamManagementEnabled) {
+                //    BuddyCache.shared().purgeAllProperties(buddies: allBuddies)
+                //}
             }
             
             let rooms = ChatRoomModel.allXMPPRooms(for: acctId, transaction: transaction)
@@ -134,6 +143,7 @@ public extension XMPPManager {
     }
     
     @objc func getPausedMessage(_ buddyUniqueId:String) -> XMPPMessage? {
+        //var xMessage:XMPPMessage?
 
         guard let buddy = ChatBuddyModel.getBuddy(uniqueId: buddyUniqueId) else { return nil }
         if buddy.lastSentChatState() == .paused {
@@ -146,6 +156,7 @@ public extension XMPPManager {
     }
     
     @objc func getInactiveMessage(_ buddyUniqueId:String) -> XMPPMessage? {
+        //var xMessage:XMPPMessage?
         guard let buddy = ChatBuddyModel.getBuddy(uniqueId: buddyUniqueId) else { return nil }
         if buddy.lastSentChatState() == .inactive {
             return nil

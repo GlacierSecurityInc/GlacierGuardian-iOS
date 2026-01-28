@@ -1,6 +1,10 @@
+//
+//  OMEMODeviceFingerprintCell.swift
 //  ChatSecure
+//
 //  Created by Chris Ballinger on 10/14/16.
 //  Copyright © 2016 Chris Ballinger. All rights reserved.
+//
 
 import UIKit
 import XLForm
@@ -8,6 +12,7 @@ import XMPPFramework
 import FormatterKit
 
 private extension String {
+    //http://stackoverflow.com/a/34454633/805882
     func splitEvery(_ n: Int) -> [String] {
         var result: [String] = []
         let chars = Array(self)
@@ -44,7 +49,7 @@ public extension XLFormBaseCell {
 }
 
 @objc(OMEMODeviceFingerprintCell)
-open class OMEMODeviceFingerprintCell: UITableViewCell {
+open class OMEMODeviceFingerprintCell: UITableViewCell { //XLFormBaseCell {
     
     @IBOutlet weak var fingerprintLabel: UILabel!
     @IBOutlet weak var trustSwitch: UISwitch!
@@ -69,6 +74,9 @@ open class OMEMODeviceFingerprintCell: UITableViewCell {
         if let device = omemoDevice {
             switchValueWithDevice(device)
         }
+        //if let fingerprint = rowDescriptor.value as? OTRFingerprint {
+        //    switchValueWithFingerprint(fingerprint)
+        //}
     }
     
     fileprivate func updateCellFromDevice(_ device: ChatOmemoDevice) {
@@ -86,10 +94,11 @@ open class OMEMODeviceFingerprintCell: UITableViewCell {
         let since = type(of: self).intervalFormatter.string(forTimeInterval: interval)
         let lastSeen = "Session established: " + since!  //Instead of OMEMO
         lastSeenLabel.text = lastSeen
+        //OMEMOTrustLevel.trustedTofu.rawValue
         if (device.trustLevel == OMEMOTrustLevel.trustedTofu.rawValue) {
             trustLevelLabel.text = "Trusted"//"TOFU"
         } else if (device.trustLevel == OMEMOTrustLevel.trustedUser.rawValue) {
-            trustLevelLabel.text = "Trusted"
+            trustLevelLabel.text = "Trusted"//VERIFIED_STRING()
         } else if (device.trustLevel == OMEMOTrustLevel.removed.rawValue) {
             trustLevelLabel.text = Removed_By_Server()
         } else {

@@ -1,6 +1,10 @@
+//
+//  NotificationOMEMOSignalCoordinator.swift
 //  GlacierNotifications
+//
 //  Created by Andy Friedman on 9/23/20.
 //  Copyright © 2020 Glacier. All rights reserved.
+//
 
 import UIKit
 import XMPPFramework
@@ -88,12 +92,13 @@ import SignalProtocolObjC
     private func extractAddressFromGroupMessage(_ message: XMPPMessage) -> XMPPJID? {
         if let fromJID = message.from {
             let roomJID = fromJID.bareJID
+            // This formula is defined in XMPPRoom.roomYapKey
             let accountId = accountKey
             var _occupant: ChatRoomOccupantModel? = ChatRoomOccupantModel.occupant(jid: fromJID, realJID: nil, roomJID: roomJID, accountId: accountId, createIfNeeded: false)
             
             // we've found the existing 1:1 buddy!
             if let buddy = _occupant?.buddy() {
-                return XMPPJID(string: buddy.username)
+                return XMPPJID(string: buddy.username)//buddyModel.bareJID
             } else {
                 if let occupant = _occupant, let realJid = occupant.realJID {
                     return realJid.bareJID
@@ -178,11 +183,13 @@ import SignalProtocolObjC
                 let accountId = accountKey
                 let roomUniqueId = ChatRoomModel.createUniqueId(accountId, jid: roomJID.bare)
                 if let xroom = ChatRoomModel.getXMPPRoom(uniqueId: roomUniqueId) {
+                    //decryptedMsg.from = "#" + xroom.threadName
                     decryptedMsg.from = xroom.threadName
                     decryptedMsg.threadId = xroom.threadIdentifier //IOSM#16
                 } else {
                     let namecomponents = roomJID.bare.components(separatedBy: "@")
                     if (namecomponents.count == 2 && namecomponents[0].count > 0) {
+                        //decryptedMsg.from = "#" + namecomponents[0]
                         decryptedMsg.from = namecomponents[0]
                     }
                 }
@@ -197,6 +204,7 @@ import SignalProtocolObjC
             if (displayName != nil && message.isGroupChatMessage) {
                 decryptedMsg.message = "From: " + displayName!
             }
+            //delegate?.failedToDecryptMessage(decryptedMsg)
             return
         }
         
@@ -233,11 +241,13 @@ import SignalProtocolObjC
                 let accountId = accountKey
                 let roomUniqueId = ChatRoomModel.createUniqueId(accountId, jid: roomJID.bare)
                 if let xroom = ChatRoomModel.getXMPPRoom(uniqueId: roomUniqueId) {
+                    //decryptedMsg.from = "#" + xroom.threadName
                     decryptedMsg.from = xroom.threadName
                     decryptedMsg.threadId = xroom.threadIdentifier //IOSM#16
                 } else {
                     let namecomponents = roomJID.bare.components(separatedBy: "@")
                     if (namecomponents.count == 2 && namecomponents[0].count > 0) {
+                        //decryptedMsg.from = "#" + namecomponents[0]
                         decryptedMsg.from = namecomponents[0]
                     }
                 }
@@ -269,6 +279,7 @@ import SignalProtocolObjC
             return
         }
         
+        //let displayName = getDisplayName(message, from: addressJID)
         var buddyInfoMsg = NotificationMessage()
         buddyInfoMsg = getBuddyInfo(buddyInfoMsg, from: addressJID)
         let displayName = buddyInfoMsg.from
@@ -303,6 +314,8 @@ import SignalProtocolObjC
         }
         var authTag: Data?
         
+        // Treat >=32 bytes OMEMO 'keys' as containing the auth tag.
+        // https://github.com/ChatSecure/ChatSecure-iOS/issues/647
         if (aesKey.count >= aesGcmBlockLength * 2) {
             
             authTag = aesKey.subdata(in: aesGcmBlockLength..<aesKey.count)
@@ -417,6 +430,7 @@ import SignalProtocolObjC
 extension NotificationOMEMOSignalCoordinator: OMEMOModuleDelegate {
     
     public func omemo(_ omemo: OMEMOModule, publishedDeviceIds deviceIds: [NSNumber], responseIq: XMPPIQ, outgoingIq: XMPPIQ) {
+        //DDLogVerbose("publishedDeviceIds: \(responseIq)")
 
     }
     
@@ -425,12 +439,15 @@ extension NotificationOMEMOSignalCoordinator: OMEMOModuleDelegate {
     }
     
     public func omemo(_ omemo: OMEMOModule, deviceListUpdate deviceIds: [NSNumber], from fromJID: XMPPJID, incomingElement: XMPPElement) {
+        //
     }
     
     public func omemo(_ omemo: OMEMOModule, failedToFetchDeviceIdsFor fromJID: XMPPJID, errorIq: XMPPIQ?, outgoingIq: XMPPIQ) {
+        //
     }
     
     public func omemo(_ omemo: OMEMOModule, publishedBundle bundle: OMEMOBundle, responseIq: XMPPIQ, outgoingIq: XMPPIQ) {
+        //DDLogVerbose("publishedBundle: \(responseIq) \(outgoingIq)")
     }
     
     public func omemo(_ omemo: OMEMOModule, failedToPublishBundle bundle: OMEMOBundle, errorIq: XMPPIQ?, outgoingIq: XMPPIQ) {
@@ -438,8 +455,10 @@ extension NotificationOMEMOSignalCoordinator: OMEMOModuleDelegate {
     }
     
     public func omemo(_ omemo: OMEMOModule, fetchedBundle bundle: OMEMOBundle, from fromJID: XMPPJID, responseIq: XMPPIQ, outgoingIq: XMPPIQ) {
+        //DDLogVerbose("fetchedBundle: \(responseIq) \(outgoingIq)")
 
         if (self.isOurJID(fromJID) && bundle.deviceId == self.signalEncryptionManager.registrationId) {
+            //DDLogVerbose("fetchedOurOwnBundle: \(responseIq) \(outgoingIq)")
 
             //We fetched our own bundle
             return;
@@ -464,6 +483,7 @@ extension NotificationOMEMOSignalCoordinator: OMEMOModuleDelegate {
         
     }
     public func omemo(_ omemo: OMEMOModule, failedToFetchBundleForDeviceId deviceId: UInt32, from fromJID: XMPPJID, errorIq: XMPPIQ?, outgoingIq: XMPPIQ) {
+        //
     }
     
     public func omemo(_ omemo: OMEMOModule, removedBundleId bundleId: UInt32, responseIq: XMPPIQ, outgoingIq: XMPPIQ) {
@@ -475,6 +495,7 @@ extension NotificationOMEMOSignalCoordinator: OMEMOModuleDelegate {
     }
     
     public func omemo(_ omemo: OMEMOModule, failedToRemoveDeviceIds deviceIds: [NSNumber], errorIq: XMPPIQ?, elementId: String?) {
+        //
     }
     
     public func omemo(_ omemo: OMEMOModule, receivedKeyData keyData: [OMEMOKeyData], iv: Data, senderDeviceId: UInt32, from fromJID: XMPPJID, payload: Data?, message: XMPPMessage) {
@@ -523,7 +544,7 @@ extension NotificationOMEMOSignalCoordinator:OMEMOStorageDelegate {
 @objc public class NotificationMessage:NSObject {
     @objc public var from:String?
     @objc public var message:String?
-    @objc public var threadId:String?
+    @objc public var threadId:String? //IOSM#16 (and following)
     @objc public var threadCollection:String?
 }
 

@@ -1,6 +1,10 @@
+//
+//  MessageStorage.swift
 //  ChatSecureCore
+//
 //  Created by Chris Ballinger on 11/21/17.
 //  Copyright © 2017 Chris Ballinger. All rights reserved.
+//
 
 import Foundation
 import XMPPFramework
@@ -86,7 +90,7 @@ import GRDB
         if let lastFetch = account.grdbRecord?.lastHistoryFetchDate,
             date > lastFetch {
             account.grdbRecord?.lastHistoryFetchDate = date
-            account.saveXMPPAccount()
+            account.saveXMPPAccount()// (with: transaction)
         }
     }
     
@@ -163,7 +167,7 @@ import GRDB
                         var bod = body
                         let xmsg = XMPPMessage(from: unwrapped)
                         if let fromresource = xmsg.from?.resource {
-                            if let account = ChatAccountModel.getXMPPAccount(uniqueId: accountId), fromresource == account.displayName {
+                            if let account = ChatAccountModel.getXMPPAccount(uniqueId: accountId), fromresource == account.displayName { //, transaction:transaction)
                                 isOutFromOtherDevice = true
                             }
                         }
@@ -174,7 +178,7 @@ import GRDB
                     } else {
                         roomStorage.insertIncoming(xmppMessage, body: body, original: original, delayed: delayed, into: room, split: false, isOutgoingFromOtherDevice: isOutgoingFromOtherDevice, transaction:nil)
                     }
-                } else {
+                } else { // if is invite message
                     if xmppMessage.element(forName: "x", xmlns: XMPPMUCUserNamespace)?.element(forName:"invite") != nil {
                         roomManager.xmppMUC(nil, roomJID: roomJID, didReceiveInvitation: xmppMessage)
                     }
@@ -202,6 +206,7 @@ import GRDB
                 
                 // mark message as read if this is a MAM catchup
                 if delayed != nil {
+                    //
                 }
                 
                 if xmppMessage.hasMarkableChatMarker {
@@ -262,6 +267,8 @@ import GRDB
                 chatmsg.date = delayed
             }
             message.grdbRecord = chatmsg
+            //preSave?(message)
+            //let chatThread = message.threadOwner()
             
             DBManager.sharedDB().grdbStorage.asyncWrite(block: { transaction in
                 var chatThread = message.threadOwner(transaction)
@@ -328,7 +335,9 @@ import GRDB
                         MessageStorage.markAsReadIfVisible(message: message, account: account)
                     }
                 }
+                // let's count carbon messages as realtime
                 if delayed == nil {
+                    //NSLog("***** updating lastFetch from handleDirectMessage with \(Date())")
                     self.updateLastFetch(account: account, date: message.messageDate)
                 }
 
@@ -372,6 +381,7 @@ import GRDB
                                     accountId: String,
                                     split: Bool,
                                     preSave: PreSave? = nil) {
+        // Don't process incoming message with reactions. Reactions are processed under MessageStorage.handleMessageReaction() method.
         if let reactions = message.chatMessageReactions as? [String: Any], !reactions.isEmpty {
             return
         }
@@ -443,6 +453,7 @@ import GRDB
             let stanzaId = message.extractStanzaId(chatAccount: account)
             incoming.grdbRecord?.stanzaId = stanzaId
             
+            //preSave?(incoming)
             DBManager.sharedDB().grdbStorage.asyncWrite(block: { transaction in
                 var chatThread = incoming.threadOwner(transaction)
                 if chatThread == nil {
@@ -456,6 +467,7 @@ import GRDB
                     var newThread = ChatThread(uniqueId: buddy.uniqueId)
                     newThread.messageDate = incoming.messageDate
                     newThread.isGroupThread = false
+                    //newThread.lastMessageId = incoming.uid
                     newThread.accountUniqueId = (account.grdbRecord?.id)!
                     newThread.modified = Date()
                     newThread.grdbSave(transaction: transaction)
@@ -493,6 +505,7 @@ import GRDB
                 }
             }, completionQueue: self.moduleQueue, completion: {
                 self.finishHandlingIncomingMessage(incoming, account: account, showNotification:true, from: fromJID.bare)
+                //NSLog("***** updating lastFetch from handleDirectMessage with \(incoming.messageDate)")
                 self.updateLastFetch(account: account, date: incoming.messageDate)
 
                 self.handleExpiration(incoming)
@@ -516,6 +529,7 @@ import GRDB
             
             // Check for duplicates
             if self.isDuplicate(message: incoming.grdbRecord!) {
+                //DDLogWarn("Duplicate message received: \(message)")
                 insert = false
             }
         }
@@ -611,17 +625,21 @@ extension MessageStorage: XMPPStreamDelegate {
                     guard let account = self.xmppAccount() else { return }
                     // if we've never fetched MAM before, try to fetch the last week
                     // otherwise fetch since the last time we fetched
+                    //var dateToFetch = account.lastHistoryFetchDate
                     
                     self.performBlock {
                         self.mamCatchupInProgress = true
                     }
                     let currentDate = Date()
                     if let dateToFetch = account.grdbRecord?.lastHistoryFetchDate {
+                        //NSLog("***** fetchHistory from \(dateToFetch)")
                         self.archiving.fetchHistory(archiveJID: nil, userJID: nil, since: dateToFetch)
                     } else {
+                        //NSLog("***** did not find lastHistoryFetchDate")
                         var dateComponents = DateComponents()
                         dateComponents.day = -7
                         let lastWeek = Calendar.current.date(byAdding: dateComponents, to: currentDate)!
+                        //dateToFetch = lastWeek
                         self.archiving.fetchHistory(archiveJID: nil, userJID: nil, since: lastWeek)
                     }
                     self.fetchDate = currentDate
@@ -764,6 +782,7 @@ extension MessageStorage: XMPPMessageArchiveManagementDelegate {
                 return
             }
             account.grdbRecord?.lastHistoryFetchDate = self.fetchDate
+            //NSLog("***** set lastHistoryFetchDate to \(Date())")
             account.saveXMPPAccountAsync()
         }
         self.callQuery = false
@@ -912,6 +931,7 @@ extension ChatState {
 }
 
 extension String {
+    /// https://otr.cypherpunks.ca/Protocol-v3-4.0.0.html
     static let OTRWhitespaceStart = String(bytes: [0x20,0x09,0x20,0x20,0x09,0x09,0x09,0x09,0x20,0x09,0x20,0x09,0x20,0x09,0x20,0x20], encoding: .utf8)!
     
     /// for separately handling OTR messages
@@ -977,6 +997,7 @@ extension ChatMessageModel {
         message.originId = xmppMessage.originId
         message.stanzaId = xmppMessage.extractStanzaId(chatAccount: account)
         
+        //self.init(message: message)
         return message
     }
 }

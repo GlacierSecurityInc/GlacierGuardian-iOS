@@ -1,6 +1,10 @@
+//
+//  MessagesViewControllerState.swift
 //  ChatSecure
+//
 //  Created by David Chiles on 2/23/16.
 //  Copyright © 2016 Chris Ballinger. All rights reserved.
+//
 
 import Foundation
 

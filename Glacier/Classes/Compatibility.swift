@@ -1,6 +1,10 @@
+//
+//  Compatibility.swift
 //  ChatSecureCore
+//
 //  Created by Chris Ballinger on 7/15/18.
 //  Copyright © 2018 Chris Ballinger. All rights reserved.
+//
 
 import Foundation
 

@@ -1,6 +1,10 @@
+//
+//  SMSNumbersViewController.swift
 //  Glacier
+//
 //  Created by andyfriedman on 9/16/22.
 //  Copyright © 2022 Glacier. All rights reserved.
+//
 
 import UIKit
 import MBProgressHUD
@@ -16,7 +20,7 @@ public enum SMSNumbersAction {
     case copy
 }
 
-@objc open class SMSNumbersViewController: UITableViewController, UISearchBarDelegate {
+@objc open class SMSNumbersViewController: UITableViewController, UISearchBarDelegate {//}, UISearchResultsUpdating, UISearchControllerDelegate {
     
     var numbers: [String] = []
     var names: [String?] = []
@@ -46,6 +50,8 @@ public enum SMSNumbersAction {
             searchBar?.placeholder = "Area code or partial number"
             searchBar?.backgroundColor = UIColor.systemGroupedBackground
             searchBar?.searchTextField.keyboardType = .phonePad
+            //searchBar?.returnKeyType = .search
+            //searchBar.frame = CGRect(x: 20, y: 100, width: self.view.frame.width - 40, height: 40)
             
             let searchButton = UIButton(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
             searchButton.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 4.0, leading: 8.0, bottom: 4.0, trailing: 8.0)
@@ -59,6 +65,7 @@ public enum SMSNumbersAction {
             searchButton.setTitle(String(format: "%C", searchIconChar), for: .normal)
             searchButton.addTarget(self, action: #selector(doSearch), for: .touchUpInside)
             searchButton.translatesAutoresizingMaskIntoConstraints = false
+            //view.addSubview(searchButton)
             
             let searchView = UIView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: 50))
             searchView.addSubview(searchBar!)
@@ -68,6 +75,7 @@ public enum SMSNumbersAction {
             searchBar?.autoPinEdge(toSuperviewEdge: .trailing, withInset: 40)
             searchBar?.autoPinEdge(toSuperviewEdge: .top, withInset: 0)
             searchBar?.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0)
+            //searchBar?.autoSetDimension(.height, toSize: 50.0)
             searchBar?.translatesAutoresizingMaskIntoConstraints = false
             
             searchButton.autoPinEdge(.leading, to: .trailing, of: searchBar!)
@@ -79,7 +87,7 @@ public enum SMSNumbersAction {
             searchBar?.searchBarStyle = UISearchBar.Style.minimal
             self.tableViewHeader.isScrollEnabled = false
             self.tableViewHeader.backgroundColor = UIColor.systemGroupedBackground
-            self.tableViewHeader.addStackedSubview(searchView)
+            self.tableViewHeader.addStackedSubview(searchView) //searchBar!)
             self.tableView.tableHeaderView = self.tableViewHeader
             
             searchView.autoPinEdge(toSuperviewEdge: .leading, withInset: 0)
@@ -117,6 +125,9 @@ public enum SMSNumbersAction {
     }
     
     public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        //if self.isSearchResultsControllerTableView(tableView) {
+        //    return self.filteredNumbers.count
+        //}
         return self.numbers.count
     }
     

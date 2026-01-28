@@ -1,6 +1,10 @@
+//
+//  ChatFileItem.swift
 //  Glacier
+//
 //  Created by andyfriedman on 9/21/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import MessageKit
@@ -66,6 +70,7 @@ extension ChatFileItem: MediaItem {
             return UIImage()
         }
         
+        //self.curSize = Self.normalizeWidth(width: 250.0, height: 70.0)
         preview.frame = CGRectMake(0, 0, 250.0, 70.0)
         
         let fmt = UIGraphicsImageRendererFormat()
@@ -92,6 +97,7 @@ extension ChatFileItem: MediaItem {
                                                      .memoryCacheAccessExtendingExpiration(.cacheTime)]
             let options = KingfisherParsedOptionsInfo(optionsInfo)
             
+            //self.mediaSize = img.size
             self.save()
             
             GlacierImageCache.shared().store(img, forKey: thumbnailKey, options: options, toDisk: false, completionHandler: {_ in
@@ -105,11 +111,13 @@ extension ChatFileItem: MediaItem {
     }
     
     func getThumbnailImage(_ url: URL) -> UIImage? {
+        //guard let parentKey = self.grdbRecord?.parentObjectKey else {return nil}
         
         guard let preview = FilePreviewView.glacierViewFromNib() else {
             return nil
         }
         
+        //let thumbnailKey =  String(format: "%@-thumb", parentKey)
         preview.setFile(self.grdbRecord!.filename)
         self.curSize = ChatMediaItem.normalizeWidth(width: 250.0, height: 70.0)
         preview.frame = CGRectMake(0, 0, 250.0, 70.0)

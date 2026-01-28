@@ -1,11 +1,15 @@
+//
+//  ImageCache.swift
 //  Glacier
+//
 //  Created by Andy Friedman on 12/7/20.
 //  Copyright © 2020 Glacier. All rights reserved.
+//
 
 import Kingfisher
 import GRDB
 
-@objc class GlacierImageCache: NSObject {
+@objc class GlacierImageCache: NSObject {//} , NSDiscardableContent {
     
     public static let options:KingfisherOptionsInfo = [.cacheMemoryOnly,
         .memoryCacheExpiration(.days(14)), .memoryCacheAccessExtendingExpiration(.cacheTime)]

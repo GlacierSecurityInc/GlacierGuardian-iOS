@@ -1,6 +1,10 @@
+//
+//  SMSComposeViewController.swift
 //  Glacier
+//
 //  Created by andyfriedman on 9/22/22.
 //  Copyright © 2022 Glacier. All rights reserved.
+//
 
 import UIKit
 
@@ -72,6 +76,7 @@ import UIKit
     }
     
     @objc open func cancelButtonPressed(_ sender: AnyObject?) {
+        //self.dismiss(animated: true, completion: nil)
         self.delegate?.controllerDidCancel(self)
     }
     
@@ -97,7 +102,7 @@ import UIKit
         self.present(alert, animated: true, completion: nil)
     }
     
-    @objc func newSMSTapped(_ phoneNumber:String) {
+    @objc func newSMSTapped(_ phoneNumber:String) { //_ sender:AnyObject){
         
         guard phoneNumber.count > 9, self.accountId != nil else {
             return
@@ -137,6 +142,7 @@ import UIKit
         if let acct = self.accountId, let sendingNum = self.sendingNumber {
             let remoteNumber = CallManager.cleanPhoneNumber(number)
             
+            //let convId = UUID().uuidString
             var conversation = TwilioBackendManager.sharedMgr().getExistingConversation(localNumber: sendingNum, remoteNumber: remoteNumber)
             
             if conversation == nil {
@@ -159,6 +165,7 @@ import UIKit
             }
             
             if let conv = conversation {
+                //TwilioBackendManager.sharedMgr().createAndJoinConversation(friendlyName: sendingNum, smsConversation: conv)
                 self.delegate?.controller(self, didSelectBuddies: [conv.uniqueId], accountId: acct, name: nil)
             }
         }
@@ -287,6 +294,7 @@ import UIKit
             }
             
             if let conv = conversation {
+                //TwilioBackendManager.sharedMgr().createAndJoinConversation(friendlyName: sendingNum, smsConversation: conv)
                 self.delegate?.controller(self, didSelectBuddies: [conv.uniqueId], accountId: acct, name: nil)
             }
         } else {

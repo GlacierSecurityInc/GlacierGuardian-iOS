@@ -1,6 +1,10 @@
+//
+//  Conversation.swift
 //  GlacierShare
+//
 //  Created by Andy Friedman on 12/15/20.
 //  Copyright © 2020 Glacier. All rights reserved.
+//
 
 import UIKit
 

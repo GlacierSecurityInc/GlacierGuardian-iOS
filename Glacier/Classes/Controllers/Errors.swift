@@ -1,6 +1,10 @@
+//
+//  Errors.swift
 //  ChatSecure
+//
 //  Created by David Chiles on 9/23/15.
 //  Copyright © 2015 Chris Ballinger. All rights reserved.
+//
 
 import Foundation
 

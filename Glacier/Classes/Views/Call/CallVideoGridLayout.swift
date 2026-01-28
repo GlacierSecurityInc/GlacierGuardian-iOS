@@ -1,4 +1,9 @@
+//
+//  CallVideoGridLayout.swift
 //  Glacier
+//
+//  Copyright (c) 2020 Open Whisper Systems. All rights reserved.
+//
 
 import Foundation
 
@@ -73,6 +78,7 @@ class CallVideoGridLayout: UICollectionViewLayout {
             result.append((rows, columns))
         }.filter { $0.columns <= maxColumns && $0.rows <= maxRows }
         .sorted { lhs, rhs in
+            // We prefer to render square grids (e.g. 2x2, 3x3, etc.) but it's
             // not always possible depending on how many items we have available.
             // If a square aspect ratio is not possible, we'll defer to having more
             // rows than columns.
@@ -87,7 +93,7 @@ class CallVideoGridLayout: UICollectionViewLayout {
         }
 
         guard let (numberOfRows, numberOfColumns) = possibleGrids.first else {
-            return
+            return //return owsFailDebug("missing grid")
         }
 
         let totalViewWidth = delegate.width
@@ -99,6 +105,7 @@ class CallVideoGridLayout: UICollectionViewLayout {
         let rowHeight = verticalCellSpace / CGFloat(numberOfRows)
 
         // The last row may have less columns than the previous rows,
+        // if there is an odd number of videos. Each row should always
         // expand the full width of the collection view.
         var columnWidthPerRow = [CGFloat]()
         for row in 1...numberOfRows {

@@ -1,6 +1,10 @@
+//
+//  TwilioBackendManager.swift
 //  Glacier
+//
 //  Created by andyfriedman on 9/14/22.
 //  Copyright © 2022 Glacier. All rights reserved.
+//
 
 import Foundation
 import Alamofire
@@ -77,6 +81,7 @@ import TwilioConversationsClient
                 }
             } else {
                 print("failed to create twilio conversation client")
+                //completion(.failure(result.error!))
             }
         }
     }
@@ -124,6 +129,7 @@ import TwilioConversationsClient
                                 }
                             } catch {}
                             contacts.append(PhoneContact(name: contactname, phoneNumber: contact.phoneNumbers.first?.value.stringValue ?? "", avatar: avatar))
+                            //print("***** number: \(contact.phoneNumbers.first?.value.stringValue ?? "")")
                         })
                         self.contacts = contacts
                         self.setNameAndAvatar()
@@ -303,6 +309,7 @@ import TwilioConversationsClient
             params["contains"] = contains
         }
                 
+        //["areaCode": areaCode, "contains": contains, "countryCode":"US"]
         Task { [weak self] in
             guard let self = self else { return }
             guard let headers = await GlacierAPIHeaders.authHeaders() else { return }
@@ -408,6 +415,8 @@ import TwilioConversationsClient
     }
     
     func nameANumber(_ selectedNumber:String, selectedName:String?) {
+        //self.naming = false
+        //self.numAction = nil
         
         if let displayName = selectedName, let smsAcct = getExistingAccount(phoneNumber: selectedNumber) {
             smsAcct.grdbRecord?.displayName = displayName
@@ -483,6 +492,7 @@ import TwilioConversationsClient
                         .responseData(queue: self.internalQueue) { response in
                             switch response.result {
                             case .success(_):
+                                //self.queryForNumbers()
                                 return
                             case .failure(let error):
                                 DDLogError("Error releasing number: \(error)")
@@ -576,6 +586,9 @@ import TwilioConversationsClient
             if let smsConv = smsConversation.refetch() {
                 smsConv.grdbRecord?.latestMessageId = message.uniqueId
                 smsConv.grdbRecord?.latestMessage = nil
+                //if let mdate = message.grdbRecord?.messageDate {
+                //    smsConv.grdbRecord?.latestMessageDate = mdate
+                //}
                 smsConv.save()
             }
 
@@ -610,6 +623,7 @@ import TwilioConversationsClient
                         
                         if found == false {
                             self.saveMessage(smsConversation, twilioMsg: msg)
+                            //DDLogDebug("TwilioConversationsClient missing message saved: \(msg) from conversation: \(String(describing: twilioConversation.sid))")
                         }
                     }
                 }
@@ -624,6 +638,7 @@ import TwilioConversationsClient
                     self.pushRegistered = true
                     DDLogError("Failure in registerForPushNotifications with \(deviceToken)")
                     // try registration again or verify token?
+                    // https://www.twilio.com/docs/conversations/ios/push-notifications-ios?code-sample=code-store-registration&code-language=Swift&code-sdk-version=default
                 } else {
                     DDLogInfo("Success in registerForPushNotifications with \(deviceToken)")
                 }
@@ -655,6 +670,7 @@ import TwilioConversationsClient
             }
         } else {
             // Store the notification for later handling
+            //receivedNotification = userInfo
             print("No existing conversation client")
         }
     }
@@ -670,6 +686,7 @@ import TwilioConversationsClient
     
     private func getTwilioConversation(_ smsConversation: SMSChatConversationModel, completion: @escaping (_ twilioConversation: TCHConversation?) -> ()) {
         guard let client = self.conversationsClient else {
+            //completion(DataFetchError.conversationsClientIsNotAvailable)
             completion(nil)
             return
         }
@@ -685,6 +702,7 @@ import TwilioConversationsClient
             attr = TCHJsonAttributes(dictionary: ["identity": myid,
                                                   "bindingType": "apn",
                                                   "address": pushString])
+            //https://www.twilio.com/docs/notify/api/binding-resource#create-a-binding
         }
         
         let creationOptions: [String: Any] = [
@@ -694,6 +712,7 @@ import TwilioConversationsClient
         ]
             
         guard let client = self.conversationsClient else {
+            //completion(DataFetchError.conversationsClientIsNotAvailable)
             return
         }
         
@@ -708,6 +727,7 @@ import TwilioConversationsClient
                         return
                     }
                     print("Created conversation and setting twilioId from \(String(describing: smsConversation.grdbRecord?.twilioId)) to \(String(describing: conversation.sid))")
+                    //smsConversation.grdbRecord?.twilioId = conversation.sid
                     if let smsConv = smsConversation.refetch() {
                         smsConv.grdbRecord?.twilioId = conversation.sid
                         smsConv.save()
@@ -721,13 +741,18 @@ import TwilioConversationsClient
     
     private func joinConversation(_ conversation: TCHConversation, smsConversation: SMSChatConversationModel) {
         if conversation.status == .joined {
+            //print("Current user already exists in conversation")
             if conversation.participants().count < 2 {
                 self.addReceiverToConversation(conversation, smsConversation: smsConversation)
             }
+            //self.loadPreviousMessages(conversation)
         } else {
             conversation.join(completion: { result in
+                //print("Result of conversation join: \(result.resultText ?? "No Result")")
                 if result.isSuccessful {
+                    //print("Result of me conversation join successful")
                     self.addReceiverToConversation(conversation, smsConversation: smsConversation)
+                    //self.loadPreviousMessages(conversation)
                 }
             })
         }
@@ -746,6 +771,7 @@ import TwilioConversationsClient
             let jsonAttr = TCHJsonAttributes(dictionary: attributes)
             
             conversation.addParticipant(byAddress: toNumber, proxyAddress: from, attributes: jsonAttr, completion: { result in
+                //print("Result of conversation add participant: \(result.resultText ?? "No Result")")
                 if !result.isSuccessful {
                     self.handleAddParticipantFail(result, conversation: conversation, smsConversation: smsConversation)
                 }
@@ -767,6 +793,7 @@ import TwilioConversationsClient
     
     func deleteConversation(smsConversation: SMSChatConversationModel, completion: @escaping (_ success: Bool) -> ()) {
         guard let client = self.conversationsClient else {
+            //print("Could not find Twilio client")
             completion(false)
             return
         }
@@ -778,9 +805,11 @@ import TwilioConversationsClient
                         completion(true)
                         return
                     }
+                    //print("Could not delete conversation")
                     completion(false)
                 })
             } else {
+                //print("Could not find conversation to delete, possibly already deleted, return success")
                 completion(true)
             }
         })
@@ -789,6 +818,7 @@ import TwilioConversationsClient
     func sendMessage(_ smsConversation:SMSChatConversationModel, messageText: String) {
         
         guard let client = self.conversationsClient else {
+            //completion(DataFetchError.conversationsClientIsNotAvailable)
             return
         }
         
@@ -799,9 +829,11 @@ import TwilioConversationsClient
                 twilConversation.prepareMessage()
                    .setBody(masked)
                    .buildAndSend { result, message in
+                       //print("Message sent with result \(result)")
                        if let tmesg = message {
                            self.handleSuccessfulSend(smsConversation, message: tmesg, mediaData: nil, originalText: messageText)
                        }
+                       //completion(result, message)
                    }
             } else {
                 print("Message not sent with result \(result)")
@@ -812,6 +844,7 @@ import TwilioConversationsClient
     func sendMediaMessage(_ smsConversation:SMSChatConversationModel, mediaData:Data, filename:String?, contentType:String, completion: @escaping (_ uploadSuccess: Bool) -> ()) {
         
         guard let client = self.conversationsClient else {
+            //completion(DataFetchError.conversationsClientIsNotAvailable)
             completion(false)
             return
         }
@@ -819,6 +852,7 @@ import TwilioConversationsClient
         client.conversation(withSidOrUniqueName: smsConversation.grdbRecord?.twilioId ?? smsConversation.uniqueId, completion: { (result, conversation) in
             if result.isSuccessful, let twilConversation = conversation, twilConversation.status == .joined {
                 twilConversation.prepareMessage()
+                   //.setBody("image")
                    .addMedia(data: mediaData, contentType: contentType, filename: filename, listener: .init(onStarted: {
                        print("Media upload started")
                    }, onProgress: { bytesSent in
@@ -837,6 +871,7 @@ import TwilioConversationsClient
                                self.handleSuccessfulSend(smsConversation, message: tmesg, mediaData: mediaData, originalText: nil)
                            }
                        }
+                       //completion(result, message)
                    }
             } else {
                 print("Message not sent with result \(result)")
@@ -968,6 +1003,7 @@ import TwilioConversationsClient
     }
     
     func parseNumbers(response: String) {
+        //NSLog("***** parsing info from SMS request")
         if let data = response.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: data, options : .allowFragments) as? Dictionary<String,Any> {
             
             if let jdata = json["data"] as? Dictionary<String,Any>, let isSms = jdata["isSMSEnabled"] as? Bool, let allowPurchase = jdata["allow_user_to_purchase_numbers"] as? Bool, let selectedNumbers = jdata["selected_twilionumber"] as? [Dictionary<String,String>] {
@@ -1003,6 +1039,7 @@ import TwilioConversationsClient
             if let phonenumber = item["text"], let id = item["id"] {
                 phonenumbers.append(phonenumber)
                 
+                //can just change to SMSChatAccount.existingAccount(with: phoneNumber)
                 var smsAccount:SMSChatAccountModel?
                 if let smsAcct = getExistingAccount(phoneNumber: phonenumber) {
                     smsAccount = smsAcct
@@ -1207,6 +1244,7 @@ import TwilioConversationsClient
     
     func removeLastSMSDelegate() {
         self.smsDelegates.removeLast()
+        //let other delegates know this has been dismissed
         for smsDelegate in self.smsDelegates {
             smsDelegate.numbersControllerClosed()
         }
@@ -1266,6 +1304,9 @@ import TwilioConversationsClient
                 if let smsConv = smsConversation.refetch() {
                     smsConv.grdbRecord?.latestMessageId = smsMessage.uniqueId
                     smsConv.grdbRecord?.latestMessage = nil
+                    //if let mdate = smsMessage.grdbRecord?.messageDate {
+                    //    smsConv.grdbRecord?.latestMessageDate = mdate
+                    //}
                     smsConv.save()
                 }
             })
@@ -1319,6 +1360,7 @@ extension TwilioBackendManager {
     }
     
     func queryCallHistory(_ limitNum:Int) {
+        //auth headers -- number (selected, or all), limit 500
         guard let org = self.getOrg() else {
             self.callHistoryDelegate?.callHistoryUpdated(nil)
             return
@@ -1335,6 +1377,7 @@ extension TwilioBackendManager {
                 }
                 self.internalQueue.async {
                     let req = self.callHistoryUrl()
+                    //print("***** \(req)")
                     self.sessionManager.request(req, method: .post, parameters: ["number": currentNumber, "limit": limit, "organization": org], encoding: JSONEncoding.default, headers: headers)
                         .validate()
                         .responseData(queue: self.internalQueue) { response in
@@ -1361,10 +1404,12 @@ extension TwilioBackendManager: TwilioConversationsClientDelegate {
 
     // MARK: Client changes
     public func conversationsClient(_ client: TwilioConversationsClient, connectionStateUpdated state: TCHClientConnectionState) {
+        //self.clientState = state
         DDLogInfo("TwilioConversationsClient connectionStateUpdated: \(state)")
     }
     
     public func conversationsClientTokenWillExpire(_ client: TwilioConversationsClient) {
+        //DDLogInfo("TwilioConversationsClient conversationsClientTokenWillExpire")
         self.queryForTwilioTokens()
     }
     
@@ -1374,6 +1419,9 @@ extension TwilioBackendManager: TwilioConversationsClientDelegate {
     
     public func conversationsClient(_ client: TwilioConversationsClient, conversationsError errorReceived: TCHError) {
         DDLogInfo("TwilioConversationsClient errorReceived: \(errorReceived)")
+        //DispatchQueue.main.async {
+            //self.conversationsError = errorReceived
+        //}
     }
     
     public func conversationsClient(_ client: TwilioConversationsClient, synchronizationStatusUpdated status: TCHClientSynchronizationStatus) {
@@ -1389,6 +1437,7 @@ extension TwilioBackendManager: TwilioConversationsClientDelegate {
             self.populateData()
         }
         
+        //if !pushRegistered, let token = self.pushToken {
         if let token = self.pushToken {
             self.registerForPushNotifications(token)
         }
@@ -1419,6 +1468,7 @@ extension TwilioBackendManager: TwilioConversationsClientDelegate {
                 }
             }
             
+            //DDLogInfo("TwilioConversationsClient Conversation added tonumber: \(String(describing: tonumber))) fromnumber \(String(describing:fromnumber)), and acctid \(String(describing:acctId))")
             
             if let toNumber = tonumber, let fromNumber = fromnumber, let acct = acctId {
                 let newConversation = SMSChatConversationModel(remoteNumber: toNumber, localNumber: fromNumber, accountId: acct)
@@ -1481,18 +1531,28 @@ extension TwilioBackendManager: TwilioConversationsClientDelegate {
 
     // MARK: Typing changes
     public func conversationsClient(_ client: TwilioConversationsClient, typingStartedOn conversation: TCHConversation, participant: TCHParticipant) {
+        //let conversation = TCHAdapter.transform(from: conversation)
+        //let participant =  TCHAdapter.transform(from: participant)
+        //typingPublisher.send(.startedTyping(conversation, participant))
     }
 
     public func conversationsClient(_ client: TwilioConversationsClient, typingEndedOn conversation: TCHConversation, participant: TCHParticipant) {
+        //let conversation = TCHAdapter.transform(from: conversation)
+        //let participant =  TCHAdapter.transform(from: participant)
+        //typingPublisher.send(.stoppedTyping(conversation, participant))
     }
     
     // MARK: User changes
     public func conversationsClient(_ client: TwilioConversationsClient, user: TCHUser, updated update: TCHUserUpdate) {
+        //if user.identity == myIdentity {
+        //    myUser = user
+        //}
     }
     
     // MARK: Message changes
     public func conversationsClient(_ client: TwilioConversationsClient, conversation: TCHConversation, messageAdded message: TCHMessage) {
         
+        //DDLogInfo("TwilioConversationsClient messageAdded: \(message) from conversation: \(String(describing: conversation.sid))")
         
         var conv:SMSChatConversationModel?
         if let tid = conversation.sid {
@@ -1509,6 +1569,7 @@ extension TwilioBackendManager: TwilioConversationsClientDelegate {
             isIncoming = true
         }
         
+        //DDLogInfo("TwilioConversationsClient messageAdded \(isIncoming), conversation: \(String(describing: conv?.uniqueId)) sender \(String(describing: senderId)) displayname \(String(describing: displayName))")
         if isIncoming, let smsConversation = conv, let senderId = senderId, let displayName = displayName {
             let smsMessage = SMSChatMessageModel(conversationId: smsConversation.uniqueId, senderId: senderId, senderDisplayName: displayName, text: message.body, twilioSid: message.sid, date:message.dateCreatedAsDate)
             smsMessage.grdbRecord?.isIncoming = isIncoming
@@ -1519,10 +1580,14 @@ extension TwilioBackendManager: TwilioConversationsClientDelegate {
                 if let smsConv = smsConversation.refetch() {
                     smsConv.grdbRecord?.latestMessageId = smsMessage.uniqueId
                     smsConv.grdbRecord?.latestMessage = nil
+                    //if let mdate = smsMessage.grdbRecord?.messageDate {
+                    //    smsConv.grdbRecord?.latestMessageDate = mdate
+                    //}
                     smsConv.save()
                 }
             })
                 
+            //DDLogInfo("TwilioConversationsClient messageAdded stored in DB")
             
             if (isIncoming && !message.attachedMedia.isEmpty) {
                 for media in message.attachedMedia {
@@ -1545,6 +1610,7 @@ extension TwilioBackendManager: TwilioConversationsClientDelegate {
                     let mediaItem = SMSChatMediaItemModel(mediaItem: mediaRec)
                     
                     smsMessage.grdbRecord?.mediaItemUniqueId = mediaItem.uniqueId
+                    //smsMessage.grdbRecord?.twilioSid = media.sid
                     mediaItem.save()
                     smsMessage.save()
                     
@@ -1627,6 +1693,7 @@ public extension TwilioAccountDelegateProtocol {
 
 public protocol CallHistoryDelegateProtocol:AnyObject {
     func callHistoryUpdated(_ historyData: Data?)
+    //func handleToken(_ token: String)
 }
 
 extension String {

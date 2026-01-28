@@ -11,6 +11,7 @@ class Keychain {
                                         kSecReturnData: true] as CFDictionary,
                                        &result)
         if ret != errSecSuccess || result == nil {
+            //wg_log(.error, message: "Unable to open config from keychain: \(ret)")
             return nil
         }
         guard let data = result as? Data else { return nil }
@@ -41,6 +42,7 @@ class Keychain {
         var ref: CFTypeRef?
         ret = SecItemAdd(items as CFDictionary, &ref)
         if ret != errSecSuccess || ref == nil {
+            //wg_log(.error, message: "Unable to add config to keychain: \(ret)")
             return nil
         }
         if let oldRef = oldRef {
@@ -52,6 +54,7 @@ class Keychain {
     static func deleteReference(called ref: Data) {
         let ret = SecItemDelete([kSecValuePersistentRef: ref] as CFDictionary)
         if ret != errSecSuccess {
+            //wg_log(.error, message: "Unable to delete config from keychain: \(ret)")
         }
     }
 

@@ -1,11 +1,17 @@
 // MIT License
+//
+// Copyright (c) 2017-2019 MessageKit
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -66,9 +72,11 @@ open class AudioPlaybackController: NSObject, AVAudioPlayerDelegate {
   ///     1. play button selected state;
   ///     2. progressView progress;
   ///     3. durationLabel text;
+  ///
   /// - Parameters:
   ///   - cell: The `AudioMessageCell` that needs to be configure.
   ///   - message: The `MessageType` that configures the cell.
+  ///
   /// - Note:
   ///   This protocol method is called by MessageKit every time an audio cell needs to be configure
   open func configureAudioCell(_ cell: AudioMessageCell, message: MessageType) {
@@ -87,6 +95,7 @@ open class AudioPlaybackController: NSObject, AVAudioPlayerDelegate {
   }
 
   /// Used to start play audio sound
+  ///
   /// - Parameters:
   ///   - message: The `MessageType` that contain the audio item to be played.
   ///   - audioCell: The `AudioMessageCell` that needs to be updated while audio is playing.
@@ -130,6 +139,7 @@ open class AudioPlaybackController: NSObject, AVAudioPlayerDelegate {
     }
 
   /// Used to pause the audio sound
+  ///
   /// - Parameters:
   ///   - message: The `MessageType` that contain the audio item to be pause.
   ///   - audioCell: The `AudioMessageCell` that needs to be updated by the pause action.
@@ -176,6 +186,7 @@ open class AudioPlaybackController: NSObject, AVAudioPlayerDelegate {
     playingCell = nil
   }
 
+    /// Sets audio playback speed (rate)
     open func setPlaybackSpeed(_ speed: Float) {
         guard let player = audioPlayer else { return }
         player.rate = speed

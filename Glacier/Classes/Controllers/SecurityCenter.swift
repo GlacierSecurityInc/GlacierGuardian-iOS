@@ -1,6 +1,10 @@
+//
+//  SecurityCenter.swift
 //  Glacier
+//
 //  Created by andyfriedman on 3/3/22.
 //  Copyright © 2022 Glacier. All rights reserved.
+//
 
 import Foundation
 import Alamofire
@@ -17,7 +21,7 @@ import NetworkExtension
     var needsNotification = false
     var versionNeedsNotification = false
     var lastVersionsCheck = Date.distantPast
-    let secVersionsUrl = "https:
+    let secVersionsUrl = "https://tiny.one/5967h5e2"
     var compromisedStatus = false
     
     //IOSM#48
@@ -67,6 +71,8 @@ import NetworkExtension
         } else if IOSSecuritySuite.amIProxied() {
             compromised = true
             self.secInfoUtil.securityInfo.compromised_detail = COMPROMISED_PROXIED
+        //} else if IOSSecuritySuite.amIDebugged() {
+        //    compromised = true
         } else if reStatus.reverseEngineered {
             compromised = true
             let reason = ": The following checks failed: \(reStatus.failedChecks)"
@@ -108,6 +114,7 @@ import NetworkExtension
         return self.compromisedStatus
     }
     
+    //IOSM#58 (next 2)
     @objc public func shouldIgnoreCompromisedAlert() -> Bool {
         return self.ignoreCompromisedAlert
     }

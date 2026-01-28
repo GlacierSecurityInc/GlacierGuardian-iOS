@@ -1,6 +1,10 @@
+//
+//  FlowLabelTableViewCell.swift
 //  Glacier
+//
 //  Created by Andy Friedman on 11/12/20.
 //  Copyright © 2020 Glacier. All rights reserved.
+//
 class FlowLabelTableViewCell:UITableViewCell, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout  {
     @IBOutlet weak var myCollectionView: UICollectionView!
     @IBOutlet weak var collectionViewHeightConstraint: NSLayoutConstraint!

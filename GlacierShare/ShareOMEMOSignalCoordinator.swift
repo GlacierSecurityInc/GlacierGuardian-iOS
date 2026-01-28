@@ -1,4 +1,7 @@
+//
+//  ShareOMEMOSignalCoordinator.swift
 //  GlacierShare
+//
 //  Created by Andy Friedman on 12/21/20.
 //  Copyright © 2020 Glacier. All rights reserved.
 
@@ -20,6 +23,7 @@ import SignalProtocolObjC
     @objc open var callbackQueue:DispatchQueue
     @objc public let workQueue:DispatchQueue
     
+    //@objc open weak var delegate:ShareMessageDelegate?
 
     fileprivate var myJID:XMPPJID? {
         get {
@@ -40,6 +44,7 @@ import SignalProtocolObjC
         try self.signalEncryptionManager = OTRAccountSignalEncryptionManager(accountKey: accountKey)
         self.omemoStorageManager = OTROMEMOStorageManager(accountKey: accountKey, accountCollection: "OTRAccount")
         self.accountKey = accountKey
+        //self.delegate = shareDelegate
         self.outstandingXMPPStanzaResponseBlocks = [:]
         self.callbackQueue = DispatchQueue(label: "ShareOMEMOSignalCoordinator-callback", attributes: [])
         self.workQueue = DispatchQueue(label: "ShareOMEMOSignalCoordinator-work", attributes: [])
@@ -125,6 +130,7 @@ import SignalProtocolObjC
      - parameter completion: The completion closure called on callbackQueue. If it successfully was able to fetch all the bundles or if it wasn't necessary. If there were no devices for this buddy it will also return flase
      */
     open func prepareSessionForBuddy(_ buddyYapKey:String, completion:@escaping (Bool) -> Void) {
+        //self.prepareSession(buddyYapKey, yapCollection: OTRBuddy.collection, completion: completion)
     }
     
     /**
@@ -151,6 +157,7 @@ import SignalProtocolObjC
      Check if we have valid sessions with our other devices and if not fetch their bundles and start sessions.
      */
     func prepareSessionWithOurDevices(_ completion:@escaping (_ success:Bool) -> Void) {
+        //self.prepareSession(self.accountKey, yapCollection: OTRAccount.collection, completion: completion)
     }
     
     
@@ -213,13 +220,16 @@ import SignalProtocolObjC
 extension ShareOMEMOSignalCoordinator: OMEMOModuleDelegate {
     
     public func omemo(_ omemo: OMEMOModule, publishedDeviceIds deviceIds: [NSNumber], responseIq: XMPPIQ, outgoingIq: XMPPIQ) {
+        //DDLogVerbose("publishedDeviceIds: \(responseIq)")
 
     }
     
     public func omemo(_ omemo: OMEMOModule, failedToPublishDeviceIds deviceIds: [NSNumber], errorIq: XMPPIQ?, outgoingIq: XMPPIQ) {
+        //DDLogWarn("failedToPublishDeviceIds: \(String(describing: errorIq))")
     }
     
     public func omemo(_ omemo: OMEMOModule, deviceListUpdate deviceIds: [NSNumber], from fromJID: XMPPJID, incomingElement: XMPPElement) {
+        //DDLogVerbose("deviceListUpdate: \(fromJID) \(deviceIds)")
         self.workQueue.async { [weak self] in
             if let eid = incomingElement.elementID {
                 self?.callAndRemoveOutstandingBundleBlock(eid, success: true)
@@ -238,6 +248,7 @@ extension ShareOMEMOSignalCoordinator: OMEMOModuleDelegate {
     }
     
     public func omemo(_ omemo: OMEMOModule, publishedBundle bundle: OMEMOBundle, responseIq: XMPPIQ, outgoingIq: XMPPIQ) {
+        //DDLogVerbose("publishedBundle: \(responseIq) \(outgoingIq)")
     }
     
     public func omemo(_ omemo: OMEMOModule, failedToPublishBundle bundle: OMEMOBundle, errorIq: XMPPIQ?, outgoingIq: XMPPIQ) {
@@ -245,13 +256,16 @@ extension ShareOMEMOSignalCoordinator: OMEMOModuleDelegate {
     }
     
     public func omemo(_ omemo: OMEMOModule, fetchedBundle bundle: OMEMOBundle, from fromJID: XMPPJID, responseIq: XMPPIQ, outgoingIq: XMPPIQ) {
+        //DDLogVerbose("fetchedBundle: \(responseIq) \(outgoingIq)")
 
         if (self.isOurJID(fromJID) && bundle.deviceId == self.signalEncryptionManager.registrationId) {
+            //DDLogVerbose("fetchedOurOwnBundle: \(responseIq) \(outgoingIq)")
 
             //We fetched our own bundle
             if let ourDatabaseBundle = self.fetchMyBundle() {
                 //This bundle doesn't have the correct identity key. Something has gone wrong and we should republish
                 if ourDatabaseBundle.identityKey != bundle.identityKey {
+                    //DDLogError("Bundle identityKeys do not match! \(ourDatabaseBundle.identityKey) vs \(bundle.identityKey)")
                     omemo.publishBundle(ourDatabaseBundle, elementId: nil)
                 }
             }
@@ -289,6 +303,7 @@ extension ShareOMEMOSignalCoordinator: OMEMOModuleDelegate {
     }
     
     public func omemo(_ omemo: OMEMOModule, failedToRemoveBundleId bundleId: UInt32, errorIq: XMPPIQ?, outgoingIq: XMPPIQ) {
+        //DDLogWarn("Error removing bundle: \(String(describing: errorIq))")
     }
     
     public func omemo(_ omemo: OMEMOModule, failedToRemoveDeviceIds deviceIds: [NSNumber], errorIq: XMPPIQ?, elementId: String?) {
@@ -300,9 +315,11 @@ extension ShareOMEMOSignalCoordinator: OMEMOModuleDelegate {
     }
     
     public func omemo(_ omemo: OMEMOModule, receivedKeyData keyData: [OMEMOKeyData], iv: Data, senderDeviceId: UInt32, from fromJID: XMPPJID, payload: Data?, message: XMPPMessage) {
+        //self.processKeyData(keyData, iv: iv, senderDeviceId: senderDeviceId, forJID: fromJID, payload: payload, delayed: nil, forwarded: false, isIncoming: true, message: message, originalMessage: message)
     }
     
     public func omemo(_ omemo: OMEMOModule, receivedForwardedKeyData keyData: [OMEMOKeyData], iv: Data, senderDeviceId: UInt32, for forJID: XMPPJID, payload: Data?, isIncoming: Bool, delayed: Date?, forwardedMessage: XMPPMessage, originalMessage: XMPPMessage) {
+        //self.processKeyData(keyData, iv: iv, senderDeviceId: senderDeviceId, forJID: forJID, payload: payload, delayed: delayed, forwarded: true, isIncoming: isIncoming, message: forwardedMessage, originalMessage: originalMessage)
     }
 }
 

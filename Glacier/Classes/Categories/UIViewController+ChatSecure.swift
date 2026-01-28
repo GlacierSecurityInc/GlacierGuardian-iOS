@@ -1,6 +1,10 @@
+//
+//  UIViewController+ChatSecure.swift
 //  ChatSecure
+//
 //  Created by Chris Ballinger on 2/16/17.
 //  Copyright © 2017 Chris Ballinger. All rights reserved.
+//
 
 import UIKit
 

@@ -1,6 +1,10 @@
+//
+//  MessagesInputBarVew.swift
 //  Glacier
+//
 //  Created by andyfriedman on 12/4/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import UIKit
 import InputBarAccessoryView

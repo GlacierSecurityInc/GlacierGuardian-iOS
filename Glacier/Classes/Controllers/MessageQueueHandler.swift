@@ -1,6 +1,10 @@
+//
+//  MessageQueueHandler.swift
 //  ChatSecure
+//
 //  Created by David Chiles on 5/4/16.
 //  Copyright © 2016 Chris Ballinger. All rights reserved.
+//
 
 import Foundation
 import XMPPFramework
@@ -305,6 +309,7 @@ extension MessageQueueHandler: OTRXMPPMessageStatusModuleDelegate {
         guard let msg = msgprot else {
             return
         }
+        //let copy = msg.copy()
         if let message = msg as? ChatRoomMessageModel {
             message.grdbRecord?.state = ChatRoomMessageState.sent.rawValue
             message.save()
@@ -351,6 +356,13 @@ extension MessageQueueHandler {
         self.waitingForMessage(message.uid, messageCollection: message.messageCollection, messageSecurity:message.messageSecurity, completion: completion)
         
         signalCoordinator.encryptAndSendMessage(message, completion: { (success, error) in
+            //if success == true {
+            //    if let outmessage = message as? OutgoingChatMessage {
+            //        outmessage.grdbRecord?.dateSent = Date()
+            //        outmessage.grdbRecord?.readDate = Date()
+            //        outmessage.save()
+            //    }
+            //} else {
             if success == false {
                 // plain text if OMEMO not available?
                 if message is OutgoingChatMessage {

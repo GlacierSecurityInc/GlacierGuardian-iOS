@@ -1,5 +1,9 @@
+//
+//  GlacierViewHelper.swift
+//
 //  Created by Andy Friedman on 6/15/20.
 //  Copyright © 2020 Glacier Security. All rights reserved.
+//
 
 import UIKit
 

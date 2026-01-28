@@ -1,6 +1,10 @@
+//
+//  ChatRoom.swift
 //  Glacier
+//
 //  Created by andyfriedman on 9/18/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import GRDB
@@ -10,6 +14,7 @@ import XMPPFramework
     
     var grdbRecord:ChatRoom?
     /// JID of the room itself
+    //@objc private var jid:String?
     /** Your full JID for the room e.g. joe@conference.domain.com/joeboo */
     @objc private var ownJID:String?
     @objc open var avatarSeedNum = -1
@@ -160,16 +165,19 @@ extension ChatRoomModel {
 #if !TARGET_IS_EXTENSION
     @objc public var avatarImage: UIImage {
         if let image = GlacierImageCache.shared().retrieveImageInMemoryCache(forKey: self.uniqueId) {
+        //if let image = OTRImages.image(withIdentifier: self.uniqueId) {
             return image
         } else {
             if (self.avatarSeedNum < 0) {
                 self.avatarSeedNum = self.nextAvatarNum(with:-1)
+                //self.saveThread()
             }
             
             if (self.avatarSeedNum < 0) {
                 let seed = self.avatarSeed
                 if let image = OTRGroupAvatarGenerator.avatarImage(withSeed: seed, width: 100, height: 100) {
                     GlacierImageCache.shared().store(image, forKey: self.uniqueId, options:GlacierImageCache.parsedOptions, toDisk: false)
+                    //OTRImages.setImage(image, forIdentifier: self.uniqueId)
                     return image
                 }
             }
@@ -177,6 +185,7 @@ extension ChatRoomModel {
             
             if let image = OTRGroupAvatarGenerator.avatarImage(withSeedNum: seedNum, width: 100, height: 100) {
                 GlacierImageCache.shared().store(image, forKey: self.uniqueId, options:GlacierImageCache.parsedOptions, toDisk: false)
+                //OTRImages.setImage(image, forIdentifier: self.uniqueId)
                 return image
             } else {
                 return OTRImages.avatarImage(withUniqueIdentifier: self.uniqueId, avatarData: nil, displayName: nil, username: self.threadName)
@@ -203,6 +212,7 @@ extension ChatRoomModel {
             return nil
         }
         set(expiresIn) {
+            //
         }
     }
     
@@ -388,6 +398,7 @@ extension ChatRoomModel {
                     .filter(Column("roomJid") == roomJid.bare)
                     .fetchOne(transaction.database) {
                     room = ChatRoomModel(room: codable)
+                    //jid.isEqual(to: ourJID, options: .bare)
                 }
             })
         } catch {
@@ -467,6 +478,7 @@ extension ChatRoomModel {
     @objc static func updateLastHistory(accountId:String) {
         DBManager.sharedDB().grdbStorage.asyncWrite(block: { transaction in
             let nowdate = Date()
+            //NSLog("***** updateLastHistory date to \(nowdate)")
             do {
                 try ChatRoom
                     .filter(Column("accountUniqueId") == accountId)
@@ -579,6 +591,7 @@ extension ChatRoomModel {
                     bookmarks.append(bookmark)
                 }
                 
+                //let xmpproom = ChatRoom(room: room)
                 let roomModel = ChatRoomModel(room: room)
                 let leftMsg = roomModel.outgoingMessage(text: leftGroup)
                 
@@ -754,7 +767,8 @@ extension ChatRoom {
         request(for: ChatRoom.messages)
     }
     
-    static let thread = belongsTo(ChatThread.self)
+    //static let address = hasOne(Address.self)
+    static let thread = belongsTo(ChatThread.self)//belongsTo(ChatThread.self)
     var thread: QueryInterfaceRequest<ChatThread> {
         request(for: ChatRoom.thread)
     }

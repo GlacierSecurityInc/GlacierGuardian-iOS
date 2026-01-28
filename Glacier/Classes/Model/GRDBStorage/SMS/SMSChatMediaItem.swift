@@ -1,6 +1,10 @@
+//
+//  SMSChatMediaItem.swift
 //  Glacier
+//
 //  Created by andyfriedman on 8/22/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import MessageKit
@@ -31,7 +35,7 @@ import GRDB
     }
 
     func shouldFetchMediaData() -> Bool {
-        return GlacierImageCache.shared().isCached(forKey: self.uniqueId) == false
+        return GlacierImageCache.shared().isCached(forKey: self.uniqueId) == false //OTRImages.image(withIdentifier: self.uniqueId) == nil
     }
     
     func fetchMediaData() {
@@ -74,6 +78,7 @@ import GRDB
         if let image = UIImage(data: mediaData) {
             self.curSize = ChatMediaItem.normalizeWidth(width: image.size.width, height: image.size.height)
             GlacierImageCache.shared().store(image, forKey: self.uniqueId, options:GlacierImageCache.parsedOptions, toDisk: false)
+            //OTRImages.setImage(image, forIdentifier: self.uniqueId)
             return true
         }
         
@@ -97,7 +102,7 @@ extension SMSChatMediaItemModel: MediaItem {
     public var image: UIImage? {
 #if !TARGET_IS_EXTENSION
         let thumbnailKey = "\(self.uniqueId)-thumb"
-        if let smsImg = GlacierImageCache.shared().retrieveImageInMemoryCache(forKey: thumbnailKey) {
+        if let smsImg = GlacierImageCache.shared().retrieveImageInMemoryCache(forKey: thumbnailKey) { //OTRImages.image(withIdentifier: thumbnailKey) {
             return smsImg
         }
         
@@ -111,6 +116,7 @@ extension SMSChatMediaItemModel: MediaItem {
             let mediaSize = ChatMediaItem.normalizeWidth(width: img.size.width, height: img.size.height)
             let resizedImage = img.scaleImageWith(newSize: mediaSize)
             GlacierImageCache.shared().store(resizedImage, forKey: thumbnailKey, options:GlacierImageCache.parsedOptions, toDisk: false)
+            //OTRImages.setImage(resizedImage, forIdentifier: thumbnailKey)
             SMSChatMessage.touch(uid)
         })
 #endif
@@ -123,7 +129,7 @@ extension SMSChatMediaItemModel: MediaItem {
     
     public var size: CGSize {
         let thumbnailKey = "\(self.uniqueId)-thumb"
-        if let smsImg = GlacierImageCache.shared().retrieveImageInMemoryCache(forKey: thumbnailKey) {
+        if let smsImg = GlacierImageCache.shared().retrieveImageInMemoryCache(forKey: thumbnailKey) {// OTRImages.image(withIdentifier: thumbnailKey) {
             return ChatMediaItem.normalizeWidth(width: smsImg.size.width, height: smsImg.size.height)
         }
         

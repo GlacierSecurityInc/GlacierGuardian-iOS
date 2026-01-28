@@ -1,6 +1,10 @@
+//
+//  Transactable.swift
 //  Glacier
+//
 //  Created by andyfriedman on 1/9/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import GRDB
@@ -54,6 +58,7 @@ public extension Transactable {
 
 // MARK: - Async Methods
 
+// NOTE: This extension is not @objc. See SDSDatabaseStorage+Objc.h.
 public extension Transactable {
     func asyncWrite(file: String = #file,
                     function: String = #function,
@@ -172,6 +177,7 @@ public extension Transactable {
 
 // MARK: - @objc macro methods
 
+// NOTE: Do NOT call these methods directly. See SDSDatabaseStorage+Objc.h.
 @objc
 public extension Transactable {
     @available(*, deprecated, message: "Use DatabaseStorageWrite() instead")

@@ -1,18 +1,24 @@
+//
+//  ChatAccountSignalIdentity.swift
 //  Glacier
+//
 //  Created by andyfriedman on 12/13/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import GRDB
 import SignalProtocolObjC
 
 public struct ChatAccountSignalIdentity: GRDBRecord, TableRecord {
+    //public protocol ChatThread: AnyObject {
     public var id: Int64?
     public var uniqueId: String
     var accountKey: String
     var publicKey:Data
     var privateKey:Data
     var registrationId: UInt32
+    //var modified: Date?
     
     public init(accountKey:String, identityKeyPair:SignalIdentityKeyPair, registrationId:UInt32) {
         self.uniqueId = UUID().uuidString

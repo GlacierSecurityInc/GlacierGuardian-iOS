@@ -1,6 +1,10 @@
+//
+//  ChatSignalHelper.swift
 //  Glacier
+//
 //  Created by andyfriedman on 12/13/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 

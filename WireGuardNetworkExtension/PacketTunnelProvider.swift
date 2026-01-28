@@ -1,6 +1,10 @@
+//
+//  PacketTunnelProvider.swift
 //  WireGuardNetworkExtension
+//
 //  Created by andyfriedman on 8/26/24.
 //  Copyright © 2024 Glacier. All rights reserved.
+//
 
 import NetworkExtension
 import WireGuardKit
@@ -10,6 +14,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     
     private lazy var adapter: WireGuardAdapter = {
         return WireGuardAdapter(with: self) { logLevel, message in
+            //wg_log(logLevel.osLogLevel, message: message)
         }
     }()
     
@@ -27,6 +32,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         let activationAttemptId = options?["activationAttemptId"] as? String
         let errorNotifier = ErrorNotifier(activationAttemptId: activationAttemptId)
 
+        //Logger.configureGlobal(tagged: "NET", withFilePath: FileManager.logFileURL?.path
 
         guard let tunnelProviderProtocol = self.protocolConfiguration as? NETunnelProviderProtocol,
               let tunnelConfiguration = tunnelProviderProtocol.asTunnelConfiguration() else {
@@ -48,12 +54,14 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
             switch adapterError {
             case .cannotLocateTunnelFileDescriptor:
+                //wg_log(.error, staticMessage: "Starting tunnel failed: could not determine file descriptor")
                 errorNotifier.notify(PacketTunnelProviderError.couldNotDetermineFileDescriptor)
                 completionHandler(PacketTunnelProviderError.couldNotDetermineFileDescriptor)
 
             case .dnsResolution(let dnsErrors):
                 let hostnamesWithDnsResolutionFailure = dnsErrors.map { $0.address }
                     .joined(separator: ", ")
+                //wg_log(.error, message: "DNS resolution failed for the following hostnames: \(hostnamesWithDnsResolutionFailure)")
                 errorNotifier.notify(PacketTunnelProviderError.dnsResolutionFailure)
                 completionHandler(PacketTunnelProviderError.dnsResolutionFailure)
 

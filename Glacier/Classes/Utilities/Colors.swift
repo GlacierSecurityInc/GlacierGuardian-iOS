@@ -1,6 +1,10 @@
+//
+//  Colors.swift
 //  Glacier
+//
 //  Created by andyfriedman on 11/9/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 
@@ -33,6 +37,7 @@ extension UIColor {
     
     @objc static func bubbleBlue() -> UIColor {
         return UIColor(red: 60, green: 92, blue: 207)
+        //return UIColor(hue: 195.0 / 360.0, saturation: 0.81, brightness: 0.80, alpha: 1.0)
     }
     
     @objc static func appleBlue() -> UIColor {

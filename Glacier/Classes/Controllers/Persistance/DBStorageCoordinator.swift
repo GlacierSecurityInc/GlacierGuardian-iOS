@@ -1,6 +1,10 @@
+//
+//  DBStorageCoordinator.swift
 //  Glacier
+//
 //  Created by andyfriedman on 1/3/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import GRDB
@@ -34,13 +38,17 @@ import SAMKeychain
         do {
             // Create a folder for storing the SQLite database, as well as
             // the various temporary files created during normal database
+            // operations (https://sqlite.org/tempfiles.html).
             
+            //try DBStorageCoordinator.ensureDatabaseKeySpecExists()
             
             if !DBStorageCoordinator.existsGlacierGRDB(), let dbdir = DBStorageCoordinator.sharedDefaultDatabaseDirectory() {
+                //let dbdir = sharedDefaultDatabaseDirectory()
                 try FileManager.default.createDirectory(at: dbdir, withIntermediateDirectories: true)
             }
             
             // Connect to a database on disk
+            // See https://swiftpackageindex.com/groue/grdb.swift/documentation/grdb/databaseconnections
             if let dburl = DBStorageCoordinator.sharedGlacierGRDBURL() {
                 storage = try GRDBStorage(dbURL: dburl, keyspec: DBStorageCoordinator.keyspec)
                 super.init()
@@ -48,6 +56,8 @@ import SAMKeychain
             }
         } catch {
             // Replace this implementation with code to handle the error appropriately.
+            // fatalError() causes the application to generate a crash log and terminate.
+            //
             // Typical reasons for an error here include:
             // * The parent directory cannot be created, or disallows writing.
             // * The database is not accessible, due to permissions or data protection when the device is locked.
@@ -61,6 +71,7 @@ import SAMKeychain
     
     public static func ensureDatabaseKeySpecExists() throws {
         do {
+            //try keyspec.clear() //REMOVE!!!
             _ = try keyspec.fetchString()
             // Key exists and is valid.
             return
@@ -77,6 +88,7 @@ import SAMKeychain
 
 
             // At this point, either:
+            //
             // * This is a new install so there's no existing password to retrieve.
             // * The keychain has become corrupt.
             
@@ -157,20 +169,28 @@ import SAMKeychain
         }
         #endif
 
+        //let benchTitle = "Slow Write Transaction \(Self.owsFormatLogMessage(file: file, function: function, line: line))"
+        //let timeoutThreshold = DebugFlags.internalLogging ? 0.1 : 0.5
 
+        //InstrumentsMonitor.measure(category: "db", parent: "write", name: Self.owsFormatLogMessage(file: file, function: function, line: line)) {
             do {
                 try self.write { transaction in
+                    //Bench(title: benchTitle, logIfLongerThan: timeoutThreshold, logInProduction: true) {
                     block(transaction)
+                    //}
                 }
             } catch {
                 fatalError("error: \(error.grdbErrorForLogging)")
             }
+        //}
+        //crossProcess.notifyChangedAsync()
     }
 
     public override func read(file: String = #file,
                               function: String = #function,
                               line: Int = #line,
                               block: (GRDBReadTransaction) -> Void) {
+        //InstrumentsMonitor.measure(category: "db", parent: "read", name: Self.owsFormatLogMessage(file: file, function: function, line: line)) {
             do {
                 try self.read { transaction in
                     block(transaction)
@@ -178,6 +198,7 @@ import SAMKeychain
             } catch {
                 fatalError("error: \(error.grdbErrorForLogging)")
             }
+        //}
     }
 }
 
@@ -277,6 +298,7 @@ extension DBStorageCoordinator {
     public func read(block: (GRDBReadTransaction) -> Void) throws {
 
         #if TESTABLE_BUILD
+        //owsAssertDebug(Self.canOpenTransaction)
         if Self.detectNestedTransactions {
             // Check for nested tractions.
             Self.canOpenTransaction = false
@@ -299,6 +321,7 @@ extension DBStorageCoordinator {
     public func write(block: (GRDBWriteTransaction) -> Void) throws {
 
         #if TESTABLE_BUILD
+        //owsAssertDebug(Self.canOpenTransaction)
         // Check for nested tractions.
         if Self.detectNestedTransactions {
             // Check for nested tractions.
@@ -342,9 +365,11 @@ extension DBStorageCoordinator {
     // This method should only be invoked with checkpointLock already acquired.
     private func checkpointIfNecessary() {
         // What Is Checkpointing?
+        //
         // Checkpointing is the process of integrating the WAL into the main database file.
         // Without it, the WAL will grow indefinitely. A large WAL affects read performance.
         // Therefore we want to keep the WAL small.
+        //
         // * The SQLite WAL consists of "frames", representing changes to the database.
         // * Frames are appended to the tail of the WAL.
         // * The WAL tracks how many of its frames have been integrated into the database.
@@ -355,58 +380,92 @@ extension DBStorageCoordinator {
         //     overwrite from the start of the WAL, WAL file size growth can be bounded.
         //   * "Truncating" the WAL so that that the WAL file is deleted or returned to
         //     an empty state.
+        //
         // The more unintegrated frames there are in the WAL, the longer a checkpoint takes
+        // to complete. Long-running checkpoints can cause problems in the app, e.g.
+        // blocking the main thread (note: we currently do _NOT_ checkpoint on the main
+        // thread).  Therefore we want to bound overall WAL file size _and_ the number of
         // unintegrated frames.
+        //
+        // To bound WAL file size, it's important to periodically "restart" or (preferably)
         // truncate the WAL file. We currently always truncate.
+        //
         // To bound the number of unintegrated frames, we can use passive checkpoints.
         // We don't explicitly initiate passive checkpoints, but leave this to SQLite
         // auto-checkpointing.
+        //
+        //
         // Checkpoint Types
+        //
         // Checkpointing has several flavors: passive, full, restart, truncate.
+        //
         // * Passive checkpoints abort immediately if there are any database
         //   readers or writers. This makes them "cheap" in the sense that
         //   they won't block for long.
         //   However they only integrate WAL contents, they don't "restart" or
         //   "truncate" so they don't inherently limit WAL growth.
+        //   My understanding is that they can have partial success, e.g.
         //   integrating some but not all of the frames of the WAL. This is
         //   beneficial.
         // * Full/Restart/Truncate checkpoints will block using the busy-handler.
         //   We use truncate checkpoints since they truncate the WAL file.
+        //   See GRDBStorage.buildConfiguration for our busy-handler (aka busyMode
+        //   callback). It aborts after ~50ms.
         //   These checkpoints are more expensive and will block while they do
         //   their work but will limit WAL growth.
+        //
         // SQLite has auto-checkpointing enabled by default, meaning that it
         // is continually trying to perform passive checkpoints in the background.
         // This is beneficial.
+        //
+        //
         // Exclusion
+        //
         // Note that we are navigating multiple exclusion mechanisms.
+        //
+        // * SQLite (as we have configured it) excludes database writes using
+        //   write locks (POSIX advisory locking on the database files).
         //   This locking protects the database from cross-process writes.
         // * GRDB writers use a serial DispatchQueue to exclude writes from
         //   each other within a given DatabasePool / DatabaseQueue.
         //   AFAIK this does not protect any GRDB internal state; it allows
         //   GRDB to detect re-entrancy, etc.
+        //
         // SQLite cannot checkpoint if there are any readers or writers.
         // Therefore we cannot checkpoint within a SQLite write transaction.
         // We checkpoint after write transactions using
+        // DatabasePool.writeWithoutTransaction().  This method uses the
         // GRDB exclusion mechanism but not the SQL one.
+        //
+        //
         // Our approach:
+        //
+        // * Always (not including auto-checkpointing) use truncate checkpoints
         //   to limit WAL size.
         // * Only checkpoint immediately after writes.
         // * It's expensive and unnecessary to do a checkpoint on every write,
         //   so we only checkpoint once every N writes. We always checkpoint after
+        //   the first write.  Large (in terms of file size) writes should be rare,
         //   so WAL file size should be bounded and quite small.
         // * Use a "budget" to tracking the urgency of trying to perform a checkpoint after
         //   the next write.  When the budget reaches zero, we should try after the next
         //   write.  Successes bump up the budget considerably, failures bump it up a little.
         // * Retry more often after failures, via the budget.
+        //
+        //
         // What could go wrong:
+        //
+        // * Our busy-handler (aka busyMode callback) is untested. Previously it was
         //   irrelevant because we always performed checkpoints on a separate
         //   DatabaseQueue.
         //   It needs to work correctly to ensure that checkpoints timeout if there's
+        //   heavy contention (reads or writes).
         // * Checkpointing could be expensive in some cases, causing blocking.
         //   This shouldn't be an issue: we're more aggressive than ever about
         //   keeping the WAL small.
         // * Cross-process activity could interfere with checkpointing.
         //   This shouldn't be an issue: We shouldn't have more than one of
+        //   the apps (main app, SAE, NSE) active at the same time for long.
         // * Checkpoints might frequently fail if we're constantly doing reads.
         //   This shouldn't be an issue: A checkpoint should eventually
         //   succeed when db activity settles.  This checkpoint might take a while
@@ -419,11 +478,18 @@ extension DBStorageCoordinator {
         //   too often.  Either way, it's about balancing overall perf with the perf
         //   cost of the next successful checkpoint.  We can tune this behavior
         //   using the "checkpoint budget".
+        //
         // Reference
+        //
+        // * https://www.sqlite.org/c3ref/wal_checkpoint_v2.html
+        // * https://www.sqlite.org/wal.html
+        // * https://www.sqlite.org/howtocorrupt.html
+        //
         guard !Thread.isMainThread else {
             // To avoid blocking the main thread, we avoid doing "truncate" checkpoints
             // on the main thread. We perhaps could do passive checkpoints on the main
             // thread, which abort if there is any contention.
+            //
             // We decrement the checkpoint budget anyway.
             checkpointBudget -= 1
             return
@@ -446,10 +512,14 @@ extension DBStorageCoordinator {
         }
 
         // Set checkpointTimeout flag.
+        //owsAssertDebug(GRDBStorage.checkpointTimeout == nil)
         GRDBStorage.checkpointTimeout = GRDBStorage.maxBusyTimeoutMs
+        //owsAssertDebug(GRDBStorage.checkpointTimeout != nil)
         defer {
             // Clear checkpointTimeout flag.
+            //owsAssertDebug(GRDBStorage.checkpointTimeout != nil)
             GRDBStorage.checkpointTimeout = nil
+            //owsAssertDebug(GRDBStorage.checkpointTimeout == nil)
         }
 
         pool.writeWithoutTransaction { database in
@@ -458,15 +528,20 @@ extension DBStorageCoordinator {
             var walSizePages: Int32 = 0
             var pagesCheckpointed: Int32 = 0
             var code: Int32 = 0
+            //Bench(title: "Checkpoint",
+                  //logIfLongerThan: TimeInterval(5) / TimeInterval(1000),
+                  //logInProduction: true) {
                 code = sqlite3_wal_checkpoint_v2(database.sqliteConnection,
                                                  nil,
                                                  kind.rawValue,
                                                  &walSizePages,
                                                  &pagesCheckpointed)
+            //}
             if code != SQLITE_OK {
                 // Extracting this error message can race.
                 let errorMessage = String(cString: sqlite3_errmsg(database.sqliteConnection))
                 if code == SQLITE_BUSY {
+                    // It is expected that the busy-handler (aka busyMode callback)
                     // will abort checkpoints if there is contention.
                     DDLogWarn("checkpointIfNecessary Error code: \(code), errorMessage: \(errorMessage).")
                 } else {
@@ -510,10 +585,15 @@ public struct GRDBKeySpecSource {
     }
 
     let keyServiceName: String
+    //let keyName: String
 
     func fetchString() throws -> String {
         // Use a raw key spec, where the 96 hexadecimal digits are provided
+        // (i.e. 64 hex for the 256 bit key, followed by 32 hex for the 128 bit salt)
+        // using explicit BLOB syntax, e.g.:
+        //
         // x'98483C6EB40B6C31A448C22A66DED3B5E5E8D5119CAC8327B655C8B5C483648101010101010101010101010101010101'
+        //let trydata = try fetchData()
 
         guard let data = fetchData(), data.count == kSQLCipherKeySpecLength else {
             throw KeychainError.failure(description: "unexpected keyspec length")
@@ -569,6 +649,7 @@ public struct GRDBKeySpecSource {
         return SAMKeychain.passwordData(forService: keyServiceName, account: GlacierMediaPassphraseName, accessGroup: kGlacierKeyGroup, error: nil)
     }
     
+    //https://www.advancedswift.com/secure-random-number-swift/
     func secureRandomData(count: Int) throws -> Data {
         var bytes = [Int8](repeating: 0, count: count)
 
@@ -650,6 +731,7 @@ private struct GRDBStorage {
 #endif
     }
 
+    // See: https://github.com/groue/GRDB.swift/blob/master/Documentation/SharingADatabase.md
     private static func buildPool(dbURL: URL, poolConfiguration: Configuration) throws -> DatabasePool {
         let coordinator = NSFileCoordinator(filePresenter: nil)
         var coordinatorError: NSError?
@@ -676,6 +758,7 @@ private struct GRDBStorage {
     }
 
     // The checkpointTimeout flag is backed by a thread local.
+    // We don't want to affect the behavior of the busy-handler (aka busyMode callback)
     // in other threads while checkpointing.
     fileprivate static var checkpointTimeoutKey: String { "GRDBStorage.checkpointTimeoutKey" }
     fileprivate static var checkpointTimeout: Int? {
@@ -697,10 +780,16 @@ private struct GRDBStorage {
         configuration.publicStatementArguments = true
         #endif
 
+        // TODO: We should set this to `false` (or simply remove this line, as `false` is the default).
         // Historically, we took advantage of SQLite's old permissive behavior, but the SQLite
+        // developers [regret this][0] and may change it in the future.
+        //
+        // [0]: https://sqlite.org/quirks.html#dblquote
+        //configuration.acceptsDoubleQuotedStringLiterals = true
 
         // Useful when your app opens multiple databases
         configuration.label = "GRDB Storage"
+        //let isMainApp = CurrentAppContext().isMainApp
         configuration.maximumReaderCount = 10 //isMainApp ? 10 : maximumReaderCountInExtensions
         configuration.busyMode = .callback({ (retryCount: Int) -> Bool in
             // sleep N milliseconds
@@ -726,7 +815,9 @@ private struct GRDBStorage {
         configuration.prepareDatabase { db in
             try DBStorageCoordinator.prepareDatabase(db: db, keyspec: keyspec)
 
+            //db.trace { dbQueryLog("\($0)") }
 
+            //MediaGalleryManager.setup(database: db)
         }
         configuration.defaultTransactionKind = .immediate
         configuration.allowsUnsafeTransactions = true
@@ -747,7 +838,9 @@ public extension Error {
         guard let grdbError = self as? GRDB.DatabaseError else {
             return self
         }
+        // DatabaseError.description includes the arguments.
         DDLogDebug("grdbError: \(grdbError))")
+        // DatabaseError.description does not include the extendedResultCode.
         DDLogDebug("resultCode: \(grdbError.resultCode), extendedResultCode: \(grdbError.extendedResultCode), message: \(String(describing: grdbError.message)), sql: \(String(describing: grdbError.sql))")
         let error = GRDB.DatabaseError(resultCode: grdbError.extendedResultCode,
                                        message: grdbError.message,

@@ -1,3 +1,5 @@
+//
+//  OTRCircleButton.swift
 //  Created by Blue Star on 4/16/20.
 //  Copyright © 2020 Glacier security. All rights reserved.
 
@@ -27,6 +29,7 @@ class CircleButton: UIButton {
     
     private func initialize() {
         self.layer.cornerRadius = 32
+        //self.clipsToBounds = true
         
         isSelected = false
         setFillState()
@@ -36,9 +39,11 @@ class CircleButton: UIButton {
     
     private func setFillState() {
         if isSelected {
+            //self.titleLabel?.textColor = selectedTextColor
             self.tintColor = selectedTextColor
             self.backgroundColor = selectedColor
         } else {
+            //self.titleLabel?.textColor = deselectedTextColor
             self.tintColor = deselectedTextColor
             self.backgroundColor = deselectedColor
         }

@@ -1,6 +1,10 @@
+//
+//  ChatDownloadMessage.swift
 //  Glacier
+//
 //  Created by andyfriedman on 9/12/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 
@@ -45,11 +49,13 @@ extension ChatDownloadMessage: DownloadMessage {
             download = ChatDownloadMessage()
         }
         
+        //let download = RoomDownloadMessage()!
         if let parent = parentMessage as? ChatMessageModel, let budid = parent.grdbRecord?.buddyUniqueId {
             download.grdbRecord?.buddyUniqueId = budid
         }
         download.grdbRecord?.url = url.absoluteString
         download.grdbRecord?.parentObjectKey = parentMessage.messageKey
+        //download.parentCollection = parentMessage.messageCollection
         download.grdbRecord?.text = url.absoluteString
         download.grdbRecord?.originalText = parentMessage.messageOriginalText
         download.grdbRecord?.expires = parentMessage.messageExpires
@@ -63,6 +69,7 @@ public extension UIAlertAction  {
     static func actionsFor(chatMediaMessage: MessageProtocol, viewController:UIViewController) -> [UIAlertAction] {
         
         var actions: [UIAlertAction] = []
+        //let mediaItemUniqueId = chatMediaMessage.messageMediaItemKey
         var url:URL?
         
         if let messageText = chatMediaMessage.messageText, messageText.count > 0 {

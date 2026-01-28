@@ -1,12 +1,17 @@
+//
+//  ChatProfileViewController.swift
 //  Glacier
+//
 //  Created by andyfriedman on 12/18/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import UIKit
 import PureLayout
 import MBProgressHUD
 import GRDB
+//import MobileCoreServices
 
 @objc open class ChatProfileViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, OTRSettingDelegate, UIPopoverPresentationControllerDelegate, OTRAttachmentPickerDelegate, UIGestureRecognizerDelegate
 {
@@ -53,6 +58,7 @@ import GRDB
         self.tableView.accessibilityIdentifier = "profileTableView"
         self.tableView.translatesAutoresizingMaskIntoConstraints = false
         
+        //self.tableView.contentInsetAdjustmentBehavior = .never
         
         self.tableView.autoresizingMask = [.flexibleHeight, .flexibleRightMargin, .flexibleWidth, .flexibleBottomMargin]
         self.view.addSubview(self.tableView)
@@ -87,8 +93,10 @@ import GRDB
             // get the current frame of the footer view
             var currentFrame = currentFooterView.frame
             
+            // we only want to do this when necessary (otherwise we risk infinite recursion)
             // so... if the calculated height is not the same as the current height
             if (newHeight != currentFrame.size.height) {
+                // use the new (calculated) height
                 currentFrame.size.height = newHeight
                 currentFooterView.frame = currentFrame
             }
@@ -188,6 +196,7 @@ import GRDB
     }
     
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        //var cell:UITableViewCell?
         if (indexPath.section == 0 && indexPath.row == 0) {
             if ChatAccountModel.countXMPPAccounts() > 0, let account = self.account(at: indexPath), let accountCell = tableView.dequeueReusableCell(withIdentifier: XMPPAccountCell.cellIdentifier()) as? XMPPAccountCell {
                 accountCell.setAppearance(account: account)
@@ -224,7 +233,9 @@ import GRDB
             var cell = tableView.dequeueReusableCell(withIdentifier: FlowLabelTableViewCell.cellIdentifier()) as? FlowLabelTableViewCell
             if (cell == nil) {
                 cell = FlowLabelTableViewCell.flowCell
+                //cell.myCollectionView.scrollEnabled = false;
             }
+            //cell.backgroundColor = [UIColor clearColor];
             if let cell = cell {
                 cell.contentView._setWidth(width: self.viewWidth)
                 cell.updateWithTeams(self.teams)
@@ -357,6 +368,7 @@ import GRDB
             xcct.vCardTemp = newvCardTemp
         }
         
+        //xcct.vCardTemp?.nickname = newName
         if let vtemp = xcct.vCardTemp, let xmgr = OTRProtocolManager.shared.xmppManager(forChatAccount: xcct) {
             vtemp.nickname = newName
             xmgr.updateNickname(vtemp)
@@ -447,10 +459,11 @@ import GRDB
             mutableDevices = devices
             
             if let curId = self.currentDevice?.deviceId {
-                let removeId = NSNumber(value:curId)
+                let removeId = NSNumber(value:curId)//[NSNumber(value:curId)]
                 let indexSet = devices.enumerated().lazy
                     .filter {
                         removeId == $0.element
+                        //removedevices.contains($0)
                     }.map{$0.offset}
                 
                 // Remove devices
@@ -473,7 +486,10 @@ import GRDB
             }
         }, completion: {
             if let bundle = omemoCoord.fetchMyBundle() {
+                //NSNumber *idNumber = [NSNumber numberWithInt:bundle.deviceId];
+                //NSArray<NSNumber *>* mydevice = @[idNumber];
                 omemoCoord.omemoModule?.publishBundle(bundle, elementId: nil)
+                //[xmpp.omemoSignalCoordinator.omemoModule publishDeviceIds:mydevice elementId:nil];
                 //IOSM-338d should include my other deviceIDs
                 mutableDevices.append(NSNumber(value: bundle.deviceId))
                 let copyDevices = mutableDevices

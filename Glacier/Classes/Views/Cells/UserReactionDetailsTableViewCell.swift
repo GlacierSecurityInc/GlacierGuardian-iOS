@@ -1,6 +1,10 @@
+//
+//  UserReactionDetailsTableViewCell.swift
 //  Glacier
+//
 //  Created by Prem Pratap Singh on 29/10/25.
 //  Copyright © 2025 Glacier. All rights reserved.
+//
 
 import UIKit
 

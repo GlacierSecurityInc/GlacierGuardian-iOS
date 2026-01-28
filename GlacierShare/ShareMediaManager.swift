@@ -1,6 +1,10 @@
+//
+//  ShareMediaManager.swift
 //  GlacierShare
+//
 //  Created by Andy Friedman on 1/5/21.
 //  Copyright © 2021 Glacier. All rights reserved.
+//
 
 import Foundation
 import XMPPFramework
@@ -21,6 +25,8 @@ extension UIImage {
         }
     }
      struct Quality {
+        //static let low = Quality(initial: 0.4, decrementFactor: 0.65)
+        //static let medium = Quality(initial: 0.65, decrementFactor: 0.65)
         static let low = Quality(initial: 0.3, decrementFactor: 0.3)
         static let medium = Quality(initial: 0.5, decrementFactor: 0.5)
         static let high = Quality(initial: 0.75, decrementFactor: 0.75)
@@ -35,6 +41,7 @@ extension UIImage {
                   jpeg: Quality = Quality.low,
                   maxTries: UInt = 10) -> Data? {
         let image = self
+        //var scaledImageData: Data? = nil
         let scaledImageData = UIImageJPEGRepresentation(image, 0.5)
         return scaledImageData
     }
@@ -111,6 +118,7 @@ public class ShareMediaManager: NSObject {
     
     //IOSM-517
     @objc public func teardownConnections() {
+        //self.connection = nil
     }
     
     // MARK: - Public Methods
@@ -163,6 +171,7 @@ public class ShareMediaManager: NSObject {
             var outKeyIv: Data? = nil
             if shouldEncrypt {
                 guard let key = OTRPasswordGenerator.randomData(withLength: 32), let iv = OTRSignalEncryptionHelper.generateIV() else {
+                //guard let key = OTRPasswordGenerator.randomData(withLength: 32), let iv = OTRPasswordGenerator.randomData(withLength: 16) else {
                     DDLogError("Could not generate key/iv")
                     self.callbackQueue.async {
                         completion(nil, ShareMediaError.keyGenerationError)
@@ -172,6 +181,7 @@ public class ShareMediaManager: NSObject {
                 outKeyIv = iv + key
                 do {
                     let crypted = try OTRSignalEncryptionHelper.encryptData(data, key: key, iv: iv)
+                    //let crypted = try OTRCryptoUtility.encryptAESGCMData(data, key: key, iv: iv)
                     outData = crypted.data + crypted.authTag
                 } catch let error {
                     outData = Data()
@@ -221,7 +231,8 @@ public class ShareMediaManager: NSObject {
                             DDLogError("Upload error: \(error)")
                         }
                     }.uploadProgress(queue: self.internalQueue) { progress in
-                        if let media = OTRMediaItem.getMediaItem(with: media.uniqueId) {
+                        //DDLogVerbose("Upload progress \(progress.fractionCompleted)")
+                        if let media = OTRMediaItem.getMediaItem(with: media.uniqueId) { //, completion: {
                             media.transferProgress = Float(progress.fractionCompleted)
                             media.save(completion: {
                                 media.touchParent()

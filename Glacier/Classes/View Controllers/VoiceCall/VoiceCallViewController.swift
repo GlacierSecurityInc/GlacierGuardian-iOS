@@ -1,6 +1,10 @@
+//
+//  VoiceCallViewController.swift
 //  Glacier
+//
 //  Created by andyfriedman on 1/24/25.
 //  Copyright © 2025 Glacier. All rights reserved.
+//
 
 import UIKit
 import Foundation
@@ -37,9 +41,11 @@ import TwilioVoice
     
     var callManager: CallManager?
     
+    //var connectCompletionHandler: ((Bool)->Swift.Void?)? = nil
     
     var incomingPushCompletionCallback: (() -> Void)?
     var callKitCompletionCallback: ((Bool) -> Void)? = nil
+    //var activeCallInvites: [String: CallInvite]! = [:]
     var activeCalls: [String: Call]! = [:]
     let CALL_TO = "to"
     let CALL_FROM = "from"
@@ -115,6 +121,7 @@ import TwilioVoice
     override public func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
+        //profileImageView.layer.cornerRadius = profileImageView.frame.height / 2.0
         profileImageView.layer.cornerRadius = profileImageView.layer.bounds.width / 2
         profileImageView.clipsToBounds = true
         
@@ -132,12 +139,14 @@ import TwilioVoice
         mutedMark.layer.cornerRadius = mutedMark.frame.height / 2
         mutedMark.clipsToBounds = true
         
+        //remoteCollectionView.frame = view.bounds
     }
     
     // MARK: - UI
     
     private func setupViews() {
         
+        //profileImageView.layer.cornerRadius = self.view.bounds.width / 2
         
         minimizedView.backgroundColor = .clear
         minimizedView.isHidden = true
@@ -156,6 +165,7 @@ import TwilioVoice
         signalStateLabel.backgroundColor = .orange
         signalStateLabel.textColor = .white
         signalStateLabel.alpha = 0.7
+        //signalStateLabel.setFAText(prefixText: "", icon: .FASignal, postfixText: "  POOR CONNECTION", size: 10)
         
         var normalImage: UIImage?
         var selectedImage: UIImage?
@@ -205,6 +215,7 @@ import TwilioVoice
     
 
     
+    // (next 3)
     public func handleAudioDenied() {
         handlePermissionDenied("Allow Audio", message: "Whoops! It looks like you have not permitted Glacier to access your Microphone. To use Glacier calling, please enable the Microphone in the Glacier settings on your device.", includeEnable: true)
     }
@@ -233,12 +244,13 @@ import TwilioVoice
     }
     
     public func handleVideoUpgradeRequest(completion: @escaping (Bool) -> Void) {
+        //
     }
     
     public func setConnectedCall(_ call: TwilioCall, activeCall: Call, with: String) {
         self.ourCall = call
         self.activeCall = activeCall
-        nameLabel.text = with.capitalized
+        nameLabel.text = with.capitalized//with.displayName.capitalized
         self.speakerButton.isEnabled = true
     }
     
@@ -246,9 +258,12 @@ import TwilioVoice
         UIView.animate(withDuration: 0.4, animations: {
             self.topView.alpha = state ? 1.0 : 0
             self.buttonView.alpha = state ? 1.0 : 0
+            //self.disconnectButton.alpha = state ? 1.0 : 0
         }, completion: { _ in
             self.topView.isHidden = !state
             self.buttonView.isHidden = !state
+            //self.disconnectButton.isHidden = !state
+            //self.signalStateLabel.isHidden = state
         })
     }
     
@@ -364,6 +379,8 @@ import TwilioVoice
     }
     
     @IBAction func speakerAction(_ sender: UIButton) {
+        //sender.isSelected = !sender.isSelected
+        //self.callManager?.performSpeakerAction(isSelected: sender.isSelected)
         
         if self.bluetoothPossible || callManager?.isBluetoothAvailable() ?? false {
             let actionsheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
@@ -421,6 +438,7 @@ import TwilioVoice
         let cuuid = self.activeCall?.uuid
         self.userDisconnecting = true
         
+        //self.activeCall?.disconnect()
         
         // call doesn't exist yet if we haven't connected. What's the uuid then?
         if let uuid = cuuid {
@@ -431,9 +449,11 @@ import TwilioVoice
     }
     
     public func holdCall(_ onHold: Bool) {
+        //localAudioTrack?.isEnabled = !onHold
     }
     
     public func disconnectCall(_ userInitiated: Bool) {
+        //print("***** disconnectCall")
         self.callManager?.finalizeVoiceCall()
         killCallTimer()
         dismiss(animated: true) {
@@ -472,6 +492,7 @@ extension VoiceCallViewController: CallDelegate {
     }
     
     public func callDidConnect(call: Call) {
+        //print("***** callDidConnect with \(call.uuid)")
         DDLogInfo("***** Call Connected to \(call.description) as \(call.from ?? "")")
         self.progressLabel.text = "00:00"
         self.miniBarTitleLabel.text = "TAP TO RETURN TO CALL - 00:00"
@@ -482,6 +503,9 @@ extension VoiceCallViewController: CallDelegate {
                                               userInfo: nil,
                                               repeats: true)
         
+        //if let caller = self.ourCall?.caller {
+            //avatar = OTRImages.avatarImage(withUsername: displayname)
+        //}
         
         self.ourCall?.answerCallAction?.fulfill(withDateConnected: Date())
     }
@@ -499,6 +523,7 @@ extension VoiceCallViewController: CallDelegate {
         self.callKitCompletionCallback?(false)
         
         if let uuid = call.uuid {
+            //self.callManager?.reportCallDisconnected(uuid: uuid, error: error)
             
             if self.userDisconnecting == false {
                 self.callManager?.performEndCallAction(uuid: uuid, userInitiated: false)
@@ -519,13 +544,16 @@ extension VoiceCallViewController: CallDelegate {
             DDLogInfo("Call disconnected")
         }
         
+        //print("***** callDidDisconnect")
         
         if let uuid = call.uuid {
+            //self.callManager?.reportCallDisconnected(uuid: uuid, error: error)
             
             if self.userDisconnecting == false {
                 self.callManager?.performEndCallAction(uuid: uuid, userInitiated: false)
             } else {
                 self.disconnectCall(false)
+                //self.callManager?.reportCallDisconnected(uuid: uuid, error: error)
             }
         }
         

@@ -1,6 +1,10 @@
+//
+//  UserInfoProfileCell.swift
 //  ChatSecure
+//
 //  Created by Chris Ballinger on 10/31/16.
 //  Copyright © 2016 Chris Ballinger. All rights reserved.
+//
 
 import UIKit
 import XLForm

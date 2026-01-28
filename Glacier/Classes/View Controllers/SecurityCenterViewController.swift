@@ -1,6 +1,10 @@
+//
+//  SecurityCenterViewController.swift
 //  Glacier
+//
 //  Created by andyfriedman on 1/27/22.
 //  Copyright © 2022 Glacier. All rights reserved.
+//
 //IOSM#19
 
 import UIKit
@@ -63,6 +67,7 @@ import IOSSecuritySuite
         }
     }
     
+    //IOSM#90 (and viewWillAppear above)
     public func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
         self.navigationController?.popToRootViewController(animated: false)
         if let appDelegate = Application.shared.delegate as? OTRAppDelegate {
@@ -74,10 +79,12 @@ import IOSSecuritySuite
                 appDelegate.window?.rootViewController = appDelegate.smsSplitViewCoordinator.splitViewController
                 break
             case GlacierTabs.Screen.dial.rawValue:
+                //appDelegate.goGlacierVoice()
                 appDelegate.window?.rootViewController = appDelegate.dialerViewController
                 break
             case GlacierTabs.Screen.settings.rawValue:
                 self.navigationController?.pushViewController(appDelegate.settingsViewController, animated: true)
+                //appDelegate.goGlacierVoice()
                 break
             default:
                 break
@@ -118,6 +125,7 @@ public extension UIDevice {
             return identifier + String(UnicodeScalar(UInt8(value)))
         }
 
+        // see https://stackoverflow.com/questions/26028918/how-to-determine-the-current-iphone-device-model
         func mapToDevice(identifier: String) -> String { // swiftlint:disable:this cyclomatic_complexity
             #if os(iOS)
             switch identifier {

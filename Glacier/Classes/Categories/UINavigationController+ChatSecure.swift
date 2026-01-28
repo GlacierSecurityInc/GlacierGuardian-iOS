@@ -1,6 +1,10 @@
+//
+//  File.swift
 //  ChatSecure
+//
 //  Created by David Chiles on 12/14/15.
 //  Copyright © 2015 Chris Ballinger. All rights reserved.
+//
 
 import Foundation
 import UIKit

@@ -1,6 +1,10 @@
+//
+//  LocationManager.swift
 //  Glacier
+//
 //  Created by andyfriedman on 10/2/24.
 //  Copyright © 2024 Glacier. All rights reserved.
+//
 
 import CoreLocation
 import Alamofire
@@ -19,6 +23,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, OrgUpdateDel {
     private var lastLocation = CLLocation(latitude: 0,longitude: 0)
     private var lastUpdated = Date.distantPast
     private var locationManagerDelegate:LocationManagerDelegate?
+    //private var locationDelegates:Set<LocationDelegate> = []
     private var finishedLogin = false
     private var orgDataReady = false
     private var trackingOn = false
@@ -96,9 +101,11 @@ class LocationManager: NSObject, CLLocationManagerDelegate, OrgUpdateDel {
         if trackingEnabled {
             locationManager.delegate = self
             locationManager.desiredAccuracy = kCLLocationAccuracyBest
+            //locationManager.distanceFilter = kCLDistanceFilterNone
             locationManager.activityType = .otherNavigation
             locationManager.pausesLocationUpdatesAutomatically = false
             locationManager.showsBackgroundLocationIndicator = false
+            //locationManager.allowsBackgroundLocationUpdates = true
             self.requestLocationPermission()
         } 
     }
@@ -112,7 +119,9 @@ class LocationManager: NSObject, CLLocationManagerDelegate, OrgUpdateDel {
                     DispatchQueue.main.async {
                         self.handleAuthStatus(authStatus)
                     }
-                }
+                } //else {
+                   // self.handleAuthStatusForChat(authStatus)
+                //}
             } else {
                 DispatchQueue.main.async {
                     self.handleLocationAuthorizationDenied()
@@ -258,6 +267,9 @@ class LocationManager: NSObject, CLLocationManagerDelegate, OrgUpdateDel {
         let currentLocation = locations.last
 
         //handle updates for chat
+        //for locDel in self.locationDelegates {
+        //    locDel.locationUpdated(currentLocation)
+        //}
 
         // Handle location updates
         if trackingEnabled, trackingOn {

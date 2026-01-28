@@ -1,6 +1,10 @@
+//
+//  OTROTRSignalEncryptionHelper.swift
 //  ChatSecure
+//
 //  Created by David Chiles on 10/3/16.
 //  Copyright © 2016 Chris Ballinger. All rights reserved.
+//
 
 import UIKit
 import CryptoKit
@@ -53,10 +57,12 @@ class OTRSignalEncryptionHelper {
     
     /** Generates random key of length 16 bytes*/
     class func generateSymmetricKey() -> Data? {
+        //return self.randomDataOfBlockLength()
         return OTRPasswordGenerator.randomData(withLength: 16)
     }
     /** Generates random iv of length 12 bytes */
     class func generateIV() -> Data? {
+        //return self.randomDataOfBlockLength()
         return Data(AES.GCM.Nonce())
     }
     

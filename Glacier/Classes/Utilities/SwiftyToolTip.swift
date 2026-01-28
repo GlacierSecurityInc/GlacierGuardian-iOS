@@ -1,4 +1,7 @@
+//
+//  SwiftyToolTip.swift
 //  FBSnapshotTestCase
+//
 //  Created by Bob De Kort on 5/17/18.
 //IOSM#85
 import Foundation
@@ -62,6 +65,10 @@ class TabBarToolTip {
     }
 }
 
+/*
+ Possible gestures to activate tooltip
+ TODO: Think of clean way to just use UIGestureRecognizer
+ */
 public enum ViewDescriptionGestures {
     case doubleTap
     case longPress
@@ -511,6 +518,10 @@ extension UIBarButtonItem {
         return false
     }
     
+    /*
+     Removes the tooltip from the Tooltip manager and removes the gesture from the view.
+     Make sure the tooltip is called in ViewDidAppear as the BarButtonItem has to be on screen and loaded.
+     */
     public func removeToolTip() {
         // Remove description from manager return value if there was a tooltip
         if SwiftyToolTipManager.instance.removeToolTip(barButton: self) != nil {

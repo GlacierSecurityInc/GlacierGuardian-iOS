@@ -1,6 +1,10 @@
+//
+//  XMPPMessage+MessageReactions.swift
 //  Glacier
+//
 //  Created by Prem Pratap Singh on 14/10/25.
 //  Copyright © 2025 Glacier. All rights reserved.
+//
 
 import Foundation
 import XMPPFramework
@@ -14,6 +18,7 @@ extension XMPPMessage {
         return deepReactionsElement?.attributeStringValue(forName: "id")
     }
 
+    /// Extracts the reaction data (sender and reactions) from the message.
     var chatMessageReactions: NSDictionary? {
         guard let reactions = deepReactionsElement else {
             return nil

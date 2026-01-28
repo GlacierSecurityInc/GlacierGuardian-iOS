@@ -15,6 +15,7 @@ enum PacketTunnelProviderError: String, Error {
 extension NETunnelProviderProtocol {
     convenience init?(tunnelConfiguration: TunnelConfiguration, previouslyFrom old: NEVPNProtocol? = nil) {
         self.init()
+        //NSLog("***** NETunnelProviderProtocol 1")
 
         guard let name = tunnelConfiguration.name else { return nil }
         guard let appId = Bundle.main.bundleIdentifier else { return nil }
@@ -58,9 +59,14 @@ extension NETunnelProviderProtocol {
 
     @discardableResult
     func migrateConfigurationIfNeeded(called name: String) -> Bool {
+        /* This is how we did things before we switched to putting items
+         * in the keychain. But it's still useful to keep the migration
+         * around so that .mobileconfig files are easier.
+         */
         if let oldConfig = providerConfiguration?["WgQuickConfig"] as? String {
             providerConfiguration = nil
             guard passwordReference == nil else { return true }
+            //wg_log(.info, message: "Migrating tunnel configuration '\(name)'")
             passwordReference = Keychain.makeReference(containing: oldConfig, called: name)
             return true
         }
@@ -75,6 +81,7 @@ extension NETunnelProviderProtocol {
             }
             guard let newReference = result as? Data else { return false }
             if !newReference.elementsEqual(passwordReference!) {
+                //wg_log(.info, message: "Migrating iOS 14-style keychain reference to iOS 15-style keychain reference for '\(name)'")
                 passwordReference = newReference
                 return true
             }

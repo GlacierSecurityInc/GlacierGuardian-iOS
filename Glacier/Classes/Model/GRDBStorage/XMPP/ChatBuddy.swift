@@ -1,6 +1,10 @@
+//
+//  ChatBuddy.swift
 //  Glacier
+//
 //  Created by andyfriedman on 9/12/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import GRDB
@@ -219,6 +223,7 @@ extension ChatBuddyModel: ChatvCard {
         }
         set {
             if let avatarData = self.grdbRecord?.avatarData, avatarData != newValue {
+                //GlacierImageCache.shared().removeImage(self.uniqueId)
                 OTRImages.removeImage(withIdentifier: self.uniqueId)
             }
             self.grdbRecord?.avatarData = newValue
@@ -376,7 +381,9 @@ extension ChatBuddyModel {
             message.grdbRecord?.chatBuddyId = buddyid
         }
         
+        //let preferredSecurity:OTRMessageTransportSecurity = .OMEMO
         message.messageSecurity = .OMEMO
+        //message.messageSecurityInfo = OTRMessageEncryptionInfo(messageSecurity: preferredSecurity)
         
         return message
     }
@@ -463,6 +470,7 @@ extension ChatBuddyModel: UserInfoProfile {
 #if !TARGET_IS_EXTENSION
     public var avatarImage: UIImage {
         get {
+            //self.getAvatarImage()
             if let grec = self.grdbRecord, let img = OTRImages.avatarImage(withUniqueIdentifier: self.uniqueId, avatarData: grec.avatarData, displayName: grec.displayName, username: grec.username) {
                 return img
             }
@@ -811,6 +819,12 @@ public struct ChatBuddy: GRDBRecord, TableRecord {
     public var id: Int64?
     public var uniqueId: String
     
+    //var accountUniqueId: String?
+    //var lastMessageIdentifier: String?
+    //var messageDate = Date.distantPast
+    //var isGroupThread = false
+    //var muteExpiration: Date?
+    //var modified: Date?
     
     var username: String
     var displayName: String?
@@ -933,5 +947,9 @@ extension ChatBuddy {
         request(for: ChatBuddy.messages)
     }
     
+    //static let thread = belongsTo(ChatThread.self)//belongsTo(ChatThread.self)
+    //var thread: QueryInterfaceRequest<ChatThread> {
+    //    request(for: ChatBuddy.thread)
+    //}
 }
 

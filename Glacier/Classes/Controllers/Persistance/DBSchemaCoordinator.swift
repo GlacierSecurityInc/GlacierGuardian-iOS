@@ -1,6 +1,10 @@
+//
+//  DBSchemaCoordinator.swift
 //  Glacier
+//
 //  Created by andyfriedman on 1/3/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import GRDB
@@ -13,6 +17,7 @@ public class DBSchemaCoordinator: NSObject {
     public static let avatarRepairAttemptCount = "Avatar Repair Attempt Count"
     
     /// Migrate a database to the latest version. Throws if migrations fail.
+    ///
     /// - Parameter databaseStorage: The database to migrate.
     /// - Parameter isMainDatabase: A boolean indicating whether this is the main database. If so, some global state will be set.
     /// - Parameter runDataMigrations: A boolean indicating whether to include data migrations. Typically, you want to omit this value or set it to `true`, but we want to skip them when recovering a corrupted database.
@@ -55,6 +60,7 @@ public class DBSchemaCoordinator: NSObject {
         DDLogInfo("Migrations complete.")
         
         if isMainDatabase {
+            //SSKPreferences.markGRDBSchemaAsLatest()
             areMigrationsComplete = true
         }
         
@@ -71,6 +77,8 @@ public class DBSchemaCoordinator: NSObject {
             try DatabaseMigrator().appliedIdentifiers(transaction.database)
         }
         
+        // First do the schema migrations. (See the comment within MigrationId for why schema and data
+        // migrations are separate.)
         let incrementalMigrator = DatabaseMigratorWrapper()
         registerSchemaMigrations(migrator: incrementalMigrator)
         try incrementalMigrator.migrate(dbStorage.pool)
@@ -114,15 +122,21 @@ public class DBSchemaCoordinator: NSObject {
         // incrementing grdbSchemaVersionLatest.
         // We only need to do this for breaking changes.
         // MARK: Data Migrations
+        //
         // Any migration which leverages SDSModel serialization must occur *after* changes to the
         // database schema complete.
+        //
         // Otherwise, for example, consider we have these two pending migrations:
+        //  - Migration 1: resaves all instances of Foo (Foo is some SDSModel)
         //  - Migration 2: adds a column "new_column" to the "model_Foo" table
+        //
         // Migration 1 will fail, because the generated serialization logic for Foo expects
         // "new_column" to already exist before Migration 2 has even run.
+        //
         // The solution is to always split logic that leverages SDSModel serialization into a
         // separate migration, and ensure it runs *after* any schema migrations. That is, new schema
         // migrations must be inserted *before* any of these Data Migrations.
+        //
         // Note that account state is loaded *before* running data migrations, because many model objects expect
         // to be able to access that without a transaction.
         case dataMigration_populateGalleryItems
@@ -158,6 +172,9 @@ public class DBSchemaCoordinator: NSObject {
             // After importing the initial schema, we want to skip the remaining
             // incremental migrations, so we manually mark them as complete.
             for migrationId in (MigrationId.allCases.filter { $0 != .createInitialSchema }) {
+                //if !CurrentAppContext().isRunningTests {
+                //    Logger.info("skipping migration: \(migrationId) for new user.")
+                //}
                 insertMigration(migrationId.rawValue, db: db)
             }
         }
@@ -185,6 +202,7 @@ public class DBSchemaCoordinator: NSObject {
         ) {
             // Hold onto a reference to the migrator, so we can use its `appliedIdentifiers` method
             // which is really a static method since it uses no instance state, but needs a reference
+            // to an instance (any instance, doesn't matter) anyway.
             // Don't keep a strong reference to self as that would be a retain cycle, and don't rely
             // on a weak reference to self because self is not guaranteed to be retained when
             // the migration actually runs; this class is used primary for migration setup.
@@ -198,11 +216,15 @@ public class DBSchemaCoordinator: NSObject {
                 // Create a transaction with this database connection.
                 // GRDB creates a database connection for each migration applied; this migration
                 // is finalized by GRDB internally. The steps look like:
+                // 1. Create Database connection (in a write transaction)
                 // 2. Run this closure, the migration itself
+                // 3. Write to the grdb_migrations table to mark this migration as done (if we don't throw)
                 // 4. Commit the transaction.
+                //
                 // Notably, it does _not_ check that the migration hasn't been run within the same transaction.
                 // We do that here and just say we succeeded by early returning and not throwing an error.
                 // This catches situations where the migrations are racing across processes.
+                //
                 // As long as we do this within the same DB connection we get as input to this
                 // method, the check happens within the same transaction that writes that
                 // the migration is complete, and we can take advantage of DB locks to enforce
@@ -243,6 +265,7 @@ public class DBSchemaCoordinator: NSObject {
         
         migrator.registerMigration(.createInitialSchema) { _ in
             fatalError("This migration should have already been run by the last GRDB migration.")
+            //return .success(())
         }
         
         migrator.registerMigration(.accountCreation) { transaction in

@@ -1,6 +1,10 @@
+//
+//  UserProfileView.swift
 //  Glacier
+//
 //  Created by Prem Pratap Singh on 19/11/25.
 //  Copyright © 2025 Glacier. All rights reserved.
+//
 
 import SwiftUI
 import UIKit
@@ -68,6 +72,7 @@ struct UserProfileView: View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .center, spacing: 0) {
                 
+                // Avatar (image or initials)
                 ZStack {
                     Image(uiImage: account.avatarImage)
                         .resizable()
@@ -302,7 +307,7 @@ struct UserProfileView: View {
     }
     
     private func didTapOnResetPasswordButton() {
-        guard let url = URL(string: "https:
+        guard let url = URL(string: "https://console.glacier.chat/forget-password/"),
               UIApplication.shared.canOpenURL(url) else {
             return
         }

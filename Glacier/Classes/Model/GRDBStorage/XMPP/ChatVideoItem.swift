@@ -1,6 +1,10 @@
+//
+//  ChatVideoItem.swift
 //  Glacier
+//
 //  Created by andyfriedman on 9/21/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import MessageKit
@@ -62,6 +66,7 @@ extension ChatVideoItem: MediaItem {
             return nil
         }
                     
+        //let uid = self.uniqueId
         self.setThumbnail(videoUrl)
 #endif
         return nil
@@ -95,6 +100,7 @@ extension ChatVideoItem: MediaItem {
         self.downloadVideo(url, completion: { (img, url) in
             guard let img = img else {return }
             let mediaSize = ChatMediaItem.normalizeWidth(width: img.size.width, height: img.size.height)
+            //print("***** setThumbnail video \(self.uniqueId) normalized size \(mediaSize), but downloaded width \(img.size.width), height \(img.size.height)")
             
             let resizedImage = img.scaleImageWith(newSize: mediaSize)
             

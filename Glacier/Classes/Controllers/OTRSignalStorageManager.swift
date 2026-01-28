@@ -1,6 +1,10 @@
+//
+//  OTRSignalStorageManager.swift
 //  ChatSecure
+//
 //  Created by David Chiles on 7/21/16.
 //  Copyright © 2016 Chris Ballinger. All rights reserved.
+//
 
 import UIKit
 import SignalProtocolObjC
@@ -177,13 +181,13 @@ open class OTRSignalStorageManager: NSObject {
     }
     
     fileprivate func storePreKeyPrivate(_ preKey: Data, preKeyId: UInt32) -> Bool {
-        let preKeyDatabaseObject = ChatPreKey(accountKey: self.accountKey, keyId: preKeyId, keyData: preKey)
-        preKeyDatabaseObject.save()
+        let preKeyDatabaseObject = ChatPreKey(accountKey: self.accountKey, keyId: preKeyId, keyData: preKey) //else { return false }
+        preKeyDatabaseObject.save()  //(with: transaction)
         return true
     }
     
     fileprivate func storePreKeyPrivate(_ preKey: Data, preKeyId: UInt32, transaction:GRDBWriteTransaction) -> Bool {
-        let preKeyDatabaseObject = ChatPreKey(accountKey: self.accountKey, keyId: preKeyId, keyData: preKey)
+        let preKeyDatabaseObject = ChatPreKey(accountKey: self.accountKey, keyId: preKeyId, keyData: preKey) //else { return false }
         preKeyDatabaseObject.grdbSave(transaction: transaction)
         return true
     }
@@ -439,6 +443,7 @@ extension OTRSignalStorageManager: SignalStore {
             preKeyData = signedPreKey.keyData
         } else {
             let count = ChatPreKey.allLiveSignalPreKeys(for: self.accountKey, includeDeleted: true)
+            //print("***** preKey not found but we have \(count) including deleted")
         }
         return preKeyData
     }
@@ -448,6 +453,7 @@ extension OTRSignalStorageManager: SignalStore {
 #if !TARGET_IS_EXTENSION
         result = self.storePreKeyPrivate(preKey, preKeyId: preKeyId)
 #endif
+        //print("***** Just stored preKey with result \(result)")
         return result
     }
     
@@ -464,10 +470,12 @@ extension OTRSignalStorageManager: SignalStore {
         var result = false
 #if !TARGET_IS_EXTENSION
         let pKey = ChatPreKey.uniqueKey(for: self.accountKey, keyId: preKeyId)
+        //print("***** Trying to delete preKey")
         if var preKey = ChatPreKey.signalPreKey(for: pKey) {
             preKey.keyData = nil
             preKey.save()
             result = true
+            //print("***** Just deleted preKey with result \(result)")
         }
 #endif
         return result
@@ -484,7 +492,7 @@ extension OTRSignalStorageManager: SignalStore {
     }
     
     public func storeSignedPreKey(_ signedPreKey: Data, signedPreKeyId: UInt32) -> Bool {
-        let signedPreKeyDatabaseObject = ChatSignedPreKey(accountKey: self.accountKey, keyId: signedPreKeyId, keyData: signedPreKey)
+        let signedPreKeyDatabaseObject = ChatSignedPreKey(accountKey: self.accountKey, keyId: signedPreKeyId, keyData: signedPreKey)// else {return false }
 #if !TARGET_IS_EXTENSION
         do {
             try DBManager.sharedDB().grdbStorage.write(block: { transaction in
@@ -495,13 +503,15 @@ extension OTRSignalStorageManager: SignalStore {
             return false
         }
         
+        //signedPreKeyDatabaseObject.save(completion:{
         //    return true
+        //})
 #endif
         return true
     }
     
     public func storeSignedPreKey(_ signedPreKey: Data, signedPreKeyId: UInt32, transaction:GRDBWriteTransaction) -> Bool {
-        let signedPreKeyDatabaseObject = ChatSignedPreKey(accountKey: self.accountKey, keyId: signedPreKeyId, keyData: signedPreKey)
+        let signedPreKeyDatabaseObject = ChatSignedPreKey(accountKey: self.accountKey, keyId: signedPreKeyId, keyData: signedPreKey)// else {return false }
 #if !TARGET_IS_EXTENSION
         do {
             signedPreKeyDatabaseObject.grdbSave(transaction: transaction)
@@ -510,7 +520,9 @@ extension OTRSignalStorageManager: SignalStore {
             return false
         }
         
+        //signedPreKeyDatabaseObject.save(completion:{
         //    return true
+        //})
 #endif
         return true
     }
@@ -581,6 +593,7 @@ extension OTRSignalStorageManager: SignalStore {
             result = true
         } else if let parentEntry = self.parentKeyAndCollectionForSignalAddress(address) {
             //See if we have any devices
+            //var hasDevices = ChatOmemoDevice.allOMEMODevices(for: parentEntry.key, collection: parentEntry.collection).count > 0
                 
             var trustLevel = OMEMOTrustLevel.trustedTofu // since we are in a closed network
             let deviceIdNumber = NSNumber(value: address.deviceId as Int32)

@@ -1,6 +1,10 @@
+//
+//  ChatRoomMessage.swift
 //  Glacier
+//
 //  Created by andyfriedman on 9/4/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import CocoaLumberjack
@@ -14,7 +18,7 @@ public enum ChatRoomMessageState:Int {
     case needsSending = 1
     case pendingSent = 2
     case sent = 3
-    case delivered = 4
+    case delivered = 4 // counts as delivered if >1 receipts
     
     public func incoming() -> Bool {
         switch self {
@@ -81,7 +85,9 @@ enum ChatRoomMessageType: Int {
             grec.messageDate = date
         } else if let date = message.delayedDeliveryDate {
             grec.messageDate = date
-        }
+        } //else { //done in initializer
+            //grec.messageDate = Date()
+        //}
         grec.senderJid = message.from?.full
         grec.receiverJid = message.to?.full
         grec.roomJid = room.roomJID?.bare
@@ -95,12 +101,13 @@ enum ChatRoomMessageType: Int {
         grec.roomUniqueId = room.uniqueId
         
         
+        // Try to find buddy of sender. We might get an muc#user item element from where we can pull the real jid of the sender, else we try by message.senderJID.
         if let x = message.element(forName: "x", xmlns: XMPPMUCUserNamespace),
             let item = x.element(forName: "item"),
             let jidString = item.attribute(forName: "jid")?.stringValue,
             let jid = XMPPJID(string: jidString) {
             realJID = jid
-        } else if let addresses = message.element(forName: "addresses", xmlns: "http:
+        } else if let addresses = message.element(forName: "addresses", xmlns: "http://jabber.org/protocol/address"),
             let address = addresses.element(forName: "address"),
             let jidString = address.attribute(forName: "jid")?.stringValue,
             let type = address.attribute(forName: "type")?.stringValue,
@@ -445,6 +452,7 @@ extension ChatRoomMessageModel:MessageProtocol {
         } catch {
             DDLogDebug("ChatRoomMessageModel.threadOwner with error: \(error)")
         }
+        //return ChatRoom.getXMPPRoom(uniqueId: self.threadId)
         
         return threadModel
     }
@@ -562,6 +570,7 @@ public class RoomDownloadMessage: ChatRoomMessageModel, DownloadMessage {
             download = RoomDownloadMessage()
         }
         
+        //let download = RoomDownloadMessage()!
         if let parent = parentMessage as? ChatRoomMessageModel {
             download.grdbRecord?.buddyUniqueId = parent.grdbRecord?.buddyUniqueId
         }
@@ -703,8 +712,9 @@ public extension XMPPRoom {
 
 public extension XMPPMessage {
     /// Gets the non-anonymous user JID from MUC message
+    /// <x xmlns="http://jabber.org/protocol/muc#user"><item jid="user@example.com" affiliation="member" role="participant"/></x>
     var mucUserJID: XMPPJID? {
-        let x = element(forName: "x", xmlns: "http:
+        let x = element(forName: "x", xmlns: "http://jabber.org/protocol/muc#user")
         let item = x?.element(forName: "item")
         guard let jidString = item?.attributeStringValue(forName: "jid") else {
             return nil
@@ -746,6 +756,7 @@ extension ChatRoomMessageModel {
                 messages = try req.fetchAll(transaction.database)
             } catch {
                 DDLogDebug("error: \(error)")
+                //completion(markable)
             }
         }, completionQueue: DispatchQueue.global(), completion: {
             DBManager.sharedDB().grdbStorage.asyncWrite(block: { transaction in
@@ -912,6 +923,7 @@ extension ChatRoomMessageModel {
             try DBManager.sharedDB().grdbStorage.read(block: { transaction in
                 if let record = try ChatRoomMessage
                     .filter(Column("roomUniqueId") == threadId)
+                    //.filter(Column("type") == RoomMessageType.download.rawValue)
                     .order(Column("messageDate").desc)
                     .fetchOne(transaction.database) {
                     message = ChatRoomMessageModel(message: record)
@@ -1065,6 +1077,9 @@ extension ChatRoomMessageModel {
     @objc public static func deleteMessage(with messageId:String) {
         DBManager.sharedDB().grdbStorage.asyncWrite(block: { transaction in
             do {
+                //let msgs = try ChatRoomMessage
+                    //.filter(Column("uniqueId") == messageId)
+                    //.deleteAndFetchAll(transaction.database)
                 
                 let msg = try ChatRoomMessage
                     .filter(Column("uniqueId") == messageId)
@@ -1096,6 +1111,7 @@ extension ChatRoomMessageModel {
             try DBManager.sharedDB().grdbStorage.read(block: { transaction in
                 count = try ChatRoomMessage
                     .filter(Column("roomUniqueId") == threadId)
+                    //.filter(Column("type") != RoomMessageType.download.rawValue)
                     .fetchCount(transaction.database)
             })
         } catch {
@@ -1185,6 +1201,8 @@ struct ChatRoomMessage: GRDBRecord {
     var msgSenderDisplayName: String
     
     //download message
+    //var parentMessageKey: String?
+    //var parentMessageCollection: String?
     var url: String?
 
     public static var databaseTableName: String {
@@ -1307,6 +1325,7 @@ extension ChatRoomMessage: MessageType {
                     } else if mediaRec.mediaType == ChatMediaType.audioItem.rawValue, let audioRec = item as? ChatAudioItem {
                         return MessageKind.audio(audioRec)
                     } else if mediaRec.mediaType == ChatMediaType.htmlItem.rawValue, let htmlRec = item as? ChatHTMLItem, ChatRoomMessageModel.disableHTMLDownload == false {
+                        //return MessageKind.linkPreview(htmlRec)
                         return MessageKind.photo(htmlRec)
                     } else if mediaRec.mediaType == ChatMediaType.fileItem.rawValue, let fileRec = item as? ChatFileItem {
                         return MessageKind.photo(fileRec)
@@ -1335,6 +1354,7 @@ extension ChatRoomMessage: MessageType {
                     } else if mediaRec.mediaType == ChatMediaType.audioItem.rawValue, let audioRec = item as? ChatAudioItem {
                         return MessageKind.audio(audioRec)
                     } else if mediaRec.mediaType == ChatMediaType.htmlItem.rawValue, let htmlRec = item as? ChatHTMLItem, ChatRoomMessageModel.disableHTMLDownload == false {
+                        //return MessageKind.linkPreview(htmlRec)
                         return MessageKind.photo(htmlRec)
                     } else if mediaRec.mediaType == ChatMediaType.fileItem.rawValue, let fileRec = item as? ChatFileItem {
                         return MessageKind.photo(fileRec)

@@ -1,6 +1,10 @@
+//
+//  ServerCheck.swift
 //  ChatSecure
+//
 //  Created by Chris Ballinger on 2/15/17.
 //  Copyright © 2017 Chris Ballinger. All rights reserved.
+//
 
 import Foundation
 
@@ -124,6 +128,7 @@ public class ServerCheck: XMPPModule {
     }
     
     private func refreshPush() {
+        //
     }
     
     private func refreshCapabilities() {
@@ -205,6 +210,7 @@ public class ServerCheckResult: NSObject {
         if let pushCap = caps[.XEP0357], pushCap.status == .Available {
             xepExists = true
         }
+        //let pushAcctWorks = push.pushMaybeWorks()
         let xmppWorks = status == .registered
         if xepExists && xmppWorks {
             checkStatus = .working

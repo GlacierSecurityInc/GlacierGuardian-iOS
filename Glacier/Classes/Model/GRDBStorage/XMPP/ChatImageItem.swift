@@ -1,6 +1,10 @@
+//
+//  ChatImageItem.swift
 //  Glacier
+//
 //  Created by andyfriedman on 9/21/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import MessageKit
@@ -77,11 +81,13 @@ extension ChatImageItem: MediaItem {
         let thumbnailKey = "\(parentKey)-thumb"
         //#if !TARGET_IS_EXTENSION
         if let chatImg = GlacierImageCache.shared().retrieveImageInMemoryCache(forKey: thumbnailKey) {
+            //return Self.normalizeWidth(width: chatImg.size.width, height: chatImg.size.height)
+            //print("***** image exists \(self.getFilename()) for Key \(thumbnailKey) with size width \(chatImg.size.width), height \(chatImg.size.height)")
             
             if chatImg.size.width > 0, chatImg.size.height > 0 {
                 self.mediaSize = chatImg.size
                 self.save {}
-                return chatImg.size
+                return chatImg.size//CGSizeMake(chatImg.size.width, chatImg.size.height)
             }
         }
         //#endif
@@ -112,7 +118,10 @@ extension ChatImageItem: MediaItem {
             let options = KingfisherParsedOptionsInfo(optionsInfo)
             let thumbnailKey = "\(parentKey)-thumb"
             
+            //let myuidstr = self.uniqueId
+            //let parentColl = self.grdbRecord?.parentObjectCollection
             GlacierImageCache.shared().store(resizedImage, original: idata, forKey: thumbnailKey, options: options, toDisk: false, completionHandler: {_ in
+                //self.removeFromCache()
             })
         })
     }
@@ -132,17 +141,24 @@ extension ChatImageItem: MediaItem {
                 self.save{}
             }
         }
+        //self.grdbRecord?.transferProgress = 1.0
+        //self.save{}
         
         let optionsInfo:KingfisherOptionsInfo = [.cacheMemoryOnly,
                                                  .memoryCacheExpiration(.days(14)),
                                                  .memoryCacheAccessExtendingExpiration(.cacheTime)]
         let options = KingfisherParsedOptionsInfo(optionsInfo)
         
+        //let myuidstr = self.uniqueId// as NSString
+        //let mycoll = self.grdbRecord?.parentObjectCollection
         GlacierImageCache.shared().store(resizedImage, original: idata, forKey: thumbnailKey, options: options, toDisk: false, completionHandler: {result in
+            //let dt = Date.timeIntervalSinceReferenceDate
+            //print("***** \(dt) done setting image thumbnail for \(parentKey)")
         })
     }
     
 #if !TARGET_IS_EXTENSION
+    //func downloadImage(_ url: URL, completion: ((_ dimage: UIImage?, _ url: URL?) -> Void)?) {
     func downloadImage(_ url: URL, filename: String?, completion: ((_ dimage: UIImage?, _ url: URL?, _ data: Data?) -> Void)?) {
         URLSession.shared.dataTask(with: url) { (data, response, error) in
             if let error = error {
@@ -206,6 +222,7 @@ extension UIImage {
 
         let image = renderer.image { ctx in
             color.setFill()
+            //UIRectFill(CGRect(origin: CGPoint.zero, size: size))
             ctx.cgContext.fill(imageRect)
         }
         

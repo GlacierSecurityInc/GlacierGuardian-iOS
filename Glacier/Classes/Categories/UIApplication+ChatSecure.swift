@@ -1,6 +1,10 @@
+//
+//  UIApplication+ChatSecure.swift
 //  ChatSecure
+//
 //  Created by David Chiles on 12/14/15.
 //  Copyright © 2015 Chris Ballinger. All rights reserved.
+//
 
 import Foundation
 import MWFeedParser
@@ -68,6 +72,7 @@ public extension UIApplication {
                 } else if notification.request.content.body == SOMEONE_IS_TYPING_STRING() {
                     typingIdentifiers.append(notification.request.identifier)
                 }
+                //DDLogVerbose("notification delivered: \(notification)")
             }
             if newMessageIdentifiers.count > 1 {
                 _ = newMessageIdentifiers.popLast()
@@ -116,6 +121,7 @@ public extension UIApplication {
             
             // Show author of group messages
             if thread.isGroupThread() {
+                //text = "#"+text
                 if let displayName = message.xmppBuddy()?.displayName,
                    displayName.count > 0 {
                     text += " (\(displayName))"
@@ -142,7 +148,8 @@ public extension UIApplication {
                 }
                 // for unencrypted media messages in group, was showing a link
                 // likely not necessary when group has OMEMO
-                if msgTxt.contains("https://") {
+                if msgTxt.contains("https://") {//},
+                   //message.downloads().count > 0 {
                     return
                 }
                 
@@ -181,7 +188,7 @@ public extension UIApplication {
     }
     
     @objc func showLocalNotificationForApprovedBuddy(_ thread:ChatBuddyModel?) {
-        guard let thread = thread else { return }
+        guard let thread = thread else { return } // , !thread.isMuted No notifications for muted
         DispatchQueue.main.async {
             var name = SOMEONE_STRING()
             if thread.displayName.count > 0 {
@@ -201,6 +208,7 @@ public extension UIApplication {
     }
     
     internal func showLocalNotificationFor(_ threadId:String?, threadCollection:String?, text:String, unreadCount:Int) {
+        //if let threadId = threadId { return } // , !thread.isMuted No notifications for muted
         DispatchQueue.main.async {
             var identifier:String? = threadId
             var userInfo:[AnyHashable:Any]? = nil
@@ -231,6 +239,7 @@ public extension UIApplication {
                 let namecomponents = msgparts[0].components(separatedBy: "@")
                 if (namecomponents.count == 2) {
                     if let range = body.range(of: ":") {
+                        //let msgtext = body.substring(from: range.lowerBound)
                         let msgtext = String(body[range.lowerBound...])
                         bodyslim = namecomponents[0] + msgtext;
                     }
@@ -305,6 +314,7 @@ public extension UIApplication {
     }
     
     @objc func showRebootNotification() {
+        //DispatchQueue.main.async {
             let localNotification = UNMutableNotificationContent()
             localNotification.title = "Reminder to reboot"
             localNotification.body = "Rebooting your device helps maintain iOS security and protects against potential threats."
@@ -318,6 +328,7 @@ public extension UIApplication {
 #endif
                 }
             })
+        //}
     }
     
     /// show a notification when there is an issue connecting, for instance expired certificate
@@ -353,6 +364,8 @@ public extension UIApplication {
             let osStatus = OSStatus(error.code)
             
             // Ignore a few SSL error codes that might be more annoying than useful
+            //                errSSLClosedGraceful         = -9805,    /* connection closed gracefully */
+            //                errSSLClosedAbort             = -9806,    /* connection closed via error */
             let codesToIgnore = [errSSLClosedAbort, errSSLClosedGraceful]
             if codesToIgnore.contains(osStatus) {
                 return
@@ -376,6 +389,7 @@ public extension UIApplication {
                 body = body + " \"\(sslString)\""
             }
         } else if error.domain == "com.glaciersecurity" && error.code == 1005 {
+            //body = body + " Notify Glacier admin."
         } else {
             // unrecognized error domain... ignoring
             return

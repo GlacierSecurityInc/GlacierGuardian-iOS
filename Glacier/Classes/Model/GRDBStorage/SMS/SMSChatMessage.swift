@@ -1,6 +1,10 @@
+//
+//  SMSChatMessage.swift
 //  Glacier
+//
 //  Created by andyfriedman on 8/22/23.
 //  Copyright © 2023 Glacier. All rights reserved.
+//
 
 import Foundation
 import GRDB
@@ -123,6 +127,7 @@ extension SMSChatMessageModel {
 struct SMSChatMessage: GRDBRecord, TableRecord {
     var id: Int64?
     var uniqueId: String
+    //var value: SMSMessage
     
     var conversationId: String?
     var twilioSid: String?

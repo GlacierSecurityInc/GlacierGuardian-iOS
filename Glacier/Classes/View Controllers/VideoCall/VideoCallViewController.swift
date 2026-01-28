@@ -1,5 +1,8 @@
+//
+//  VideoCallViewController.swift
 //  Created by Guillermo Olmedo on 4/15/20.
 //  Copyright © 2020 Glacier Security. All rights reserved.
+//
 
 import UIKit
 import Foundation
@@ -55,6 +58,7 @@ import AVKit
     var connectCompletionHandler: ((Bool)->Swift.Void?)? = nil
     
     @IBOutlet weak var localView: UIView! //VideoView
+    //var localVideoView: VideoView?
     
     private var localRenderer: RTCMTLVideoView?
     private var remoteRenderer: RTCMTLVideoView?
@@ -74,7 +78,7 @@ import AVKit
     deinit {
         NotificationCenter.default.removeObserver(self) //IOSM-521
         // We are done with camera
-        self.currentCall?.webrtcClient?.terminateSession()
+        self.currentCall?.webrtcClient?.terminateSession() //stopCaptureLocalVideo()
         self.currentCall?.webrtcClient = nil
         self.currentCall = nil
     }
@@ -151,6 +155,7 @@ import AVKit
         mutedMark.layer.cornerRadius = mutedMark.frame.height / 2
         mutedMark.clipsToBounds = true
         
+        //remoteCollectionView.frame = view.bounds
     }
     
     // MARK: - UI
@@ -201,6 +206,7 @@ import AVKit
         signalStateLabel.backgroundColor = .orange
         signalStateLabel.textColor = .white
         signalStateLabel.alpha = 0.7
+        //signalStateLabel.setFAText(prefixText: "", icon: .FASignal, postfixText: "  POOR CONNECTION", size: 10)
         
         let icMuteOffImage = UIImage(named: "ic-mute-off", in: GlacierInfo.resourcesBundle, compatibleWith: nil)
         let icMuteOnImage = UIImage(named: "ic-mute-on", in: GlacierInfo.resourcesBundle, compatibleWith: nil)
@@ -307,6 +313,7 @@ import AVKit
         self.speakerButton.setImage(iconImage, for: .normal)
     }
     
+    // (next 3)
     public func handleAudioDenied() {
         handlePermissionDenied("Allow Audio", message: "Whoops! It looks like you have not permitted Glacier to access your Microphone. To use Glacier calling, please enable the Microphone in the Glacier settings on your device.", includeEnable: true)
     }
@@ -364,6 +371,7 @@ import AVKit
     }
     
     public func doConnectCall(_ call: TwilioCall, with: String) {
+        //self.connectCall(call)
         self.currentCall = call
         if self.currentCall?.audioOnly == false {
             addButton.isHidden = true
@@ -381,6 +389,7 @@ import AVKit
         UIView.animate(withDuration: 0.4, animations: {
             self.topView.alpha = state ? 1.0 : 0
             self.buttonView.alpha = state ? 1.0 : 0
+            //self.disconnectButton.alpha = state ? 1.0 : 0
         }, completion: { _ in
             self.topView.isHidden = !state
             self.buttonView.isHidden = !state
@@ -427,6 +436,7 @@ import AVKit
         
         if idleCount > 10 {
             idleCount = -1
+            //showCallMenu(state: false)
         }
         
         if self.currentCall?.callstatus == .disconnected {
@@ -501,8 +511,10 @@ import AVKit
         //handle webrtc
         if sender.isSelected {
             //maybe check if we've already started, ie if
+            //webClient.startCaptureLocalVideo(renderer: localVideo, andCameraPosition: .front)
             webClient.showVideo()
         } else {
+            //webClient.stopCaptureLocalVideo()
             webClient.hideVideo()
         }
         
@@ -517,6 +529,8 @@ import AVKit
         //if off video with bluetooth on, keep bluetooth on
         //if off video with bluetooth off, turn off speaker
         
+        //self.callManager?.performSpeakerAction(isSelected: sender.isSelected)
+        //speakerButton.isSelected = sender.isSelected
         //note: if i put it on phone bluetooth shouldn't be available
         if !speakerButton.isSelected && callManager?.isBluetoothAvailable() ?? false {
             self.callManager?.performSpeakerAction(selection: SpeakerChoice.bluetooth)
@@ -526,6 +540,7 @@ import AVKit
             speakerButton.isSelected = sender.isSelected
         }
         self.viewTapped() //IOSM-475
+        //profileImageView.isHidden = sender.isSelected
     }
     
     public func setBluetoothEnabled(_ bluetoothEnabled: Bool) {
@@ -588,11 +603,13 @@ import AVKit
     }
     
     public func holdCall(_ onHold: Bool) {
+        //localAudioTrack?.isEnabled = !onHold
+        //localVideoTrack?.isEnabled = !onHold
     }
     
     public func disconnectCall(_ userInitiated: Bool) {
         DDLogDebug("disconnectCall")
-        self.callManager?.performSpeakerAction(isSelected: false)
+        self.callManager?.performSpeakerAction(isSelected: false)  //selection: SpeakerChoice.bluetooth)
         
         if (userInitiated) {
             if let url = Bundle.main.url(forResource: "MarimbaBlink", withExtension: "wav") {
@@ -600,6 +617,7 @@ import AVKit
             }
         }
         
+        //self.room?.disconnect()
         //actually do what is required to end the call...which is?
         killCallTimer()
         DispatchQueue.main.async {
@@ -618,8 +636,10 @@ import AVKit
     }
     
     public func turnOnVideo() {
+        //DDLogInfo("***** turnOnVideo")
         if self.currentCall?.audioOnly == true {
             self.addVideo()
+            //self.currentCall?.audioOnly = false
         }
         DispatchQueue.main.async {
             self.videoAction(self.videoButton)
@@ -668,7 +688,12 @@ extension VideoCallViewController : WebRTCConnectionDelegate {
                         }
                     }
                     webClient.renderRemoteVideo(to: self.remoteRenderer!)
+                    //webClient.turnSpeakerOn()
+                    //self.speakerButton.isSelected = true
+                    //self.callManager?.performSpeakerAction(selection: SpeakerChoice.speaker)
                 }  else if webClient.getSpeakerOn() {
+                    //webClient.turnSpeakerOn()
+                    //self.callManager?.performSpeakerAction(selection: SpeakerChoice.speaker)
                 }
             }
             
@@ -714,6 +739,7 @@ extension VideoCallViewController : WebRTCConnectionDelegate {
         self.cleanupRemoteParticipants()
         DispatchQueue.main.async {
             self.disconnectCall(true)
+            //self.currentCall = nil
         }
     }
     
@@ -736,6 +762,7 @@ extension VideoCallViewController : WebRTCConnectionDelegate {
     }
     
     func webRTCCallClosed() {
+        //
     }
     
     public func isConnected() -> Bool {
@@ -745,10 +772,12 @@ extension VideoCallViewController : WebRTCConnectionDelegate {
 
 extension VideoCallViewController: RTCVideoViewDelegate {
     public func videoView(_ videoView: any RTCVideoRenderer, didChangeVideoSize size: CGSize) {
+        //print("📐 Remote video resized: \(size)")
         self.currentCall?.webrtcClient?.showVideo()
     }
     
     func videoView(_ videoView: RTCVideoRenderer, didReceiveFirstFrameWith size: CGSize) {
+        //print("🎥 peerConnection Remote video started. Frame size: \(size)")
         self.currentCall?.webrtcClient?.showVideo()
     }
 }

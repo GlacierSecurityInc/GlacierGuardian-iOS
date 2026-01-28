@@ -1,6 +1,10 @@
+//
+//  AuthView.swift
 //  Glacier
+//
 //  Created by andyfriedman on 12/10/24.
 //  Copyright © 2024 Glacier. All rights reserved.
+//
 
 import SwiftUI
 import Authenticator
@@ -9,7 +13,7 @@ import Amplify
 struct AuthView: View {
     private let theme = AuthenticatorTheme()
     private var preuser: String?
-    private let supportLink = URL(string: "https:
+    private let supportLink = URL(string: "https://glacier.chat/support")
     
     init() {
         theme.components.button.primary.cornerRadius = 50
@@ -27,10 +31,11 @@ struct AuthView: View {
                     user: self.preuser,
                     state: state,
                     headerContent: {
+                        //
                     },
                     footerContent: {
                         VStack {
-                            SignInFooter(supportLink: self.supportLink!)
+                            SignInFooter(supportLink: self.supportLink!) //hidesSignUpButton: true)
                         }
                     }
                 )
@@ -50,6 +55,10 @@ struct AuthView: View {
             },
             footerContent: {
                 VStack {
+                    //Link("Support", destination: URL(string: "https://glacier.chat/support")!)
+                        //.foregroundColor(.glacierBlue)
+                        //.tint(.systemBlue) //.primary is white/label
+                    //Spacer().frame(height: 60)
                     if let info = Bundle.main.infoDictionary, let appVersion = info["CFBundleShortVersionString"] as? String, let appBuild = info[kCFBundleVersionKey as String] as? String {
                         let versionTitle = String(format: "%@ %@ (%@)", VERSION_STRING(), appVersion, appBuild)
                         Text(versionTitle)
@@ -58,6 +67,7 @@ struct AuthView: View {
             }
             
         ) { state in
+            //ProgressView("Initializing…")
         }
         .hidesSignUpButton()
         .authenticatorTheme(theme)
@@ -68,3 +78,6 @@ extension Color {
     public static let glacierBlue: Color = Color(hue: 195.0 / 360.0, saturation: 0.81, brightness: 0.80)
 }
 
+//#Preview {
+//    AuthView()
+//}

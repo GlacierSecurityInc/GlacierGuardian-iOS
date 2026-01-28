@@ -1,6 +1,10 @@
+//
+//  OTRJoinGroupViewController.swift
 //  ChatSecureCore
+//
 //  Created by Andy Friedman on 11/8/17.
 //  Copyright © 2017 Chris Ballinger. All rights reserved.
+//
 import Foundation
 import UIKit
 import PureLayout

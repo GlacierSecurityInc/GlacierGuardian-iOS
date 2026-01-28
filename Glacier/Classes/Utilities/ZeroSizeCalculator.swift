@@ -1,6 +1,10 @@
+//
+//  CustomTextMessageSizeCalculator.swift
 //  ChatExample
+//
 //  Created by Vignesh J on 30/04/21.
 //  Copyright © 2021 MessageKit. All rights reserved.
+//
 
 import MessageKit
 import UIKit
