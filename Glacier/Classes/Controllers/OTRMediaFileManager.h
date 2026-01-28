@@ -17,7 +17,7 @@ extern NSString *const kOTRRootMediaDirectory;
 
 @property (nonatomic, strong, readonly) IOCipher *ioCipher;
 
-//ALF IOSM-465 added salt
+// added salt
 - (BOOL)setupWithPath:(NSString *)path password:(NSString *)password salt:(NSString *)salt;
 
 - (void)releaseDBConnection; //IOSM-517

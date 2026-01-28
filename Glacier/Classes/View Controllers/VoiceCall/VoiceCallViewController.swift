@@ -93,7 +93,7 @@ import TwilioVoice
         minimizedView.isUserInteractionEnabled = true
         minimizedView.addGestureRecognizer(miniTapGesture)
         
-        UIApplication.shared.isIdleTimerDisabled = true //ALF IOSM-462, 471
+        UIApplication.shared.isIdleTimerDisabled = true
         NotificationCenter.default.addObserver(self, selector: #selector(becameActive), name: UIApplication.didBecomeActiveNotification, object: nil) //IOSM-521
         
         setupViews()
@@ -107,13 +107,11 @@ import TwilioVoice
         }
     }
     
-    //ALF IOSM-521
     override public func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         UIApplication.shared.isIdleTimerDisabled = true
     }
     
-    //ALF IOSM-521
     override public func viewWillDisappear(_ animated: Bool) {
         // Allow the device to sleep.
         super.viewWillDisappear(animated)
@@ -184,7 +182,7 @@ import TwilioVoice
         // Allow changing audio routes while the call is connecting
         speakerButton.isEnabled = true
         
-        //ALF IOSM-451 if bluetooth
+        // if bluetooth
         if callManager?.isBluetoothAvailable() ?? false {
             normalImage = UIImage(named: "ic-bluetooth-on", in: GlacierInfo.resourcesBundle, compatibleWith: nil)
             speakerButton.setImage(normalImage, for: .normal)
@@ -217,7 +215,7 @@ import TwilioVoice
     
 
     
-    //ALF IOSM-464 (next 3)
+    // (next 3)
     public func handleAudioDenied() {
         handlePermissionDenied("Allow Audio", message: "Whoops! It looks like you have not permitted Glacier to access your Microphone. To use Glacier calling, please enable the Microphone in the Glacier settings on your device.", includeEnable: true)
     }
@@ -367,7 +365,6 @@ import TwilioVoice
         }
     }
     
-    //ALF IOSM-451
     public func setBluetoothEnabled(_ bluetoothEnabled: Bool) {
         DispatchQueue.main.async {
             var normalImage: UIImage?
@@ -468,7 +465,7 @@ import TwilioVoice
             appDelegate.window?.frame = CGRect(x: 0, y: 0, width: screenSize.width, height: screenSize.height)
             appDelegate.chatRoomViewController.enablePhoneButton(true)
             appDelegate.chatViewController.enablePhoneButton(true)
-            UIApplication.shared.isIdleTimerDisabled = false //ALF IOSM-462, 471
+            UIApplication.shared.isIdleTimerDisabled = false
         }
     }
     

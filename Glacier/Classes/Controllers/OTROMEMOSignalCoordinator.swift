@@ -1047,7 +1047,7 @@ import GRDB
                 do {
                     try DBManager.sharedDB().grdbStorage.write(block: { transaction in
                         //IOSM-338c added here and removed letEmKnow
-                        if (incoming) { //ALF IOSM-458
+                        if (incoming) {
                             //self.omemoModule?.fetchBundle(forDeviceId: senderDeviceId, jid: addressJID, elementId: nil)
                             //create session does the above if needed...
                         
@@ -1390,7 +1390,7 @@ import GRDB
     
     private var publishingMyDevice:Bool = false
     private var missingKeysSet = Set<String>()
-    //ALF IOSM-497 added delayed
+    // added delayed
     func handleMissingKeys(message: XMPPMessage, forwarded: Bool, delayed: Date?, transaction:GRDBWriteTransaction) -> Bool {
         // 1 - store unencrypted notice of failed message
         // 2 - call for key exchange
@@ -1419,7 +1419,7 @@ import GRDB
                         return false
                     }
                     
-                    //ALF IOSM-517 this can be delayed/stamped from me if it was a share.
+                    // this can be delayed/stamped from me if it was a share.
                     //Will it cause big problems to ignore anything from my roomjid?
                     if myRoomJID.isEqual(to: messageJID) {
                         // DDLogVerbose("Discarding duplicate outgoing MUC message \(message)")
@@ -1428,7 +1428,7 @@ import GRDB
                     
                     let missingFrom = roomJID.bare
                     if (!missingKeysSet.contains(missingFrom)) {
-                        //ALF IOSM-497 check if appDelegate ready to handle undecryptable
+                        // check if appDelegate ready to handle undecryptable
                         if (self.isBeforeMyTime(message: message, delayed: delayed, transaction: transaction)) {
                             return false
                         }
@@ -1465,7 +1465,7 @@ import GRDB
                 if let missingFrom = message.fromStr,
                     !missingKeysSet.contains(missingFrom) {
                     
-                    //ALF IOSM-497 check if appDelegate ready to handle undecryptable
+                    // check if appDelegate ready to handle undecryptable
                     if (self.isBeforeMyTime(message: message, delayed: delayed, transaction: transaction)) {
                         return false
                     }
@@ -1498,7 +1498,6 @@ import GRDB
         return false
     }
     
-    //ALF IOSM-497
     func isBeforeMyTime(message: XMPPMessage, delayed: Date?, transaction: GRDBWriteTransaction) -> Bool {
         
         var msgtime = Date.distantFuture

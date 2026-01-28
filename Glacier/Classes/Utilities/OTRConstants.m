@@ -45,13 +45,11 @@ NSString *const kGlacierKeyGroup      = @"5MXM7J8H38.group.com.glaciersec.access
 NSString *const kCognitoAcct       = @"com.glaciersec.Cognito";
 NSString *const kGlacierVpn       = @"com.glaciersec.Vpn";
 
-//ALF IOSM-465
 NSString *const kGlacierSalt       = @"com.glaciersec.Salt";
 NSString *const kGlacierKeySpec       = @"com.glaciersec.KeySpec";
 NSString *const kGlacierMediaSalt       = @"com.glaciersec.MediaSalt";
 NSString *const kGlacierMediaKeySpec       = @"com.glaciersec.MediaKeySpec";
 
-//ALF IOSM-499
 NSString *const kGlacierBackup       = @"com.glaciersec.Backup";
 
 NSString *const kGlacierImage            = @"kGlacierImage";
@@ -93,7 +91,6 @@ NSString *const GRDBDatabasePassphraseAccountName = @"OTRYapDatabasePassphraseAc
 
 NSString *const OTRYapDatabaseName = @"ChatSecureYap.sqlite";
 
-//ALF IOSM-465
 NSString *const GlacierYapDatabaseName = @"GlacierYap.sqlite";
 NSString *const GlacierMediaDatabaseName = @"Glacier-media.sqlite";
 

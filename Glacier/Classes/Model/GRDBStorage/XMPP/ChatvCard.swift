@@ -10,7 +10,7 @@ import Foundation
 
 @objc public protocol ChatvCard {
     @objc var vCardTemp: XMPPvCardTemp? { get set }
-    @objc var lastUpdatedvCardTemp: Date? { get set }//ALF IOSM#105
+    @objc var lastUpdatedvCardTemp: Date? { get set }
     @objc var waitingForvCardTempFetch: Bool { get set }
     @objc var photoHash: String? { get set }
     @objc var avatarData: Data? { get set }

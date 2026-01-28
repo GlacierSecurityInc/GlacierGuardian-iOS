@@ -57,7 +57,7 @@ open class OMEMODeviceFingerprintCell: UITableViewCell { //XLFormBaseCell {
     @IBOutlet weak var trustLevelLabel: UILabel!
     private var omemoDevice:ChatOmemoDevice?
     
-    @objc @IBOutlet weak var fingerprintWidth: NSLayoutConstraint! //ALF IOSM-479
+    @objc @IBOutlet weak var fingerprintWidth: NSLayoutConstraint!
     
     fileprivate static let intervalFormatter = TTTTimeIntervalFormatter()
     
@@ -65,11 +65,11 @@ open class OMEMODeviceFingerprintCell: UITableViewCell { //XLFormBaseCell {
         return 90
     }*/
     
-    @objc public class func cellIdentifier() -> String { //ALF IOSM-479
+    @objc public class func cellIdentifier() -> String {
         return "OMEMODeviceFingerprintCell"
     }
     
-    public func updateWithDevice(_ device:ChatOmemoDevice) { //ALF IOSM-479
+    public func updateWithDevice(_ device:ChatOmemoDevice) {
         updateCellFromDevice(device)
     }
     

@@ -14,9 +14,9 @@ public typealias CellButtonBlock = (_ cell: UITableViewCell, _ sender: Any) -> (
 public class XMPPAccountCell: UITableViewCell {
     @IBOutlet weak var avatarButton: UIButton!
     @IBOutlet public weak var displayNameLabel: UILabel!
-    @IBOutlet weak var displayNameTop: NSLayoutConstraint! //ALF IOSM-479
+    @IBOutlet weak var displayNameTop: NSLayoutConstraint!
     
-    @IBOutlet weak var userNameLabel: UILabel! //ALF IOSM-479
+    @IBOutlet weak var userNameLabel: UILabel!
     
     @IBOutlet public weak var infoButton: UIButton!
     

@@ -1148,7 +1148,6 @@ import MCEmojiPicker
     func setupTopRightButtons() {
         let lblColor = UIColor.label
         
-        //ALF IOSM-503
         phoneButton.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 4.0, leading: 8.0, bottom: 4.0, trailing: 8.0)
         self.phoneButton.translatesAutoresizingMaskIntoConstraints = false
         self.phoneButton.frame = CGRectMake(0, 0, 64, 48)
@@ -2339,7 +2338,7 @@ extension ChatViewController { //call stuff
                 return
             } else {
                 if xmppMgr.callManager.makeCall(callBuddies, name:self.getThreadName()!, callType: callType) == true { //IOSM#70 if
-                    //ALF IOSM-442 add "outgoing" message to thread
+                    // add "outgoing" message to thread
                     let message = "\(ChatRoomMessage.StringConstants.outgoingCall.text) - \(Date().formattedAsShortWeekdayTime())"
                     self.addCallUpdate(message, mgr: xmppMgr, buddy: buddy)
 
@@ -2356,7 +2355,7 @@ extension ChatViewController { //call stuff
             //let alert = UIAlertController(title: "Start Call?", message: nil, preferredStyle: .alert)
             //let callAction = UIAlertAction(title: "Call", style: .default, handler: { alert in
                 //if xmppMgr.callManager.makeCall(callBuddies, name:self.getThreadName()!) == true { //IOSM#70 if
-                    //ALF IOSM-442 add "outgoing" message to thread
+                    // add "outgoing" message to thread
                     //self.addCallUpdate("You called", mgr: xmppMgr, buddy: buddy)
                 //}
             //})
@@ -2394,7 +2393,7 @@ extension ChatViewController { //call stuff
         }
     }
 
-    //ALF IOSM-503 added msg, owner
+    // added msg, owner
     func addCallUpdate(_ updateMsg:String, mgr:XMPPManager, buddy:ChatBuddy) {
         let budModel = ChatBuddyModel(buddy: buddy)
         let message = budModel.outgoingMessage(text: updateMsg)

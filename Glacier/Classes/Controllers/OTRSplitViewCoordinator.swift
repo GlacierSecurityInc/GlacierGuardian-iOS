@@ -215,7 +215,6 @@ open class OTRSplitViewCoordinator: NSObject, ConversationViewControllerDelegate
 open class OTRSplitViewControllerDelegateObject: NSObject, UISplitViewControllerDelegate {
     
     open func splitViewController(_ splitViewController: UISplitViewController, collapseSecondary secondaryViewController: UIViewController, onto primaryViewController: UIViewController) -> Bool {
-        //ALF IOSM-496
         if (UIDevice.current.userInterfaceIdiom == UIUserInterfaceIdiom.pad) {
             return false
         }

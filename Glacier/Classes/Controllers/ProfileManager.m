@@ -21,7 +21,6 @@
 #import "GlacierInfo.h"
 #import "OTRStrings.h"
 
-//ALF IOSM-479
 @implementation ProfileManager
 
 - (instancetype) init

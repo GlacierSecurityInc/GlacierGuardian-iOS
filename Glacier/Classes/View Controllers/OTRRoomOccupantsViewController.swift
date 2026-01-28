@@ -10,7 +10,7 @@ import Foundation
 import UIKit
 import PureLayout
 import BButton
-import MBProgressHUD //ALF IOSM-498
+import MBProgressHUD
 import GRDB
 import XMPPFramework
 
@@ -42,7 +42,7 @@ private enum StoryboardCellIdentifier: String {
     case groupName = "cellGroupName"
     case share = "cellGroupShare"
     case addFriends = "cellGroupAddFriends"
-    case pinned = "cellGroupPinned" //ALF IOSM-503 (and all pinned below)
+    case pinned = "cellGroupPinned" // (and all pinned below)
     case mute = "cellGroupUnmute"
     case members = "cellGroupMembers"
     case leave = "cellGroupLeave"
@@ -104,7 +104,7 @@ open class OTRRoomOccupantsViewController: UIViewController {
     open var roomUniqueId: String?
     var notificationToken:NSObjectProtocol? = nil
     
-    var pins:XMPPPinned? //ALF IOSM-503
+    var pins:XMPPPinned?
     
     open var room:ChatRoomModel? {
         return self.xmppRoom()
@@ -351,7 +351,7 @@ open class OTRRoomOccupantsViewController: UIViewController {
             }*/
         }
         
-        self.getPins() //ALF IOSM-503
+        self.getPins()
     }
     
     open override func viewWillDisappear(_ animated: Bool) {
@@ -399,7 +399,7 @@ open class OTRRoomOccupantsViewController: UIViewController {
             }
             
             var isOnline = false
-            var canModifyName = false //ALF IOSM-495 changed subject to name throughout
+            var canModifyName = false // changed subject to name throughout
             if let ownOccupant = ownOccupant() {
                 canModifyName = ownOccupant.canModifyName()
                 isOnline = ownOccupant.role != .none
@@ -444,7 +444,7 @@ open class OTRRoomOccupantsViewController: UIViewController {
             break
         }
         
-        //ALF IOSM-488, 485 only changes group name size for some reason
+        // only changes group name size for some reason
         //let userFont = UIFontDescriptor.preferredFontDescriptor(withTextStyle: UIFontTextStyle.body, compatibleWith: nil)
         //let fontSize = userFont.pointSize-1
         //cell.textLabel?.font = UIFont.systemFont(ofSize: fontSize)
@@ -468,7 +468,6 @@ open class OTRRoomOccupantsViewController: UIViewController {
             if let room = self.room,
                 let roomJid = room.roomJID,
                 let xmppRoomManager = self.xmppRoomManager(for: room) {
-                //ALF IOSM-498
                 let hud = MBProgressHUD.showAdded(to: self.view, animated: true)
                 
                 let xroom = self.xmppRoom(for:room)
@@ -494,7 +493,6 @@ open class OTRRoomOccupantsViewController: UIViewController {
                 // pause to let message go through
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                     xmppRoomManager.leaveRoom(roomJid)
-                    //ALF IOSM-498
                     hud.removeFromSuperview()
                     if let delegate = self.delegate {
                         delegate.didLeaveRoom(self)
@@ -573,7 +571,7 @@ open class OTRRoomOccupantsViewController: UIViewController {
         }
     }
     
-    //ALF IOSM-503 moved from OTRMessagesViewController, and next function
+    // moved from OTRMessagesViewController, and next function
     private func didSelectPinnedButton() {
         let storyboard = UIStoryboard(name: "RoomAttachments", bundle: GlacierInfo.resourcesBundle)
         if let vc = storyboard.instantiateViewController(withIdentifier: "roomAttachments") as? RoomAttachmentsViewController, let roomid = self.roomUniqueId {

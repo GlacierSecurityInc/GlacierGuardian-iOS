@@ -212,7 +212,7 @@ class WebRTCVideoGridCell: UICollectionViewCell {
         setupMicOffButton()
         mutedView.isHidden = !participant.isMuted
         
-        //ALF IOSM-512 check if videoEnabled
+        // check if videoEnabled
         //var hide = false
         /*let videoPublications = participant.participant.remoteVideoTracks
         for publication in videoPublications {

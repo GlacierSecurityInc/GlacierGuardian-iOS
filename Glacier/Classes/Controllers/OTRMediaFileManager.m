@@ -48,7 +48,6 @@ NSString *const kOTRRootMediaDirectory = @"media";
 
 - (BOOL)setupWithPath:(NSString *)path password:(NSString *)password salt:(NSString *)salt
 {
-    //ALF IOSM-465
     _ioCipher = [[IOCipher alloc] initWithPath:path password:password salt:salt];
     if (!_ioCipher) {
         return NO;

@@ -13,7 +13,7 @@
 #import "OTRComposingImageView.h"
 #import "NSString+ChatSecure.h"
 #import "GlacierInfo.h"
-//#import "Glacier-Swift.h" //ALF IOSM-472
+//#import "Glacier-Swift.h"
 
 #if !TARGET_IS_EXTENSION
 #import "Glacier-Swift.h"
@@ -463,7 +463,6 @@ NSString *const OTRMicrophoneImageKey = @"OTRMicrophoneImageKey";
 
 + (UIImage *)imageWithIdentifier:(NSString *)identifier
 {
-    //ALF IOSM-472
     return [GlacierImageCache image:identifier];
 }
 
@@ -480,7 +479,6 @@ NSString *const OTRMicrophoneImageKey = @"OTRMicrophoneImageKey";
     
     if (image && [image isKindOfClass:[UIImage class]]) {
         [GlacierImageCache setImage:image identifier:identifier toDisk:YES];
-        //ALF IOSM-472
         //GlacierImageCache *cacheImage = [[GlacierImageCache alloc] init];
         //cacheImage.image = image;
         

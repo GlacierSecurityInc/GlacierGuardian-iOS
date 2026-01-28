@@ -394,7 +394,7 @@ extension OTRSignalStorageManager: SignalStore {
         
         let session = ChatSignalSession(accountKey: self.accountKey, name: address.name, deviceId: address.deviceId, sessionData: recordData)
         
-#if !TARGET_IS_NOTIFICATION //ALF IOSM-328 removed
+#if !TARGET_IS_NOTIFICATION // removed
         session.save()
 #endif
         return true

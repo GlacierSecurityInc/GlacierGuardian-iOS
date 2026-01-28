@@ -12,7 +12,7 @@ public class CoreProfileCell: UITableViewCell {
     @IBOutlet weak var profileSwitch: UISwitch!
     @IBOutlet weak var profileName: UILabel!
     
-    @objc public class func cellIdentifier() -> String { //ALF IOSM-479
+    @objc public class func cellIdentifier() -> String {
         return "CoreProfileCell"
     }
     

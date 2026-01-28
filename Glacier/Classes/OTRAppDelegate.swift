@@ -10,7 +10,7 @@ import Foundation
 import UserNotifications
 import CocoaLumberjack
 import PushKit
-import MBProgressHUD //ALF IOSM-498
+import MBProgressHUD
 import GRDB
 import Amplify
 import AWSAPIPlugin
@@ -346,7 +346,6 @@ public extension OTRAppDelegate {
     }
     
     @objc func markAllRead() {
-        //ALF IOSM-498
         let conversationsVC = OTRAppDelegate.appDelegate.conversationViewController
         let hud = MBProgressHUD.showAdded(to: conversationsVC.view, animated: true)
         
@@ -420,7 +419,6 @@ public extension OTRAppDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             //NotificationCenter.default.post(name: Notification.Name(rawValue: "ReloadDataNotificationName"), object: self, userInfo:nil)
                 
-            //ALF IOSM-498
             hud.hide(animated: true)
             hud.removeFromSuperview()
         }

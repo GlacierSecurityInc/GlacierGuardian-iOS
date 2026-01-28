@@ -48,7 +48,6 @@ static const CGFloat kOTRMaxImageViewHeight = 6;
         self.subtitleLabel.textAlignment = NSTextAlignmentCenter;
         self.subtitleLabel.textColor = [UIColor labelColor];
         
-        //ALF IOSM-488, 485
         UIFontDescriptor *userFont = [UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleBody];
         float fontSize = [userFont pointSize]-1;
         float subFontSize = [userFont pointSize]-6;

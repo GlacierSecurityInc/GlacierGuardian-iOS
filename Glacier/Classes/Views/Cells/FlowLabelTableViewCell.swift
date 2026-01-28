@@ -5,7 +5,6 @@
 //  Created by Andy Friedman on 11/12/20.
 //  Copyright © 2020 Glacier. All rights reserved.
 //
-//ALF IOSM-479
 class FlowLabelTableViewCell:UITableViewCell, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout  {
     @IBOutlet weak var myCollectionView: UICollectionView!
     @IBOutlet weak var collectionViewHeightConstraint: NSLayoutConstraint!
@@ -16,7 +15,7 @@ class FlowLabelTableViewCell:UITableViewCell, UICollectionViewDataSource, UIColl
     }
     
     var myteams:Array<Any>?
-    @objc public func updateWithTeams(_ teams:Array<Any>) { //ALF IOSM-479
+    @objc public func updateWithTeams(_ teams:Array<Any>) {
         self.myteams = teams
         self.myCollectionView.reloadData()
         didUpdateCollectionView()

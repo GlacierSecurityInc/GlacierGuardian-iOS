@@ -315,7 +315,7 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     splitViewController.viewControllers = @[leadingViewController,messagesNavigationController];
     splitViewController.delegate = self.splitViewControllerDelegate;
     splitViewController.title = CHAT_STRING();
-    splitViewController.presentsWithGesture = NO; //ALF IOSM-496
+    splitViewController.presentsWithGesture = NO;
     splitViewController.displayModeButtonItem.enabled = NO;
     splitViewController.view.backgroundColor = UIColor.systemBackgroundColor;
     
@@ -351,7 +351,7 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     splitViewController.viewControllers = @[leadingViewController,smsMessagesNavigationController];
     splitViewController.delegate = self.splitViewSMSControllerDelegate;
     splitViewController.title = @"SMS";
-    splitViewController.presentsWithGesture = NO; //ALF IOSM-496
+    splitViewController.presentsWithGesture = NO;
     splitViewController.displayModeButtonItem.enabled = NO;
     splitViewController.view.backgroundColor = UIColor.systemBackgroundColor;
     
@@ -404,7 +404,7 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
      */
     
     // for Splash/Privacy page
-    if ([self hasAddress]) { //ALF IOSM-500
+    if ([self hasAddress]) {
         self.splitViewCoordinator.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeSecondaryOnly;
         
         // creates a "privacy" screen, showing splash screen when backgrounded
@@ -588,7 +588,7 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
 - (void) removeSplashView {
     UIView *splashView = [self.window viewWithTag:12345];
     if (splashView == nil) {
-        self.splitViewCoordinator.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeOneBesideSecondary; //ALF IOSM-500
+        self.splitViewCoordinator.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeOneBesideSecondary;
         return;
     }
     
@@ -601,7 +601,7 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
         
         // in case there are somehow more than one
         [self removeSplashView];
-        self.splitViewCoordinator.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeOneBesideSecondary; //ALF IOSM-500
+        self.splitViewCoordinator.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeOneBesideSecondary;
     }];
 }
 
@@ -649,7 +649,7 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
 }
 
 - (void) resetDoubleNotificationHandlerIfNeeded {
-    //if (self.doubleDone) { //ALF IOSM-497 commented out
+    //if (self.doubleDone) { commented out
     self.doubleDone = NO;
     [self performSelector:@selector(handleDoubleNotification:) withObject:nil afterDelay:15.0];
 }

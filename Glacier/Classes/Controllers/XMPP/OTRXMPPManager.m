@@ -50,7 +50,6 @@
 @property (assign, nonatomic) BOOL retriedRoster;
 @property (assign, nonatomic) BOOL disconnectedBuddies;
 
-//ALF IOSM-479
 @property (strong, nonatomic) NSMutableSet *teams;
 @property (strong, nonatomic, nullable) NSDate *lastConnected;
 
@@ -79,7 +78,7 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
         _enablingPush = NO;
         _retriedRoster = NO;
         _disconnectedBuddies = NO;
-        _teams = [[NSMutableSet alloc ]init]; //ALF IOSM-479
+        _teams = [[NSMutableSet alloc ]init];
         _messageQueueHandler = [[MessageQueueHandler alloc] init];
     }
     return self;
@@ -385,7 +384,7 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 if ([UIApplication sharedApplication].applicationState == UIApplicationStateActive) {
                     [self goActive];
-                } else if ([_callManager isRinging]) { //ALF IOSM-437
+                } else if ([_callManager isRinging]) {
                     [self goActive];
                     //[self updateClientState:XMPPClientStateActive];
                 } else {
@@ -411,12 +410,10 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
     } completionQueue:self.workQueue];
 }
 
-//ALF IOSM-479
 - (NSDate *) getLastConnected {
     return self.lastConnected;
 }
 
-//ALF IOSM-570
 - (NSDate *) getLastConnectAttempt {
     return self.lastConnectAttempt;
 }
@@ -561,7 +558,6 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
     
     //call method on account that does async stuff and handles completion block
     //all but removeAccountFromRooms are async already
-    //ALF23
     if (!self.disconnectedBuddies) {
         self.disconnectedBuddies = YES;
         [self disconnectBuddiesAndRooms:[self shouldDisconnectBuddies]];
@@ -635,7 +631,6 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
 
 #pragma mark Public Methods
 
-//ALF IOSM-479
 - (NSArray<NSString *> *)getTeams {
     return [self.teams allObjects];
 }
@@ -960,7 +955,7 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
     }
     
     self.loginStatus = OTRLoginStatusAuthenticated;
-    self.lastConnected = [NSDate date]; //ALF IOSM-479
+    self.lastConnected = [NSDate date];
     NSString *accountKey = self.chatAccount.uniqueId;
     NSString *accountCollection = [[self.chatAccount class] collection];
     NSDictionary *userInfo = nil;
@@ -1052,7 +1047,7 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
 
 - (void)xmppStream:(XMPPStream *)sender didFailToSendMessage:(XMPPMessage *)message error:(NSError *)error
 {
-    //ALF IOSM-481 added Active check and main thread
+    // added Active check and main thread
     dispatch_async(dispatch_get_main_queue(), ^{
         if ([UIApplication sharedApplication].applicationState != UIApplicationStateActive) {
             return;
@@ -1110,7 +1105,6 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
         
         [self.xmppvCardTempModule updateMyvCardTemp:vCardTemp];
         
-        //ALF IOSM-452
         XMPPPresence *presence = [XMPPPresence presence];
         NSXMLElement *xElement = [NSXMLElement elementWithName:@"x" xmlns:@"vcard-temp:x:update"];
         NSXMLElement *displayElement = [NSXMLElement elementWithName:@"displayname" stringValue:self.chatAccount.displayName];
@@ -1220,7 +1214,6 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark XMPPRosterDelegate
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//ALF IOSM-479
 - (void)xmppRosterDidBeginPopulating:(XMPPRoster *)sender withVersion:(NSString *)version {
     [self.teams removeAllObjects];
 }
@@ -1228,7 +1221,6 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
 - (void)xmppRoster:(XMPPRoster *)sender didReceiveRosterItem:(NSXMLElement *)item {
     DDLogVerbose(@"%@ %@", THIS_METHOD, item);
     
-    //ALF IOSM-479
     NSXMLElement *group = [item elementForName:@"group"];
     if (group != nil) {
         [self.teams addObject:group.stringValue];
@@ -1353,10 +1345,10 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
 
 - (void)pushModule:(XMPPPushModule*)module readyWithCapabilities:(NSXMLElement *)caps jid:(XMPPJID *)jid {
     // Enable XEP-0357 push bridge if server supports it
-    [self registerPushTokens]; //ALF IOSM-461
+    [self registerPushTokens];
 }
 
-//ALF IOSM-461 make this public if needed. added || voiptoken
+// make this public if needed. added || voiptoken
 - (void)registerPushTokens {
     NSString *token = [OTRProtocolManager.pushController getPushToken];
     NSString *voiptoken = [OTRProtocolManager.pushController getVoipToken];
@@ -1443,11 +1435,10 @@ failedToDisablePushWithErrorIq:(nullable XMPPIQ*)errorIq
         [xmppMessage addChild:expiresElement];
     }
     
-    //ALF IOSM-442
     if (message.isSystemUpdate) {
         NSXMLElement *updateElement = [NSXMLElement elementWithName:@"x" xmlns:@"jabber:x:systemupdate"];
         [xmppMessage addChild:updateElement];
-    } else { //ALF IOSM-443
+    } else {
         [xmppMessage addMarkableChatMarker];
     }
     

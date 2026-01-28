@@ -39,12 +39,12 @@ import Foundation
     var threadCollection: String { get }
     var isMessageIncoming: Bool { get }
     var isMessageIncomingOrDifferentDevice: Bool { get }
-    var isSystemUpdate: Bool { get }//ALF IOSM-442
-    var isMarkable: Bool { get }//ALF IOSM-443
+    var isSystemUpdate: Bool { get }
+    var isMarkable: Bool { get }
     var messageMediaItemKey: String? { get set }
     var transferProgress: NSNumber? { get set }
     var mediaType: NSNumber? { get set }
-    var url: String? { get set }//ALF IOSM#105
+    var url: String? { get set }
     var messageError: NSError? { get set }
     var messageSecurity: OTRMessageTransportSecurity { get set }
     var omemoDeviceKey: String? { get set }
@@ -68,7 +68,7 @@ import Foundation
     /** Only applies to outgoing messages */
     var isMessageDelivered: Bool { get }
 
-    /** Only applies to outgoing messages */ //ALF IOSM-443
+    /** Only applies to outgoing messages */
     var isMessageDisplayed: Bool { get }
 
     /** XEP-0359: origin-id */

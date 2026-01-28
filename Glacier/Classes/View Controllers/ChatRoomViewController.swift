@@ -1040,7 +1040,6 @@ import MCEmojiPicker
     func setupTopRightButtons() {
         let lblColor = UIColor.label
         
-        //ALF IOSM-503
         /*phoneButton.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 4.0, leading: 8.0, bottom: 4.0, trailing: 8.0)
         self.phoneButton.translatesAutoresizingMaskIntoConstraints = false
         self.phoneButton.frame = CGRectMake(0, 0, 64, 48)
@@ -1054,7 +1053,6 @@ import MCEmojiPicker
         self.phoneButton.setTitle(String(format: "%C", phoneIconChar), for: .normal)
         self.phoneButton.addTarget(self, action: #selector(didSelectPhoneButton), for: UIControl.Event.touchUpInside)
         
-        //ALF IOSM-503
         let phoneItem = UIBarButtonItem(customView: self.phoneButton)
         let callWindow = OTRAppDelegate.appDelegate.callWindow
         if callWindow.rootViewController != nil {
@@ -1075,7 +1073,7 @@ import MCEmojiPicker
         groupItem.style = UIBarButtonItem.Style.plain
             
         self.navigationItem.rightBarButtonItem = groupItem //nil
-        //ALF IOSM-503 changed pin to phone
+        // changed pin to phone
         //let items = [groupItem, phoneItem]
         //self.navigationItem.rightBarButtonItems = items
     }
@@ -1573,7 +1571,7 @@ import MCEmojiPicker
         }
     }
 
-    //ALF IOSM-442 changed MemberUpdate to Update to include SystemUpdates
+    // changed MemberUpdate to Update to include SystemUpdates
     func isUpdateMessage(_ message: ChatRoomMessage) -> Bool {
         return message.memberUpdate || message.systemUpdate
     }
@@ -2558,7 +2556,7 @@ extension ChatRoomViewController { //call stuff
             let alert = UIAlertController(title: "Start Call?", message: nil, preferredStyle: .alert)
             let callAction = UIAlertAction(title: "Call", style: .default, handler: { alert in
                 //if xmppMgr.callManager.makeCall(callBuddies, name:self.getThreadName()!) == true { //IOSM#70 if
-                    //ALF IOSM-442 add "outgoing" message to thread
+                    // add "outgoing" message to thread
                     //self.addCallUpdate("You called", mgr: xmppMgr, room: room)
                 //}
             })
@@ -2569,7 +2567,7 @@ extension ChatRoomViewController { //call stuff
         }
     }
 
-    //ALF IOSM-503 added msg, owner
+    // added msg, owner
     func addCallUpdate(_ updateMsg:String, mgr:XMPPManager, room:ChatRoom) {
         let roomModel = ChatRoomModel(room: room)
         let message = roomModel.outgoingMessage(text: updateMsg)
