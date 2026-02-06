@@ -21,7 +21,6 @@ import NetworkExtension
     var needsNotification = false
     var versionNeedsNotification = false
     var lastVersionsCheck = Date.distantPast
-    let secVersionsUrl = "https://tiny.one/5967h5e2"
     var compromisedStatus = false
     
     let DEVICE_ID = "device"
