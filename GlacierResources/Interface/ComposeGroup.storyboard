@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="19529" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="o67-Zh-raq">
+    <device id="retina4_7" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="19519"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Compose Group View Controller-->
+        <scene sceneID="KyR-Ti-GBr">
+            <objects>
+                <viewController id="o67-Zh-raq" customClass="ComposeGroupViewController" customModule="Glacier" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="dgf-ep-m1c"/>
+                        <viewControllerLayoutGuide type="bottom" id="c8h-vc-VRi"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="mGK-U1-2MI">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="cr5-7D-PoW">
+                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <connections>
+                                    <outlet property="dataSource" destination="o67-Zh-raq" id="1uL-HQ-JxT"/>
+                                    <outlet property="delegate" destination="o67-Zh-raq" id="UDi-Kv-w3w"/>
+                                </connections>
+                            </tableView>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="c8h-vc-VRi" firstAttribute="top" secondItem="cr5-7D-PoW" secondAttribute="bottom" id="00e-w3-kfN"/>
+                            <constraint firstAttribute="trailing" secondItem="cr5-7D-PoW" secondAttribute="trailing" id="2x0-An-DMB"/>
+                            <constraint firstItem="cr5-7D-PoW" firstAttribute="leading" secondItem="mGK-U1-2MI" secondAttribute="leading" id="Dek-sK-oXP"/>
+                            <constraint firstItem="cr5-7D-PoW" firstAttribute="top" secondItem="dgf-ep-m1c" secondAttribute="bottom" id="QL3-Ax-l7B"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" id="XNu-XS-MaQ">
+                        <barButtonItem key="rightBarButtonItem" systemItem="done" id="I2C-hx-NIC">
+                            <connections>
+                                <action selector="didPressDone:" destination="o67-Zh-raq" id="h6H-X5-dvj"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
+                    <connections>
+                        <outlet property="doneButton" destination="I2C-hx-NIC" id="iDM-hh-5AN"/>
+                        <outlet property="tableView" destination="cr5-7D-PoW" id="Lzl-L5-6Gb"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="4w9-Fk-rrg" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="53.600000000000001" y="81.409295352323838"/>
+        </scene>
+    </scenes>
+    <resources>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>

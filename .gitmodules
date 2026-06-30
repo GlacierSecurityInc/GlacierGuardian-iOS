@@ -1,0 +1,12 @@
+[submodule "Submodules/SignalProtocol-ObjC"]
+	path = Submodules/SignalProtocol-ObjC
+	url = https://github.com/ChatSecure/SignalProtocol-ObjC.git
+[submodule "Submodules/libsqlfs"]
+	path = Submodules/libsqlfs
+	url = https://github.com/afriedmanGlacier/libsqlfs.git
+[submodule "Submodules/IOCipher"]
+	path = Submodules/IOCipher
+	url = https://github.com/afriedmanGlacier/IOCipher-ObjC.git
+[submodule "Submodules/XMPPFramework"]
+	path = Submodules/XMPPFramework
+	url = https://github.com/afriedmanGlacier/XMPPFramework.git
