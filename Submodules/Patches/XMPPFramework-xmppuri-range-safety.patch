@@ -1,0 +1,54 @@
+--- a/Extensions/XEP-0147/XMPPURI.m
++++ b/Extensions/XEP-0147/XMPPURI.m
+@@ -52,21 +52,42 @@
+ }
+ 
+ - (void) parseURIString:(NSString*)uriString {
++    if (uriString.length == 0) {
++        return;
++    }
++
+     NSString *authority = nil;
+-    // Parse authority component
+-    if ([uriString containsString:@"://"]) {
+-        NSRange fullRange = NSMakeRange(0, uriString.length);
+-        NSRange startRange = [uriString rangeOfString:@"://"];
+-        NSUInteger trailingLocation = startRange.location + startRange.length;
+-        NSRange trailingRange = NSMakeRange(trailingLocation, uriString.length - trailingLocation);
++    // Parse authority component: xmpp://<authority>/<jid>, per XEP-0147.
++    NSRange startRange = [uriString rangeOfString:@"://"];
++    if (startRange.location != NSNotFound) {
++        NSUInteger authorityLocation = NSMaxRange(startRange);
++        NSRange trailingRange = NSMakeRange(authorityLocation, uriString.length - authorityLocation);
+         NSRange endRange = [uriString rangeOfString:@"/" options:0 range:trailingRange];
+-        NSUInteger authorityLocation = startRange.location + startRange.length;
++
++        if (endRange.location == NSNotFound) {
++            // An authority that is never closed by a "/" - xmpp://user@example.com, or a
++            // bare xmpp:// - carries no target JID. Take the authority and stop.
++            //
++            // This branch is the fix: the old code used endRange.location unconditionally,
++            // so NSNotFound became an enormous length and substringWithRange: raised
++            // NSInvalidArgumentException. Nothing caught it, and on iOS the URI arrives on
++            // the main thread straight from a tapped link, so the app died (GUA 03).
++            authority = [uriString substringFromIndex:authorityLocation];
++            if (authority.length > 0) {
++                _accountJID = [XMPPJID jidWithString:authority];
++            }
++            return;
++        }
++
+         NSRange authorityRange = NSMakeRange(authorityLocation, endRange.location - authorityLocation);
+         authority = [uriString substringWithRange:authorityRange];
+         NSString *stringToRemove = [NSString stringWithFormat:@"://%@/", authority];
+-        uriString = [uriString stringByReplacingOccurrencesOfString:stringToRemove withString:@":" options:0 range:fullRange];
++        uriString = [uriString stringByReplacingOccurrencesOfString:stringToRemove
++                                                         withString:@":"
++                                                            options:0
++                                                              range:NSMakeRange(0, uriString.length)];
+     }
+-    if (authority) {
++    if (authority.length > 0) {
+         _accountJID = [XMPPJID jidWithString:authority];
+     }
+     

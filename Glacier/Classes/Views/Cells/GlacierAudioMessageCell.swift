@@ -104,6 +104,17 @@ class GlacierAudioMessageCell: AudioMessageCell {
     override func prepareForReuse() {
         super.prepareForReuse()
     }
+
+    /// Guards against MessageKit's `avatarPositionUnresolved` fatalError when an unconfigured
+    /// layout attribute (default `.natural`) reaches the cell — e.g. during the typing-indicator
+    /// section insert's bounds-change fade. See `GlacierMessageContentCells.swift`.
+    override func apply(_ layoutAttributes: UICollectionViewLayoutAttributes) {
+        if let attrs = layoutAttributes as? MessagesCollectionViewLayoutAttributes {
+            super.apply(attrs.resolvingUnconfiguredAvatarPosition())
+        } else {
+            super.apply(layoutAttributes)
+        }
+    }
     
     /// Handle tap gesture on contentView and its subviews.
     open override func handleTapGesture(_ gesture: UIGestureRecognizer) {

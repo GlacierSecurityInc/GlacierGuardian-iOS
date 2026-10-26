@@ -68,6 +68,7 @@ private struct GlacierUserResponse: Decodable {
     let userName: String?
     let messengerId: String?
     let glacierpwd: String?
+    let xmppToken: String?
     let extensionVoiceserver: String?
     let firstName: String?
     let lastName: String?
@@ -86,6 +87,7 @@ private struct GlacierUserResponse: Decodable {
         case userName = "user_name"
         case messengerId = "messenger_id"
         case glacierpwd
+        case xmppToken = "xmpp_token"
         case extensionVoiceserver = "extension_voiceserver"
         case firstName = "first_name"
         case lastName = "last_name"
@@ -106,6 +108,7 @@ private struct GlacierUserResponse: Decodable {
         userName = try container.decodeIfPresent(String.self, forKey: .userName)
         messengerId = try container.decodeIfPresent(String.self, forKey: .messengerId)
         glacierpwd = try container.decodeIfPresent(String.self, forKey: .glacierpwd)
+        xmppToken = try container.decodeIfPresent(String.self, forKey: .xmppToken)
         extensionVoiceserver = try container.decodeIfPresent(String.self, forKey: .extensionVoiceserver)
         firstName = try container.decodeIfPresent(String.self, forKey: .firstName)
         lastName = try container.decodeIfPresent(String.self, forKey: .lastName)
@@ -360,11 +363,22 @@ open class BackendHelper: NSObject {
                 switch response.result {
                 case .success(let payload):
                     guard let userPayload = payload.user,
-                          let password = userPayload.glacierpwd,
                           let user = userPayload.messengerId else {
                         completion(nil)
                         return
                     }
+                    // Require at least one usable credential. glacierpwd is kept
+                    // for backward compatibility; once the server moves to JWT
+                    // auth the backend returns xmpp_token instead and glacierpwd
+                    // may be absent.
+                    let token = userPayload.xmppToken
+                    guard (userPayload.glacierpwd?.isEmpty == false) || (token?.isEmpty == false) else {
+                        self.logFailureResponse(response.data, context: "getGlacierUser")
+                        DDLogError("getGlacierUser: response had neither glacierpwd nor xmpp_token")
+                        completion(nil)
+                        return
+                    }
+                    let password = userPayload.glacierpwd ?? ""
                     var displayName = userPayload.userName ?? username
                     if let firstName = userPayload.firstName {
                         displayName = firstName
@@ -377,6 +391,7 @@ open class BackendHelper: NSObject {
                         username: user,
                         voiceext: userPayload.extensionVoiceserver ?? "",
                         password: password,
+                        token: token,
                         org: lowerOrg,
                         displayname: displayName
                     )

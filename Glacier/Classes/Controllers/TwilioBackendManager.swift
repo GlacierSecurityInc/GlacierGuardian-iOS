@@ -109,14 +109,17 @@ import TwilioConversationsClient
         self.pushRegistered = false
     }
     
+    /// Loads the device address book, asking for access first if it has not been asked.
+    ///
+    /// The authorization request goes through `GuardianPermissionManager` rather than
+    /// straight to `CNContactStore`. One of this method's callers is `parseNumbers`,
+    /// which runs whenever the backend answers `queryForNumbers` — during login that
+    /// lands at an unpredictable point, and the contacts prompt used to cut into the
+    /// middle of the other permission prompts. Queued, it simply waits its turn.
     func fetchContacts(completion: @escaping (Bool) -> Void) { 
         let store = CNContactStore()
-        store.requestAccess(for: .contacts) { (granted, error) in
-            if let error = error {
-                print("failed to request access", error)
-                completion(false)
-                return
-            }
+        GuardianPermissionManager.shared.request(.contacts) { status in
+            let granted = (status == .granted)
             if granted {
                 self.internalQueue.async {
                     let keys = [CNContactGivenNameKey, CNContactFamilyNameKey, CNContactPhoneNumbersKey, CNContactThumbnailImageDataKey]

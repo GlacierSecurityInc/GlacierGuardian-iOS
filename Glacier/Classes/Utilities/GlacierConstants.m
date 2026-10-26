@@ -36,6 +36,7 @@ NSString *const kGlacierNotificationAccountCollectionKey = @"kOTRNotificationAcc
 
 NSString *const kOTRServiceName            = @"org.chatsecure.ChatSecure";
 NSString *const kOTRCertificateServiceName = @"org.chatsecure.ChatSecure.Certificate";
+NSString *const kGlacierAccessTokenServiceName = @"com.glaciersec.Chat.AccessToken";
 
 NSString *const kGlacierServiceName            = @"com.glaciersec.Chat";
 NSString *const kGlacierGroup      = @"group.com.glaciersec.apps";

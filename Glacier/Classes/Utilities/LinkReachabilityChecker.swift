@@ -35,7 +35,7 @@ actor LinkReachabilityChecker {
         request.httpMethod = "HEAD"
         
         do {
-            let (_, response) = try await URLSession.shared.data(for: request)
+            let (_, response) = try await GlacierMediaSession.session.data(for: request)
             if let httpResponse = response as? HTTPURLResponse,
                (200..<400).contains(httpResponse.statusCode) {
                 cache[urlString] = true

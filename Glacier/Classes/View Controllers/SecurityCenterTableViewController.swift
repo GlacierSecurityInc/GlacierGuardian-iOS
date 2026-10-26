@@ -188,7 +188,7 @@ open class SecurityCenterTableViewController: UITableViewController {
             screenLockCell.contentConfiguration = screenContent
                 
             var shielded = true
-            if IOSSecuritySuite.amIJailbroken() {
+            if IOSSecuritySuite.amIJailbroken() || GlacierJailbreakChecks.run().jailbroken {
                 systemContent.secondaryText = "Shows signs of being jailbroken"
                 shielded = false
             } else if IOSSecuritySuite.amIProxied() {
@@ -197,7 +197,7 @@ open class SecurityCenterTableViewController: UITableViewController {
             } else if IOSSecuritySuite.amIDebugged() {
                 systemContent.secondaryText = "Shows signs of being debugged"
                 //shielded = false
-            } else if IOSSecuritySuite.amIReverseEngineered() {
+            } else if SecurityCenter.isReverseEngineered() {
                 systemContent.secondaryText = "Shows signs of being reverse engineered"
                 shielded = false
             } else if IOSSecuritySuite.amIRunInEmulator() {

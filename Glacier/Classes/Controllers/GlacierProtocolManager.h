@@ -45,6 +45,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)loginAccount:(ChatAccountModel *)account;
 - (void)loginAccount:(ChatAccountModel *)account userInitiated:(BOOL)userInitiated;
+/// Force XMPP up for a ringing incoming call (VoIP-push woken path), with a bounded retry.
+- (void)ensureConnectedForIncomingCall:(ChatAccountModel *)account;
 - (void)loginAccounts:(NSArray<ChatAccountModel*> *)accounts;
 - (void)goAwayForAllAccounts;
 - (void)goOfflineForAllAccounts;

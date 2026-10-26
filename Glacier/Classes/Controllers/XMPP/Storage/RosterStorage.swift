@@ -155,6 +155,7 @@ extension RosterStorage: XMPPRosterStorage {
         }
         let status = ThreadStatus(presence: presence)
         let resource = presence.from?.resource
+        let oldStatus = BuddyCache.shared().threadStatus(buddyId: buddy.uniqueId)
         
         if (presence.type == "unavailable") {
             BuddyCache.shared().setThreadStatus(ThreadStatus.offline, buddyId: buddy.uniqueId, resource: resource)
@@ -168,6 +169,13 @@ extension RosterStorage: XMPPRosterStorage {
         updateSubscription(buddy: buddy, presence: presence, stream: stream)
         updateLastSeen(buddy: buddy, presence: presence, status: status)
         buddy.touch()
+        // The conversation list only redraws on chatThread changes, and its cells read the
+        // presence ring from BuddyCache. It used to be redrawn as a side effect of the vCard
+        // refetch every presence triggered (photoHash was never set); do it explicitly now,
+        // only when the contact's overall status actually changed.
+        if BuddyCache.shared().threadStatus(buddyId: buddy.uniqueId) != oldStatus {
+            ChatThread.touch(uniqueId: buddy.uniqueId)
+        }
     }
     
     public func userExists(with jid: XMPPJID, xmppStream stream: XMPPStream) -> Bool {
@@ -237,7 +245,9 @@ extension RosterStorage: XMPPRosterDelegate {
             }
         } else {
             var buddyModel:ChatBuddyModel?
+            var changed = false
             if buddy == nil {
+                changed = true
                 buddyModel = ChatBuddyModel()
                 buddy = ChatBuddy(uniqueId: buddyModel!.uniqueId)
                 buddy?.accountUniqueId = accountId
@@ -253,6 +263,8 @@ extension RosterStorage: XMPPRosterDelegate {
                 //buddyModel = buddyModel?.copyAsSelf()
             }
             guard let buddyModel = buddyModel else { return }
+            let oldSubscription = buddyModel.grdbRecord?.subscription
+            let oldGroups = buddyModel.grdbRecord?.sharedGroups
             buddyModel.grdbRecord?.subscription = SubscriptionAttribute(stringValue: subscription).rawValue
             //buddyModel.pendingApproval.setPendingOut(pending: (ask == "subscribe"))
             //if buddyModel.subscribedFrom {
@@ -262,9 +274,12 @@ extension RosterStorage: XMPPRosterDelegate {
             //    buddyModel.trustLevel = .roster
             //}
                 
-            // Update name
-            if let name = item.attributeStringValue(forName: "name"), name.count > 0 {
+            // The contact's own name (vCard / presence) wins. The roster name is
+            // only a fallback until we learn one, so it can't flip-flop with it.
+            if let name = item.attributeStringValue(forName: "name"), name.count > 0,
+               buddyModel.hasPlaceholderDisplayName, name != buddyModel.grdbRecord?.displayName {
                 buddyModel.displayName = name
+                changed = true
             }
                 
             var groups: [String] = []
@@ -275,7 +290,17 @@ extension RosterStorage: XMPPRosterDelegate {
                 }
             }
             buddyModel.grdbRecord?.sharedGroups = groups
-            buddyModel.saveThread()
+            if buddyModel.grdbRecord?.subscription != oldSubscription || groups != oldGroups {
+                changed = true
+            }
+            // Only write a new or changed buddy: every roster fetch replays the whole roster,
+            // and saving rewrote the full row (avatar blob included) for each contact.
+            if changed {
+                buddyModel.saveThread()
+                // Refresh the thread UI. GlacierXMPPManager's roster handler used to do this
+                // for every item via updateVCard; it now only does so when it renames.
+                ChatThread.touch(uniqueId: buddyModel.uniqueId)
+            }
                 
             self.rosterSet.insert(buddyModel)
         }

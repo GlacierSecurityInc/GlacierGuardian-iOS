@@ -22,33 +22,71 @@ import os.log
 import IOSSecuritySuite
 
 public extension GlacierAppDelegate {
+    /// Starts the Amplify/Cognito bring-up for this launch.
+    ///
+    /// Two things must be in place before the session check can run, and in a
+    /// background launch on a locked phone neither is ready at didFinishLaunching:
+    ///  * protected data — the Cognito credential store lives in the keychain;
+    ///  * an open database — deciding whether a failed session should prompt reads
+    ///    the account table.
+    /// Whichever arrives last kicks the work off; `amplifySessionChecked` keeps the
+    /// session check to a single run for the life of the process.
     @objc func setupAmplify() {
         guard !self.blockAmplifyForProxyIfNeeded() else { return }
+
         if UIApplication.shared.isProtectedDataAvailable {
-            configureAmplifyIfNeeded()
-            Task {
-                let migrated = await performCognitoClientMigrationIfNeeded()
-                if !migrated {
-                    await tryFetchSession()
-                }
-            }
-        } else {
-            NotificationCenter.default.addObserver(
-                forName: UIApplication.protectedDataDidBecomeAvailableNotification,
-                object: nil,
-                queue: .main
-            ) { [weak self] _ in
-                guard let self = self else { return }
-                guard !self.blockAmplifyForProxyIfNeeded() else { return }
-                self.configureAmplifyIfNeeded()
-                Task {
-                    let migrated = await self.performCognitoClientMigrationIfNeeded()
-                    if !migrated {
-                        await self.tryFetchSession()
-                    }
-                }
-            }
+            self.amplifyProtectedDataReady = true
+            self.startAmplifyBringUpIfReady()
+            return
         }
+
+        os_log("setupAmplify: protected data unavailable at launch, waiting for unlock",
+               log: .auth, type: .info)
+
+        // Deliberately one-shot. This observer used to be left installed for the
+        // life of the process, so the entire bring-up re-ran on *every* unlock and
+        // could re-present the login prompt hours into a session.
+        guard self.protectedDataObserver == nil else { return }
+        self.protectedDataObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.protectedDataDidBecomeAvailableNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self = self else { return }
+            if let observer = self.protectedDataObserver {
+                NotificationCenter.default.removeObserver(observer)
+                self.protectedDataObserver = nil
+            }
+            os_log("setupAmplify: protected data became available", log: .auth, type: .info)
+            self.amplifyProtectedDataReady = true
+            self.startAmplifyBringUpIfReady()
+        }
+    }
+
+    /// Called from `whenDatabaseReady:` once the GRDB stack is open.
+    @objc func amplifyDatabaseDidBecomeReady() {
+        self.amplifyDatabaseReady = true
+        self.startAmplifyBringUpIfReady()
+    }
+
+    private func startAmplifyBringUpIfReady() {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { self.startAmplifyBringUpIfReady() }
+            return
+        }
+        guard self.amplifyProtectedDataReady else { return }
+        guard !self.blockAmplifyForProxyIfNeeded() else { return }
+
+        // Configuring only needs the keychain, and other callers (GlacierAPIHeaders)
+        // depend on it, so it must not sit behind the database.
+        self.configureAmplifyIfNeeded()
+
+        // The prompt decision reads the account table, so wait for the database. If
+        // the database never opens we simply never prompt, which is the safe way to
+        // fail.
+        guard self.amplifyDatabaseReady, !self.amplifySessionChecked else { return }
+        self.amplifySessionChecked = true
+        Task { await self.tryFetchSession() }
     }
     
     private func blockAmplifyForProxyIfNeeded() -> Bool {
@@ -75,42 +113,95 @@ public extension GlacierAppDelegate {
         return url.lastPathComponent == "sandboxReceipt" ||
                 url.path.contains("sandboxReceipt")
     }
-    
-    // Runs once on the first launch after the App Client ID was rotated.
-    // Signs out the existing Cognito session (which is bound to the old client ID
-    // and will fail to refresh anyway) and prompts the user to sign in again with
-    // clear, non-alarming messaging about the security upgrade.
-    private static let cognitoClientMigrationKey = "cognitoAppClientMigrationV1"
-    private func performCognitoClientMigrationIfNeeded() async -> Bool {
-        guard !UserDefaults.standard.bool(forKey: Self.cognitoClientMigrationKey) else { return false }
-
-        // Fresh install — no existing session to migrate.
-        guard self.conversationViewController.getFirstAccount() != nil else {
-            UserDefaults.standard.set(true, forKey: Self.cognitoClientMigrationKey)
-            return false
-        }
-
-        // Mark done before any async work so a crash/relaunch doesn't re-trigger.
-        UserDefaults.standard.set(true, forKey: Self.cognitoClientMigrationKey)
-
-        // Invalidate the old-client-ID session so it can't linger or cause
-        // confusing refresh failures later.
-        let _ = await Amplify.Auth.signOut()
-
-        await MainActor.run {
-            self.conversationViewController.setMigrationLoginController()
-        }
-        return true
-    }
 
     private func tryFetchSession() async {
         guard !blockAmplifyForProxyIfNeeded() else { return }
-        let signedIn = await AWSAcctManager.sharedMgr().fetchCurrentAuthSession()
-            
-        if signedIn == false, self.conversationViewController.getFirstAccount() != nil {
-            //needs re-login for backend. Set flag to handle login appropriately in AWSAcctManager
+
+        let state = await AWSAcctManager.sharedMgr().resolveAuthSessionState()
+
+        switch state {
+        case .signedIn:
+            os_log("session check: signed in", log: .auth, type: .info)
+            return
+
+        case .indeterminate:
+            // Network trouble, an unreadable keychain, or a plugin that was not
+            // ready yet. Staying quiet is the only correct move: a working session
+            // must never be discarded on a guess.
+            os_log("session check: indeterminate, not prompting", log: .auth, type: .info)
+            return
+
+        case .noSession, .tokensInvalid:
+            break
+        }
+
+        guard self.conversationViewController.getFirstAccount() != nil else {
+            os_log("session check: no session and no account, leaving it to onboarding",
+                   log: .auth, type: .info)
+            return
+        }
+
+        // Tokens that went stale under the user (a rotated App Client ID, an
+        // expired refresh token) get an explanation first; a plain signed-out
+        // state just needs the password.
+        let explains = (state == .tokensInvalid)
+        os_log("session check: re-auth required (explains=%{public}@)",
+               log: .auth, type: .default, explains ? "yes" : "no")
+        await MainActor.run { self.requestReauthPrompt(explains: explains) }
+    }
+
+    /// Shows the re-auth prompt, but only when there is a foreground UI to show it
+    /// in. During a background launch the conversation controller lives in a scene
+    /// with no window context, so presenting there is either dropped outright or —
+    /// worse — leaves an alert queued that the user walks into hours later.
+    private func requestReauthPrompt(explains: Bool, required: Bool = false) {
+        guard UIApplication.shared.applicationState == .active, self.isMainInterfaceReady() else {
+            os_log("re-auth prompt deferred: app is not foreground yet", log: .auth, type: .info)
+            // A required prompt already waiting must not be downgraded by a later
+            // dismissable one.
+            self.reauthPromptExplains = explains || self.reauthPromptRequired
+            self.reauthPromptRequired = required || self.reauthPromptRequired
+            self.reauthPromptPending = true
+            return
+        }
+        self.reauthPromptPending = false
+        self.reauthPromptRequired = false
+        self.showReauthUI(explains: explains, required: required)
+    }
+
+    /// Called by the XMPP manager when a credential refresh finds the Cognito session
+    /// gone. On a JWT-only server that leaves messaging and calls dead until the user
+    /// signs in, so unlike the launch-time prompt this one cannot be dismissed.
+    @objc func requireReauthForXMPP() {
+        os_log("XMPP auth needs a Cognito sign-in; requiring re-auth", log: .auth, type: .default)
+        self.requestReauthPrompt(explains: true, required: true)
+    }
+
+    private func showReauthUI(explains: Bool, required: Bool = false) {
+        if required {
+            self.conversationViewController.setExplainedReauthController(required: true)
+        } else if explains {
+            self.conversationViewController.setExplainedReauthController()
+        } else {
             self.conversationViewController.setWelcomeController(true)
         }
+    }
+
+    /// Called from `applicationDidBecomeActive:` to flush a prompt that was
+    /// deferred because the app was still in the background.
+    @objc func presentPendingReauthPromptIfNeeded() {
+        guard self.reauthPromptPending else { return }
+        guard self.isMainInterfaceReady() else { return }
+        guard self.conversationViewController.getFirstAccount() != nil else {
+            self.reauthPromptPending = false
+            self.reauthPromptRequired = false
+            return
+        }
+        os_log("presenting deferred re-auth prompt", log: .auth, type: .default)
+        let required = self.reauthPromptRequired
+        self.reauthPromptPending = false
+        self.reauthPromptRequired = false
+        self.showReauthUI(explains: self.reauthPromptExplains, required: required)
     }
 
     private func configureAmplifyIfNeeded() {//async {
@@ -124,9 +215,10 @@ public extension GlacierAppDelegate {
             //try Amplify.add(plugin: AWSS3StoragePlugin())
             try Amplify.configure()
             self.amplifyIsConfigured = true
-            print("Amplify configured successfully.")
+            os_log("Amplify configured successfully", log: .auth, type: .info)
         } catch {
-            print("Failed to initialize Amplify: \(error)")
+            os_log("Failed to initialize Amplify: %{public}@",
+                   log: .auth, type: .error, String(describing: error))
         }
     }
     
@@ -675,7 +767,7 @@ public extension GlacierAppDelegate {
             bgTask = .invalid
         }
         DispatchQueue.global().async {
-            guard let account = self.getFirstAccount(), let jid = XMPPJID(string: callerJid), let buddy = ChatBuddyModel.fetchBuddyModel(jid: jid, accountUniqueId: account.uniqueId), let _ = ChatThreadModel.getChatThread(uniqueId: buddy.uniqueId), let systemMsg = buddy.outgoingMessage(text: message) as? OutgoingChatMessage else {
+            guard let account = self.getFirstAccount(), let jid = XMPPJID(string: callerJid), let buddy = ChatBuddyModel.fetchBuddyModel(jid: jid, accountUniqueId: account.uniqueId), let systemMsg = buddy.outgoingMessage(text: message) as? OutgoingChatMessage else {
                 UIApplication.shared.endBackgroundTask(bgTask)
                 bgTask = .invalid
                 return
@@ -693,16 +785,47 @@ public extension GlacierAppDelegate {
             // write fires after the bgTask ends, and iOS often suspends us
             // before it runs when a call ends in the background.
             let threadUniqueId = buddy.uniqueId
+            let acctId = account.accountId
             DBManager.sharedDB().grdbStorage.asyncWrite(block: { transaction in
                 systemMsg.grdbRecord?.grdbSave(transaction: transaction)
                 do {
-                    if var threadRec = try ChatThread
+                    var threadRec = try ChatThread
                         .filter(Column("uniqueId") == threadUniqueId)
-                        .fetchOne(transaction.database) {
+                        .fetchOne(transaction.database)
+
+                    // Create the one-on-one thread if the caller has no existing
+                    // conversation yet (e.g. right after a fresh login). Mirrors the
+                    // create-if-missing branch in MessageStorage.getThread so an
+                    // incoming call surfaces a thread the same way a first incoming
+                    // message does. Done inside this same transaction so the message
+                    // insert and the new thread row commit atomically under the held
+                    // SQLCipher lock.
+                    if threadRec == nil {
+                        var newThread = ChatThread(uniqueId: threadUniqueId)
+                        newThread.messageDate = systemMsg.messageDate
+                        newThread.isGroupThread = false
+                        newThread.lastMessageId = systemMsg.uid
+                        newThread.accountUniqueId = acctId
+                        newThread.modified = Date()
+                        newThread.grdbSave(transaction: transaction)
+                        threadRec = try ChatThread
+                            .filter(Column("uniqueId") == threadUniqueId)
+                            .fetchOne(transaction.database)
+                    }
+
+                    if var threadRec = threadRec {
                         threadRec.messageDate = systemMsg.messageDate
                         threadRec.lastMessageId = systemMsg.uid
                         threadRec.modified = Date()
                         threadRec.grdbSave(transaction: transaction)
+
+                        // Link the buddy to the (possibly new) thread row so
+                        // buddy.chatThread resolves, consistent with
+                        // MessageStorage.getThread.
+                        if buddy.chatThreadId == -1, let ctid = threadRec.id, var bud = buddy.grdbRecord {
+                            bud.chatThreadId = ctid
+                            try bud.update(transaction.database, columns: [Column("chatThreadId")])
+                        }
                     }
                 } catch {
                     DDLogError("addSystemMessage thread update error: \(error)")
@@ -977,10 +1100,16 @@ extension GlacierAppDelegate: PKPushRegistryDelegate {
                     // reportNewIncomingCall has already been called; safe to start XMPP login now.
                     if UIApplication.shared.applicationState != .active, self.isProxyDetected() == false {
                         DispatchQueue.global().async {
-                            if let account = ChatAccountModel.firstAccount(), GlacierProtocolManager.shared.isAccountIdConnected(account.uniqueId) == false {
+                            if let account = ChatAccountModel.firstAccount() {
                                 // DDLogInfo("***** received VoIP push and about to login.")
                                 self.voipNotification = true
-                                GlacierProtocolManager.shared.loginAccount(account)
+                                // Don't gate on isAccountIdConnected: a VoIP-push wake means we
+                                // were suspended, so the XMPP socket is likely half-open (reports
+                                // connected but is dead on the next write). Force a fresh, bounded
+                                // reconnect so the JMI signaling channel is actually live for the
+                                // call — the foreground status timer that normally owns retries is
+                                // not running here (see ensureConnectedForIncomingCall).
+                                GlacierProtocolManager.shared.ensureConnected(forIncomingCall: account)
                             }
                         }
                     }
@@ -1003,12 +1132,33 @@ extension GlacierAppDelegate: PKPushRegistryDelegate {
                 handledCallIDs.add(uuidstr)*/
                 
                 //looks like Twilio library wants to get called first
+                // Twilio's SDK reports the incoming call to CallKit itself (via callInviteReceived
+                // -> reportIncomingCall, or reportPlaceholderCallAndEnd on the cancel/unparseable
+                // paths), so the contract is satisfied by the SDK's delegate callback; mark handled
+                // so the placeholder safety net below does not also fire. Log the payload shape so a
+                // future 0xBAADCA11 here can be traced to the exact push that slipped through.
+                if GlacierAppDelegate.isTestFlight {
+                    DDLogInfo("VoIP push routed to Twilio SDK. Payload keys: \(Array(userInfo.keys))")
+                }
+                awaitingAsyncCompletion = true
                 CallManager.sharedCallManager().incomingCallReceived(callInfo: userInfo)
                 completeOnce()
             }
 
             if !awaitingAsyncCompletion {
-                completeOnce()
+                // We received a .voIP push but none of the branches above reported a call
+                // (e.g. an unexpected or malformed payload). iOS 13+ kills the app (0xBAADCA11)
+                // if a VoIP push completes without reportNewIncomingCall, so satisfy the contract
+                // by reporting a placeholder call and immediately ending it.
+                //
+                // This should essentially never happen with a well-formed p2 ring, so log the
+                // payload shape: if this ever fires in production it means a malformed/unexpected
+                // VoIP push is reaching the handler (points at a server payload issue to chase).
+                DDLogError("VoIP push did not resolve to a reportable call; reporting placeholder to satisfy CallKit contract. Payload keys: \(Array(userInfo.keys)) status=\(String(describing: userInfo[kNotificationCallStatusKey])) callIdType=\(String(describing: userInfo[kNotificationCallIdKey].map { Swift.type(of: $0) }))")
+                awaitingAsyncCompletion = true
+                CallManager.sharedCallManager().reportPlaceholderCallAndEnd {
+                    completeOnce()
+                }
             }
         }
     }

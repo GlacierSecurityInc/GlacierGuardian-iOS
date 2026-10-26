@@ -26,6 +26,9 @@ import GRDB
     @objc open weak var omemoModuleQueue:DispatchQueue?
     @objc open var callbackQueue:DispatchQueue
     @objc public let workQueue:DispatchQueue
+    /// Marks `workQueue` so `onWorkQueue` can tell when it is already running there.
+    /// Per instance, so another account's coordinator queue doesn't count.
+    private let workQueueKey = DispatchSpecificKey<Void>()
     @objc public let messageStorage: MessageStorage
     @objc public let roomManager: GlacierXMPPRoomManager
     fileprivate var myjid:XMPPJID?
@@ -60,8 +63,16 @@ import GRDB
     }
     let preKeyCount:UInt = 100
     fileprivate var outstandingXMPPStanzaResponseBlocks:[String: (Bool) -> Void]
-    /// callbacks for when fetching device Id list
-    private var deviceIdFetchCallbacks:[XMPPJID: (Bool) -> Void] = [:]
+    /// Callbacks waiting on an in-flight device-id fetch, keyed by JID.
+    /// This holds an ARRAY per JID on purpose: a single closure meant that two
+    /// overlapping sends to the same contact clobbered each other's waiter, and the
+    /// first one's DispatchGroup never left - that send hung forever. Only ever touch
+    /// this on workQueue.
+    private var deviceIdFetchCallbacks:[XMPPJID: [(Bool) -> Void]] = [:]
+    /// How long to wait for a device-id fetch before giving up on it. Without this a
+    /// server that never answers leaves the waiter parked and stalls the send queue
+    /// behind it.
+    private let deviceIdFetchTimeout:TimeInterval = 10.0
 
     private var lekList:[UInt32] = []
 
@@ -122,8 +133,20 @@ import GRDB
         self.outstandingXMPPStanzaResponseBlocks = [:]
         self.callbackQueue = DispatchQueue(label: "OMEMOSignalCoordinator-callback", attributes: [])
         self.workQueue = DispatchQueue(label: "OMEMOSignalCoordinator-work", attributes: [])
+        self.workQueue.setSpecific(key: self.workQueueKey, value: ())
         self.messageStorage = messageStorage
         self.roomManager = roomManager
+    }
+    
+    /// Runs `block` serialized on `workQueue`, inline if already there. libsignal session
+    /// state (and PendingSignalSessions) assumes every cipher operation is serialized, so
+    /// synchronous entry points used from outside workQueue (call setup) must go through
+    /// this. Callers must not hold a grdbStorage write.
+    private func onWorkQueue<T>(_ block: () -> T) -> T {
+        if DispatchQueue.getSpecific(key: workQueueKey) != nil {
+            return block()
+        }
+        return workQueue.sync(execute: block)
     }
     
     @objc public func setJID(_ jid:XMPPJID) {
@@ -151,13 +174,69 @@ import GRDB
         self.outstandingXMPPStanzaResponseBlocks.removeValue(forKey: elementId)
     }
     
-    /** Always call on internal work queue */
+    /** Safe to call from any thread; hops to the work queue itself. */
     fileprivate func callAndRemoveOutstandingDeviceIdFetch(_ jid:XMPPJID,success:Bool) {
-        guard let outstandingBlock = self.deviceIdFetchCallbacks[jid] else {
-            return
+        self.workQueue.async { [weak self] in
+            guard let strongself = self,
+                  let outstandingBlocks = strongself.deviceIdFetchCallbacks.removeValue(forKey: jid),
+                  outstandingBlocks.count > 0 else {
+                return
+            }
+            // Removed first, so a late response arriving after a timeout (or the other
+            // way round) finds nothing and cannot resolve a waiter twice.
+            for block in outstandingBlocks {
+                block(success)
+            }
         }
-        outstandingBlock(success)
-        self.deviceIdFetchCallbacks.removeValue(forKey: jid)
+    }
+    
+    /** Register a waiter for an in-flight device-id fetch and arm its timeout.
+        Always call on the internal work queue. */
+    private func addOutstandingDeviceIdFetch(_ jid:XMPPJID, block:@escaping (Bool) -> Void) {
+        self.deviceIdFetchCallbacks[jid, default: []].append(block)
+        self.workQueue.asyncAfter(deadline: .now() + self.deviceIdFetchTimeout) { [weak self] in
+            guard let strongself = self, strongself.deviceIdFetchCallbacks[jid] != nil else {
+                return
+            }
+            DDLogWarn("Timed out fetching device ids for \(jid.bare)")
+            strongself.callAndRemoveOutstandingDeviceIdFetch(jid, success: false)
+        }
+    }
+    
+    /** Force a device-list refresh for this JID, calling back once the new list has been
+        stored - or once the fetch failed or timed out.
+     
+        The normal send path only fetches a device list when the local one is empty, so a
+        contact who added a device while we missed the PEP update stays invisible to us
+        indefinitely. A message that failed for that reason will fail again in exactly the
+        same way unless the retry re-reads the list first, which is what the resend path
+        uses this for.
+     
+        The completion is called on callbackQueue and is guaranteed to be called exactly
+        once, including on timeout. */
+    @objc open func refreshDeviceList(for jid: XMPPJID, completion: @escaping (Bool) -> Void) {
+        self.workQueue.async { [weak self] in
+            guard let strongself = self, let omemoModule = strongself.omemoModule else {
+                self?.callbackQueue.async {
+                    completion(false)
+                }
+                return
+            }
+            
+            let elementId = UUID().uuidString
+            // weak: the waiter is retained by deviceIdFetchCallbacks, which is owned by
+            // self, so a strong capture here would be a retain cycle until it resolves.
+            strongself.addOutstandingDeviceIdFetch(jid) { [weak strongself] success in
+                guard let queue = strongself?.callbackQueue else {
+                    completion(success)
+                    return
+                }
+                queue.async {
+                    completion(success)
+                }
+            }
+            omemoModule.fetchDeviceIds(for: jid, elementId: elementId)
+        }
     }
     
     /** 
@@ -302,7 +381,7 @@ import GRDB
             
             group.enter()
             // Hold on to a closure so that when we get the call back from OMEMOModule we can call this closure.
-            self?.deviceIdFetchCallbacks[jid] = { success in
+            sself.addOutstandingDeviceIdFetch(jid) { success in
                 if (!success) {
                     deviceFetchSuccess = false
                 }
@@ -648,8 +727,18 @@ import GRDB
                                 // new OMEMO format puts auth tag inside omemo session
                                 // see https://github.com/siacs/Conversations/commit/f0c3b31a42ac6269a0ca299f2fa470586f6120be#diff-e9eacf512943e1ab4c1fbc21394b4450R170
                                 let payload = keyData + gcm.authTag
-                                return try self.encryptPayloadWithSignalForDevice(device, payload: payload, transaction: transaction)
+                                guard let deviceKeyData = try self.encryptPayloadWithSignalForDevice(device, payload: payload, transaction: transaction) else {
+                                    // Returns nil without throwing when the username cannot be
+                                    // resolved for the device's parent.
+                                    DDLogError("OMEMO no key for device \(device.deviceId) (\(device.parentKey)): could not resolve a username")
+                                    return nil
+                                }
+                                return deviceKeyData
                             } catch {
+                                // Swallowed on purpose - one unreachable device must not fail
+                                // the whole send - but it was swallowed silently until now,
+                                // which is what made partial envelopes invisible.
+                                DDLogError("OMEMO encrypt failed for device \(device.deviceId) (\(device.parentKey)): \(error)")
                                 return nil
                             }
                         }
@@ -660,8 +749,13 @@ import GRDB
                          3. encrypt to those devices.
                          4. Remove optional values
                          */
-                        buddyKeyDataArray = buddyKeys.flatMap({ key in
-                            self.omemoStorageManager.getDevicesForParentKey(key, collection: ChatBuddyModel.collection(), trustedOnly: true, transaction: transaction).map(encryptClosure).compactMap{ $0 }
+                        // expectedDeviceIds records who SHOULD have received a key, so the
+                        // check after both passes can report who did not. See the note there.
+                        var expectedDeviceIds:Set<UInt32> = []
+                        buddyKeyDataArray = buddyKeys.flatMap({ key -> [OMEMOKeyData] in
+                            let devices = self.omemoStorageManager.getDevicesForParentKey(key, collection: ChatBuddyModel.collection(), trustedOnly: true, transaction: transaction)
+                            expectedDeviceIds.formUnion(devices.map { UInt32($0.deviceId) })
+                            return devices.map(encryptClosure).compactMap{ $0 }
                         })
                         
                         // Stop here if we were not able to encrypt to any of the buddies
@@ -680,9 +774,32 @@ import GRDB
                          4. Remove optional values
                          */
                         
-                        ourDevicesKeyData = self.omemoStorageManager.getDevicesForOurAccount(trustedOnly: true, transaction: transaction).filter({ (device) -> Bool in
+                        let ourDevices = self.omemoStorageManager.getDevicesForOurAccount(trustedOnly: true, transaction: transaction).filter({ (device) -> Bool in
                             return UInt32(device.deviceId) != self.signalEncryptionManager.storage.getLocalRegistrationId(transaction)
-                        }).map(encryptClosure).compactMap{ $0 }
+                        })
+                        expectedDeviceIds.formUnion(ourDevices.map { UInt32($0.deviceId) })
+                        ourDevicesKeyData = ourDevices.map(encryptClosure).compactMap{ $0 }
+                        
+                        // Partial-envelope visibility, reporting only - this deliberately
+                        // does NOT fail the send.
+                        //
+                        // A device whose key generation failed is dropped by the compactMaps
+                        // above and the message goes out anyway, so that device receives
+                        // ciphertext it can never read while the sender sees a normal sent
+                        // message. Nothing anywhere recorded that this had happened.
+                        //
+                        // Whether to fail closed instead is a real behaviour change - it
+                        // makes one unreachable device block a conversation - and should be
+                        // decided on evidence of how often this actually fires, which is
+                        // what these lines are here to collect. DDLogError because only
+                        // Warn and Error reach os_log, so anything lower is absent from a
+                        // sysdiagnose.
+                        let generatedDeviceIds = Set((buddyKeyDataArray + ourDevicesKeyData).map { $0.deviceId })
+                        let missingDeviceIds = expectedDeviceIds.subtracting(generatedDeviceIds)
+                        if missingDeviceIds.count > 0 {
+                            let destination = destinationJID?.bare ?? "unknown"
+                            DDLogError("OMEMO partial envelope to \(destination): no key for devices \(missingDeviceIds.sorted()) of expected \(expectedDeviceIds.sorted()); sending anyway to \(generatedDeviceIds.sorted())")
+                        }
                     } catch let err {
                         //This should only happen if we had an error encrypting the payload
                         self.callbackQueue.async(execute: {
@@ -794,7 +911,12 @@ import GRDB
      </fingerprint>
      */
     open func getPayloadForCall(_ fingerprint:String, buddyjid:String, deviceId:String, senderDeviceId:UInt32) -> XMLElement? {
-        
+        return onWorkQueue {
+            self.encryptPayloadForCall(fingerprint, buddyjid: buddyjid, deviceId: deviceId, senderDeviceId: senderDeviceId)
+        }
+    }
+
+    private func encryptPayloadForCall(_ fingerprint:String, buddyjid:String, deviceId:String, senderDeviceId:UInt32) -> XMLElement? {
         guard let ivData = SignalEncryptionHelper.generateIV(), let keyData = SignalEncryptionHelper.generateSymmetricKey(), let fingerprintData = fingerprint.data(using: String.Encoding.utf8) else {
             return nil
         }
@@ -831,6 +953,12 @@ import GRDB
     }
     
     open func getDecryptedPayload(_ keyData:[OMEMOKeyData], senderDeviceId:UInt32, iv:Data, payload:Data, addressjid:String) -> String? {
+        return onWorkQueue {
+            self.decryptPayload(keyData, senderDeviceId: senderDeviceId, iv: iv, payload: payload, addressjid: addressjid)
+        }
+    }
+
+    private func decryptPayload(_ keyData:[OMEMOKeyData], senderDeviceId:UInt32, iv:Data, payload:Data, addressjid:String) -> String? {
         //DDLogInfo("***** in getDecryptedPayload 1")
         var decryptedPayload:String?
         let rid = self.signalEncryptionManager.registrationId
@@ -943,7 +1071,12 @@ import GRDB
                 self.outstandingXMPPStanzaResponseBlocks[elementId] = { success in
                     completion(success)
                 }
-                self.omemoModule?.removeDeviceIds(deviceIds, elementId: elementId)
+                // Response block is registered inside the transaction; the stanza goes
+                // out after it commits. removeDeviceIds dispatch_syncs onto the OMEMO
+                // queue, which deadlocks against the writer. See afterCommit(block:).
+                transaction.afterCommit { [weak self] in
+                    self?.omemoModule?.removeDeviceIds(deviceIds, elementId: elementId)
+                }
             } else {
                 completion(true)
             }
@@ -1348,17 +1481,28 @@ import GRDB
         }
         
         if message.isGroupChatMessage {
-            var isOutgoingFromOtherDevice = false
-            if forwarded, let x = message.element(forName: "x", xmlns: XMPPMUCUserNamespace),
+            // `isIncoming` was resolved in processKeyData from the sender JID we decrypted
+            // against. OMEMO forces us to identify the real sender before we can read the
+            // message at all, so that resolution is already the best one available - the
+            // muc#user real JID where the room publishes it, the occupant nick where it
+            // does not - and a message we could only decrypt as our own is our own.
+            //
+            // Re-deriving it here instead, and only for carbons, meant a message relayed
+            // live from another of our devices was stored as incoming: it rendered as
+            // someone else's bubble and its avatar came from whatever the recycled cell had
+            // drawn last. The two checks below stay as belt and braces.
+            var isOutgoingFromOtherDevice = !isIncoming
+            if !isOutgoingFromOtherDevice,
+               let x = message.element(forName: "x", xmlns: XMPPMUCUserNamespace),
                let item = x.element(forName: "item"),
                let jidString = item.attribute(forName: "jid")?.stringValue,
                let jid = XMPPJID(string: jidString),
-               let origto = originalMessage.to {
-                    if (origto.bare == jid.bare && origto.resource != jid.resource) {
-                    isOutgoingFromOtherDevice = true //and added below
+               let origto = originalMessage.to ?? self.myJID {
+                if (origto.bare == jid.bare && origto.resource != jid.resource) {
+                    isOutgoingFromOtherDevice = true
                 }
-            } else if forwarded, let fromresource = message.from?.resource {
-                if let account = ChatAccountModel.getXMPPAccount(uniqueId: self.accountKey), fromresource == account.displayName { //, transaction:transaction)
+            } else if !isOutgoingFromOtherDevice, let fromresource = message.from?.resource {
+                if let account = ChatAccountModel.getXMPPAccount(uniqueId: self.accountKey), fromresource == account.displayName {
                     isOutgoingFromOtherDevice = true
                 }
             }
@@ -1389,13 +1533,52 @@ import GRDB
     
     private var publishingMyDevice:Bool = false
     private var missingKeysSet = Set<String>()
+    /// True when `body` is the placeholder a sender attaches to an OMEMO message so that
+    /// clients which cannot read the ciphertext still show something.
+    ///
+    /// Every platform writes its own wording, and each one has to be recognized here or
+    /// the repair path in handleMissingKeys never runs. The Mac body is the one that used
+    /// to be missed: this looked for the substring "encrypted message", and Dino's
+    /// "[This message is OMEMO encrypted]" does not contain it - the two words are the
+    /// other way round - so an undecryptable message from a Mac was silently discarded
+    /// with no device republish, no session reset, no local record and nothing logged.
+    ///
+    /// Keep this in step with the Mac client's FallbackShell
+    /// (plugins/omemo/src/logic/decrypt.vala), which already recognizes all three.
+    ///
+    /// Deliberately permissive: a false positive costs one device republish that is
+    /// already rate-limited to once per 7 seconds, while a false negative silently loses
+    /// a message.
+    static func isKnownOMEMOFallbackBody(_ body: String?) -> Bool {
+        guard let raw = body?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty else {
+            return false
+        }
+        
+        // What this has always matched, kept as-is so nothing that works today stops
+        // working: we send "Message cannot be decrypted." and the Android fallback
+        // ("I sent you an OMEMO encrypted message but your client doesn...") contains
+        // "encrypted message".
+        if raw.contains("encrypted message") || raw.contains("Message cannot be decrypted") {
+            return true
+        }
+        
+        // Mac (Dino), from plugins/omemo/src/logic/encrypt.vala.
+        if raw == "[This message is OMEMO encrypted]" || raw == "[OMEMO encryption failed]" {
+            return true
+        }
+        
+        // Glacier bodies that differ from ours only in case or trailing punctuation.
+        var normalized = raw.lowercased()
+        while normalized.hasSuffix(".") {
+            normalized = String(normalized.dropLast()).trimmingCharacters(in: .whitespaces)
+        }
+        return normalized == "message cannot be decrypted" || normalized == "unable to decrypt message"
+    }
+    
     func handleMissingKeys(message: XMPPMessage, forwarded: Bool, delayed: Date?, transaction:GRDBWriteTransaction) -> Bool {
         // 1 - store unencrypted notice of failed message
         // 2 - call for key exchange
-        let messageTest = message.body
-        if let messageString = message.body,
-            messageString.count > 0,
-           messageString.contains("encrypted message") || messageString.contains ("Message cannot be decrypted") {
+        if OMEMOSignalCoordinator.isKnownOMEMOFallbackBody(message.body) {
             
             //this is a self-sent message, not sure why its getting here
             //if (messageString.contains("Sent encrypted message")) {
@@ -1443,7 +1626,12 @@ import GRDB
                             self.publishingMyDevice = true
                             let devices = self.fetchDeviceIds(for: myid)
                             //print("***** Publishing my device IDs \(devices)")
-                            self.omemoModule?.publishDeviceIds(devices, elementId: nil)
+                            // Read the device ids under the transaction, publish after it
+                            // commits: publishDeviceIds dispatch_syncs onto the OMEMO queue,
+                            // which deadlocks against the writer. See afterCommit(block:).
+                            transaction.afterCommit { [weak self] in
+                                self?.omemoModule?.publishDeviceIds(devices, elementId: nil)
+                            }
                             
                             return true
                         }
@@ -1483,7 +1671,10 @@ import GRDB
                         self.publishingMyDevice = true
                         let devices = self.fetchDeviceIds(for: myid)
                         //print("***** Publishing my device IDs \(devices)")
-                        self.omemoModule?.publishDeviceIds(devices, elementId: nil)
+                        // Deferred for the same reason as the group branch above.
+                        transaction.afterCommit { [weak self] in
+                            self?.omemoModule?.publishDeviceIds(devices, elementId: nil)
+                        }
                         
                         return true
                     }
@@ -1636,7 +1827,16 @@ extension OMEMOSignalCoordinator: OMEMOModuleDelegate {
 
 // MARK: - OMEMOStorageDelegate
 extension OMEMOSignalCoordinator:OMEMOStorageDelegate {
-    
+
+    /// Our own device id, for OMEMOModule's device-list self-append check. Deliberately
+    /// reads the registration id rather than going through `fetchMyBundle()`, which can
+    /// generate 100 prekeys inside a write transaction and returns nil on any failure —
+    /// our id must not drop out of the published device list just because that was slow
+    /// or unavailable right after a re-login.
+    public func myDeviceId() -> UInt32 {
+        return self.ownDeviceId
+    }
+
     public func configure(withParent aParent: OMEMOModule, queue: DispatchQueue) -> Bool {
         self.omemoModule = aParent
         self.omemoModuleQueue = queue
@@ -1648,23 +1848,29 @@ extension OMEMOSignalCoordinator:OMEMOStorageDelegate {
         let isOurDeviceList = self.isOurJID(jid)
         
         //print("***** Storing device IDs for \(jid.bare) with \(deviceIds.count)")
+        // The waiter is resolved from the storage completion, not inline here.
+        // storeDevices writes via asyncWrite, so resolving inline let the waiter re-read
+        // the device rows BEFORE the new list committed - it would be handed back exactly
+        // the stale list it asked us to refresh.
         if (isOurDeviceList) {
-            self.omemoStorageManager.storeOurDevices(deviceIds)
+            self.omemoStorageManager.storeOurDevices(deviceIds, completion: { [weak self] in
+                self?.callAndRemoveOutstandingDeviceIdFetch(jid, success: true)
+            })
             self.workQueue.async { [weak self] in
                 self?.requestBundlesForOurDevicesIfNeeded(deviceIds: deviceIds, jid: jid)
             }
         } else {
             //print("***** storing buddy devices \(deviceIds)")
-            self.omemoStorageManager.storeBuddyDevices(deviceIds, buddyUsername: jid.bare, completion: {() -> Void in
+            self.omemoStorageManager.storeBuddyDevices(deviceIds, buddyUsername: jid.bare, completion: { [weak self] () -> Void in
 
                 //print("***** stored buddy devices \(deviceIds)")
                 //Devices updated for buddy
                 DispatchQueue.main.async {
                     NotificationCenter.default.post(name: OMEMOSignalCoordinator.DeviceListUpdateNotificationName, object: self, userInfo: ["jid":jid])
                 }
+                self?.callAndRemoveOutstandingDeviceIdFetch(jid, success: true)
             })
         }
-        callAndRemoveOutstandingDeviceIdFetch(jid, success: true)
     }
     
     public func fetchDeviceIds(for jid: XMPPJID) -> [NSNumber] {

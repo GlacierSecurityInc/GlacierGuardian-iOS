@@ -62,6 +62,19 @@ extern NSString *const NewNetworkStatusKey;
 @property (assign, nonatomic) BOOL voipNotification;
 @property (assign, nonatomic) BOOL amplifyIsConfigured;
 
+// Amplify bring-up gating. A background launch on a locked phone has neither the
+// keychain (protected data) nor an open database at didFinishLaunching, and the
+// Cognito session check needs both. See -setupAmplify.
+@property (assign, nonatomic) BOOL amplifyProtectedDataReady;
+@property (assign, nonatomic) BOOL amplifyDatabaseReady;
+@property (assign, nonatomic) BOOL amplifySessionChecked;
+@property (assign, nonatomic) BOOL reauthPromptPending;
+// YES when the deferred prompt should explain itself first (see -setExplainedReauthController).
+@property (assign, nonatomic) BOOL reauthPromptExplains;
+// YES when the deferred prompt is for a dead XMPP login and must not be dismissable.
+@property (assign, nonatomic) BOOL reauthPromptRequired;
+@property (nonatomic, strong, nullable) id protectedDataObserver;
+
 @property (assign, nonatomic) BOOL isGroupChatController;
 
 @property (assign, nonatomic) BOOL resortNeeded;

@@ -49,6 +49,10 @@ public extension GlacierXMPPRoomManager {
                     } else {
                         var thread = ChatThread(uniqueId: room.uniqueId)
                         thread.isGroupThread = true
+                        // A group we just learned about has no messages yet, so it
+                        // would sort to the bottom of the chat list by last activity
+                        // and be easy to miss. Date it from when we discovered it.
+                        thread.messageDate = Date()
                         
                         if let accountId = self.accountId, let acct = try ChatAccountModel.getXMPPAccount(uniqueId: accountId, transaction: transaction), let aid = acct.grdbRecord?.id {
                             thread.accountUniqueId = aid
@@ -124,21 +128,41 @@ public extension GlacierXMPPRoomManager {
         })
     }
     
-    @objc func addRoomsToBookmarks(_ rooms: [ChatRoomModel]) {
-        var bookmarks: [XMPPConferenceBookmark] = []
-        rooms.forEach { (room) in
-            if let bookmark = room.bookmark {
-                bookmarks.append(bookmark)
-            }
+    /// Applies bookmarks read from the server, whether from an explicit fetch or
+    /// a live PEP event.
+    ///
+    /// Additive on purpose: a bookmark can create and join a room here, and can
+    /// never remove one. `autojoin="false"` means "bookmarked, don't join", so
+    /// those items are skipped rather than acted on.
+    @objc func handleIncomingConferenceBookmarks(_ bookmarks: [XMPPConferenceBookmark]) {
+        let joinable = bookmarks.filter { $0.autoJoin }
+        let skipped = bookmarks.count - joinable.count
+        if skipped > 0 {
+            DDLogInfo("Bookmarks 2: skipped \(skipped) bookmark(s) with autojoin=false")
         }
-        bookmarksModule.fetchAndPublish(bookmarksToAdd: bookmarks, completion: { (newBookmarks, responseIq) in
-            guard let outBookmarks = newBookmarks else {
-                DDLogError("Failed to add bookmarks \(bookmarks)")
-                return
-            }
-            DDLogInfo("New bookmarks \(outBookmarks)")
-            self.handleIncomingBookmarks(outBookmarks)
-        })
+        guard !joinable.isEmpty else { return }
+        handleIncomingBookmarks(joinable)
+    }
+    
+    /// Publishes a bookmark for every local room of this account except the
+    /// given bare JIDs. Used to upstream rooms the bookmarks node doesn't have.
+    @objc(publishLocalRoomBookmarksExcluding:)
+    func publishLocalRoomBookmarks(excluding excludedJIDs: [String]) {
+        guard let accountId = self.accountId else { return }
+        let excluded = Set(excludedJIDs)
+        var bookmarks: [XMPPConferenceBookmark] = []
+        ChatRoomModel.allXMPPRooms(for: accountId).forEach { room in
+            guard let jid = room.roomJID?.bare, !excluded.contains(jid),
+                  let bookmark = room.bookmark else { return }
+            bookmarks.append(bookmark)
+        }
+        guard !bookmarks.isEmpty else { return }
+        DDLogInfo("Bookmarks 2: publishing \(bookmarks.count) local room bookmark(s)")
+        bookmarks2Module?.publishBookmarks(bookmarks)
+    }
+    
+    @objc func addRoomsToBookmarks(_ rooms: [ChatRoomModel]) {
+        publishConferenceBookmarks(rooms.compactMap { $0.bookmark })
     }
     
     @objc func removeRoomsFromBookmarks(_ rooms: [ChatRoomModel]) {
@@ -152,13 +176,11 @@ public extension GlacierXMPPRoomManager {
     }
     
     @objc func removeRooms(from bookmarks: [XMPPConferenceBookmark]) {
-        bookmarksModule.fetchAndPublish(bookmarksToAdd: [], bookmarksToRemove: bookmarks, completion: { (newBookmarks, responseIq) in
-            if let newBookmarks = newBookmarks {
-                DDLogInfo("New bookmarks \(newBookmarks)")
-            } else {
-                DDLogWarn("Failed to remove bookmarks \(bookmarks)")
-            }
-        })
+        let jids = bookmarks.compactMap { $0.jid }
+        guard !jids.isEmpty else { return }
+        // Per-item retract. XEP-0048 was a whole-document replace, so two
+        // devices writing at once silently lost one of the updates.
+        bookmarks2Module?.retractBookmarks(for: jids)
     }
     
     @objc func fetchHistory(for xmppRoom: XMPPRoom) {

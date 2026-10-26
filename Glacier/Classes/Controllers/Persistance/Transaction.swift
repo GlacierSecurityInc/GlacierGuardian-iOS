@@ -76,6 +76,32 @@ public class GRDBWriteTransaction: GRDBReadTransaction {
         asyncCompletions.append(AsyncCompletion(queue: queue, block: block))
     }
 
+    /// The queue `afterCommit` blocks run on. Serial, so paired calls keep their
+    /// order both inside one block and across blocks registered on the same
+    /// transaction (a `publishBundle` followed by a `publishDeviceIds`, say).
+    private static let afterCommitQueue = DispatchQueue(label: "com.glacier.afterCommit")
+
+    /// Run `block` after this write transaction has committed and the GRDB writer
+    /// lock has been released.
+    ///
+    /// Use this for anything that dispatches *synchronously* onto another queue.
+    /// XMPP module calls are the ones that matter here: `XMPPModule performBlock:`
+    /// is a `dispatch_sync` onto the module's own queue, so calling
+    /// `publishDeviceIds`, `fetchDeviceIds(for:)`, `publishBundle` and friends from
+    /// inside a write block parks the writer thread on the OMEMO queue. Meanwhile
+    /// the OMEMO queue's own callbacks (`processIncomingDeviceIds` ->
+    /// `fetchMyBundle`) take the writer. That is an AB-BA deadlock: both queues
+    /// wedge, the SQLite write transaction is never released, and iOS kills the app
+    /// at the next suspension with 0xDEAD10CC.
+    ///
+    /// The OMEMO side of that cycle is not removable — those callbacks genuinely
+    /// need the database — so the rule is one-directional and lives here: **never
+    /// block on another queue while holding the writer.** Defer it instead.
+    @objc
+    public func afterCommit(block: @escaping CompletionBlock) {
+        addAsyncCompletion(queue: GRDBWriteTransaction.afterCommitQueue, block: block)
+    }
+
     fileprivate typealias TransactionFinalizationBlock = (_ transaction: GRDBWriteTransaction) -> Void
     private var transactionFinalizationBlocks = [String: TransactionFinalizationBlock]()
     private var removedFinalizationKeys = Set<String>()

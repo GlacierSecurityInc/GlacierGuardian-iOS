@@ -370,28 +370,36 @@ extension MessageQueueHandler {
             //    }
             //} else {
             if success == false {
-                // plain text if OMEMO not available?
-                if message is OutgoingChatMessage {
-                    GlacierProtocolManager.sharedInstance().send(message as! OutgoingChatMessage)
+                // Never fall back to a cleartext send here. The user composed this in an
+                // OMEMO thread and the bubble still presents it as encrypted, so putting
+                // the body on the wire in the clear is a silent downgrade the user cannot
+                // see. Record the failure and leave the message unsent instead - that is
+                // also what makes the existing "Resend" context-menu action available,
+                // since it is gated on messageError being non-nil.
+                let sendError: NSError
+                if let err = error {
+                    sendError = err as NSError
+                } else {
+                    sendError = NSError.glacierError(OMEMOError.noDevicesForBuddy, userInfo: nil)
+                }
+                DDLogError("sendOMEMOMessage failed for \(message.uid): \(sendError)")
+                
+                if let failedMessage = message.copyMessage() {
+                    failedMessage.messageError = sendError
+                    if let roomMessage = failedMessage as? ChatRoomMessageModel {
+                        // needsSending rather than sent: isMessageSent must stay false or
+                        // the message reads as delivered when it never left the device.
+                        roomMessage.grdbRecord?.state = ChatRoomMessageState.needsSending.rawValue
+                    }
+                    // dateSent/readDate are deliberately left unset on direct messages for
+                    // the same reason.
+                    failedMessage.save()
                 }
                 
-                //Something went wrong getting ready to send the message
-                //Save error object to message
-                guard let message = message.copyMessage() else {
-                    return
-                }
-                    
-                if let message = message as? ChatRoomMessageModel {
-                    message.grdbRecord?.state = ChatRoomMessageState.sent.rawValue
-                    message.save()
-                } else if let message = message as? OutgoingChatMessage {
-                    message.grdbRecord?.dateSent = Date()
-                    message.grdbRecord?.readDate = Date()
-                    message.save()
-                }
-                
+                //Even though we were not succesfull in sending a message. The action needs to be removed from the queue so the next message can be handled.
+                // This must run even when copyMessage() returns nil, or every queued
+                // message behind this one stalls.
                 if let messageInfo = self.popWaitingMessage(message.uid, messageCollection: message.messageCollection) {
-                    //Even though we were not succesfull in sending a message. The action needs to be removed from the queue so the next message can be handled.
                     messageInfo.completion(true, 0.0)
                 }
             }

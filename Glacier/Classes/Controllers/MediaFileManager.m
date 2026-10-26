@@ -25,6 +25,10 @@ NSString *const kOTRRootMediaDirectory = @"media";
 /** Uses dispatch_sync. Will perform block synchronously on the internalQueue and block for result if called on another queue. */
 - (void) performSyncRead:(dispatch_block_t)block;
 
+/** Uses dispatch_barrier_sync. Drains the queue, runs the block with exclusive access,
+    and blocks for the result, unless we're already on internalQueue. */
+- (void) performBarrierSync:(dispatch_block_t)block;
+
 @end
 
 @implementation MediaFileManager
@@ -48,16 +52,31 @@ NSString *const kOTRRootMediaDirectory = @"media";
 
 - (BOOL)setupWithPath:(NSString *)path password:(NSString *)password salt:(NSString *)salt
 {
-    _ioCipher = [[IOCipher alloc] initWithPath:path password:password salt:salt];
-    if (!_ioCipher) {
-        return NO;
-    }
-    return [_ioCipher setCipherCompatibility:3];
-    //return _ioCipher != nil;
+    __block BOOL success = NO;
+    // Release the previous volume *before* opening the new one, with the queue drained.
+    // -[IOCipher dealloc] reaches sqlfs_close(), which mutates libsqlfs process-global
+    // state -- the pthread key and cached password that every sqlfs_proc_* call depends
+    // on, since IOCipher passes a NULL handle and lets libsqlfs resolve a per-thread one.
+    // Letting the assignment release the old instance ran that teardown *after* the new
+    // instance had initialized those globals, so subsequent reads and writes resolved a
+    // NULL handle and faulted. The barrier additionally keeps any in-flight operation
+    // from straddling the swap.
+    [self performBarrierSync:^{
+        self->_ioCipher = nil;
+        IOCipher *cipher = [[IOCipher alloc] initWithPath:path password:password salt:salt];
+        if (!cipher) {
+            return;
+        }
+        self->_ioCipher = cipher;
+        success = [cipher setCipherCompatibility:3];
+    }];
+    return success;
 }
 
 - (void)releaseDBConnection {
-    _ioCipher = nil;
+    [self performBarrierSync:^{
+        self->_ioCipher = nil;
+    }];
 }
 
 - (void)copyDataFromFilePath:(NSString *)filePath
@@ -193,6 +212,82 @@ completionQueue:(nullable dispatch_queue_t)completionQueue {
     return fileExists;
 }
 
+- (BOOL)exportChatItem:(ChatMediaItemModel *)mediaItem
+         buddyUniqueId:(NSString *)buddyUniqueId
+             toFileURL:(NSURL *)destinationURL
+                 error:(NSError * __autoreleasing *)error {
+    NSString *filePath = [[self class] pathForChatMediaItem:mediaItem buddyUniqueId:buddyUniqueId];
+    if (!filePath) {
+        if (error) {
+            *error = [NSError errorWithDomain:kGlacierErrorDomain code:150 userInfo:@{NSLocalizedDescriptionKey:@"Unable to create file path"}];
+        }
+        return NO;
+    }
+
+    __block BOOL success = NO;
+    __block NSError *blockError = nil;
+    // ~4 MB chunks so large videos are never fully resident in memory.
+    static const NSUInteger kChunkSize = 4 * 1024 * 1024;
+
+    [self performSyncRead:^{
+        if (![self.ioCipher fileExistsAtPath:filePath isDirectory:nil]) {
+            blockError = [NSError errorWithDomain:kGlacierErrorDomain code:151 userInfo:@{NSLocalizedDescriptionKey:@"File does not exist!"}];
+            return;
+        }
+
+        NSDictionary *fileAttributes = [self.ioCipher fileAttributesAtPath:filePath error:&blockError];
+        if (blockError) {
+            return;
+        }
+        NSUInteger totalLength = [fileAttributes[NSFileSize] unsignedIntegerValue];
+
+        // Start from an empty destination file.
+        [[NSFileManager defaultManager] removeItemAtURL:destinationURL error:nil];
+        if (![[NSFileManager defaultManager] createFileAtPath:destinationURL.path contents:nil attributes:nil]) {
+            blockError = [NSError errorWithDomain:kGlacierErrorDomain code:152 userInfo:@{NSLocalizedDescriptionKey:@"Unable to create destination file"}];
+            return;
+        }
+
+        NSFileHandle *handle = [NSFileHandle fileHandleForWritingAtPath:destinationURL.path];
+        if (!handle) {
+            blockError = [NSError errorWithDomain:kGlacierErrorDomain code:153 userInfo:@{NSLocalizedDescriptionKey:@"Unable to open destination file"}];
+            return;
+        }
+
+        NSUInteger offset = 0;
+        while (offset < totalLength) {
+            NSUInteger readLength = MIN(kChunkSize, totalLength - offset);
+            NSData *chunk = [self.ioCipher readDataFromFileAtPath:filePath length:readLength offset:offset error:&blockError];
+            if (blockError || chunk == nil) {
+                break;
+            }
+            if (chunk.length == 0) {
+                // Nothing more to read; avoid spinning if the reported size was stale.
+                break;
+            }
+            @try {
+                [handle writeData:chunk];
+            } @catch (NSException *exception) {
+                blockError = [NSError errorWithDomain:kGlacierErrorDomain code:154 userInfo:@{NSLocalizedDescriptionKey:exception.reason ?: @"Unable to write destination file"}];
+                break;
+            }
+            offset += chunk.length;
+        }
+        [handle closeFile];
+
+        if (blockError) {
+            [[NSFileManager defaultManager] removeItemAtURL:destinationURL error:nil];
+            return;
+        }
+        success = YES;
+    }];
+
+    if (!success && error) {
+        *error = blockError;
+    }
+    return success;
+}
+
 /* Internal. If "length" is set, only return the length of the data, otherwise the data ifself */
 - (nullable NSData*)dataForChatItem:(ChatMediaItemModel *)mediaItem
                       buddyUniqueId:(NSString *)buddyUniqueId
@@ -309,6 +404,18 @@ completionQueue:(nullable dispatch_queue_t)completionQueue {
         block();
     } else {
         dispatch_sync(_concurrentQueue, block);
+    }
+}
+
+/** Will drain the internalQueue and perform block with exclusive access, blocking for
+    the result, unless we're already on internalQueue */
+- (void) performBarrierSync:(dispatch_block_t)block {
+    NSParameterAssert(block != nil);
+    if (!block) { return; }
+    if (dispatch_get_specific(IsOnInternalQueueKey)) {
+        block();
+    } else {
+        dispatch_barrier_sync(_concurrentQueue, block);
     }
 }
 

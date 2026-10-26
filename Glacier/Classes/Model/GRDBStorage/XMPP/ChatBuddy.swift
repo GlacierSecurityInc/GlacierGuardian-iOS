@@ -155,12 +155,18 @@ extension ChatBuddyModel: ChatvCard {
             return vtemp
         }
         set {
+            // Through avatarData, not the record, so photoHash stays current (presence
+            // hashes are compared against it) and a stale avatar image is evicted.
             if let photo = newValue?.photo {
-                self.grdbRecord?.avatarData = photo
+                self.avatarData = photo
+            } else {
+                // Keep the stored avatar, but drop its hash. Otherwise an empty
+                // presence hash never matches it and every presence refetches.
+                self.grdbRecord?.photoHash = nil
             }
-            if let nick = newValue?.nickname {
+            if let nick = newValue?.nickname, !nick.isEmpty {
                 self.grdbRecord?.displayName = nick
-            } else if let fname = newValue?.formattedName {
+            } else if let fname = newValue?.formattedName, !fname.isEmpty {
                 self.displayName = fname
             }
         }
@@ -222,7 +228,7 @@ extension ChatBuddyModel: ChatvCard {
             return self.grdbRecord?.avatarData
         }
         set {
-            if let avatarData = self.grdbRecord?.avatarData, avatarData != newValue {
+            if self.grdbRecord?.avatarData != newValue {
                 //GlacierImageCache.shared().removeImage(self.uniqueId)
                 GlacierImages.removeImage(withIdentifier: self.uniqueId)
             }
@@ -471,6 +477,14 @@ extension ChatBuddyModel: UserInfoProfile {
         set {
             self.grdbRecord?.displayName = newValue
         }
+    }
+    
+    /// True when the stored name is only a stand-in (nothing, the bare JID, or its
+    /// user part), i.e. we have never learned a real name for this contact.
+    @objc public var hasPlaceholderDisplayName: Bool {
+        guard let grec = grdbRecord, let name = grec.displayName, !name.isEmpty else { return true }
+        let user = grec.username.components(separatedBy: "@").first ?? grec.username
+        return name == grec.username || name == user
     }
     
     public var username: String {

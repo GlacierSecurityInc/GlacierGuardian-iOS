@@ -36,6 +36,7 @@
 #import "PasswordGenerator.h"
 @import XMPPFramework;
 #import "GlacierProtocolManager.h"
+#import "GlacierICEInterfacePolicy.h"
 #import "Glacier-Swift.h"
 #import "UITableView+Glacier.h"
 @import UserNotifications;
@@ -92,7 +93,13 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     //[LogManager.shared setupLogging];
     //[self setupCrashReporting];
     
+    [GlacierICEInterfacePolicy startMonitoring];
     [SAMKeychain setAccessibilityType:kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly];
+
+    // Before anything can touch URLSession.shared: clear what older builds cached
+    // to disk, then take the disk away from the shared cache for good.
+    [GlacierCacheHygiene purgeLegacyDiskCachesIfNeeded];
+    [GlacierCacheHygiene installMemoryOnlyURLCache];
     
     UIViewController *mainRootViewController = nil;
     //[DBStorageCoordinator removeAllFiles]; //just for now to reset every time
@@ -336,11 +343,17 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     if (self.hud) {
         [self.hud removeFromSuperview];
     }
+
+    // Earliest point the account record is readable, which is what the purge needs in
+    // order to rehome a stranded organization id before deleting it (GUA 02). Idempotent,
+    // and a no-op on installs that never wrote those keys.
+    [GlacierAccountMetadataMigration purgeLegacyAppGroupMetadata];
     
     [self setDomainIfAvailable];
     //[self checkConnectionOrTryLogin];
     [_conversationViewController handleDatabaseInitialization];
     [_conversationViewController doSecurityCheck:NO];
+    [self amplifyDatabaseDidBecomeReady];
     [[TwilioBackendManager sharedMgr] queryForNumbers];
     [self checkConnectionOrTryLogin];
 }
@@ -711,6 +724,8 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     // remove the privacy screen
     [self removeSplashView];
     
+    [self presentPendingReauthPromptIfNeeded];
+    
     [GlacierAppDelegate setLastInteractionDate:NSDate.date];
     [self batteryStateDidChange:nil];
     // DDLogInfo(@"*****DBG Application became active");
@@ -800,18 +815,20 @@ NSString *const NewNetworkStatusKey = @"NewNetworkStatusKey";
     return NO;
 }
 
+// Guardian claims one URL scheme, glaciermessenger, and does not act on it here: it exists
+// for the Cognito hosted-UI redirect (amplifyconfiguration.json), which AWSCognitoAuthPlugin
+// takes through ASWebAuthenticationSession and never routes via this method.
+//
+// The xmpp scheme used to be claimed too, left over from ChatSecure. Nothing ever consumed
+// it - this handler parsed the URI and returned a BOOL that no caller read - so it bought us
+// nothing while letting any web page, message, or QR code hand an arbitrary URI to
+// XMPPURI's parser. A crafted xmpp:// link terminated the app that way (GUA 03). The scheme
+// is no longer in CFBundleURLTypes, so iOS will not route those links to us at all.
+//
+// Kept as an explicit no-op because SceneDelegate forwards here: a future deep link belongs
+// in this method, behind a check on its own scheme.
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options {
-    if ([url.scheme isEqualToString:@"xmpp"]) {
-        XMPPURI *xmppURI = [[XMPPURI alloc] initWithURL:url];
-        XMPPJID *jid = xmppURI.jid;
-        if (jid) {
-            return YES;
-        }
-    }
     return NO;
-    // I think we only want this if no user exists or under certain conditions
-    // maybe check what is in options?
-    //return [[AWSCognitoAuth defaultCognitoAuth] application:app openURL:url options:options];
 }
 
 - (void) showSubscriptionRequestForBuddy:(NSDictionary*)userInfo {

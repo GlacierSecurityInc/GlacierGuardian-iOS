@@ -134,15 +134,19 @@
     NSString *urlstr = media.images.fixedWidth.gifUrl;
     if (urlstr != nil && [self.delegate respondsToSelector:@selector(attachmentPicker:gotGif:withInfo:)]) {
         NSURL *url = [NSURL URLWithString:urlstr];
-        NSData *imageData = [NSData dataWithContentsOfURL:url];
-        UIImage* image = [GifHelper getGifImage:imageData];
-        
-        NSMutableDictionary *infodict = [[NSMutableDictionary alloc]initWithCapacity:1];
-        [infodict setObject:[NSNumber numberWithBool:NO] forKey:@"Multiselect"];
-        
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.delegate attachmentPicker:self gotGif:image withInfo:infodict];
-        });
+        NSURLSessionDataTask *task = [GlacierMediaSession.session dataTaskWithURL:url
+            completionHandler:^(NSData *imageData, NSURLResponse *response, NSError *error) {
+                if (error != nil || imageData == nil) { return; }
+                UIImage* image = [GifHelper getGifImage:imageData];
+
+                NSMutableDictionary *infodict = [[NSMutableDictionary alloc]initWithCapacity:1];
+                [infodict setObject:[NSNumber numberWithBool:NO] forKey:@"Multiselect"];
+
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self.delegate attachmentPicker:self gotGif:image withInfo:infodict];
+                });
+            }];
+        [task resume];
     }
     [giphyViewController dismissViewControllerAnimated:YES completion:nil];
 }

@@ -839,6 +839,9 @@ static NSString *const kSettingsCellIdentifier = @"kSettingsCellIdentifier";
 }
 
 - (void)attachmentPicker:(AttachmentPicker *)attachmentPicker gotVideoURL:(NSURL *)videoURL {
+    // The avatar picker only wants images, but AttachmentPicker has already
+    // staged a copy in tmp by the time we are called.
+    [GlacierCacheHygiene removeStagedTemporaryFileAt:videoURL];
     self.avatarPicker = nil;
 }
 

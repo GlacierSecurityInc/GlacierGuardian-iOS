@@ -53,15 +53,41 @@
 @property (assign, nonatomic) BOOL enablingPush;
 @property (assign, nonatomic) BOOL retriedRoster;
 @property (assign, nonatomic) BOOL disconnectedBuddies;
-/// YES when the most recent disconnect had no error (our connectWithTimeout timer fired).
-/// Used by xmppReconnect:shouldAttemptAutoReconnect: to suppress XMPPReconnect's
-/// immediate-retry when a clean timeout already fired; the status timer handles that case.
-/// NO (default) lets XMPPReconnect reconnect fast after real network-error disconnects.
-@property (assign, nonatomic) BOOL lastDisconnectWasClean;
+/// YES only while a disconnect *we asked for* is in flight — a deliberate teardown
+/// (backgrounding, logout, proxy detected) or a deliberate drop that some other retry
+/// owner will immediately follow up on (callConnect, registration, domain change).
+///
+/// Set at the call site immediately BEFORE -[XMPPStream disconnect], and cleared in
+/// xmppStreamDidDisconnect:withError: once that disconnect has been delivered. Setting it
+/// at the call site rather than in the delegate is what makes it correct for
+/// xmppReconnect:shouldAttemptAutoReconnect:, which XMPPReconnect calls before our own
+/// disconnect handler runs (see that method).
+///
+/// It must never outlive the disconnect it describes: a nil-error disconnect we did NOT
+/// ask for (server sent </stream>, connect timer fired) has to stay eligible for
+/// XMPPReconnect, or nothing recovers the stream until the user opens the app by hand.
+@property (assign, nonatomic) BOOL intentionalDisconnect;
 /// Guards against launching two VPN warm-up probes concurrently.
 @property (assign, nonatomic) BOOL vpnProbeInFlight;
 
+/// Incoming-call priority connect: when YES, a bounded retry loop is forcing XMPP
+/// up for a ringing call (see -ensureConnectedForIncomingCall). It drives reconnection
+/// ONLY via connectUserInitiated: (re-entrancy guarded), and owns reconnection outright
+/// for the duration of the window — xmppReconnect:shouldAttemptAutoReconnect: defers to
+/// it while this is YES, so the two can never drive the stream at once.
+///
+/// The window stays armed until its deadline. It is deliberately NOT cleared the moment
+/// the stream authenticates: authentication is not the same as a usable stream, and a
+/// socket that dies seconds later must still be recovered while the phone is ringing.
+@property (atomic) BOOL callConnectActive;
+@property (atomic, strong) NSDate *callConnectDeadline;
+
 @property (strong, nonatomic) NSMutableSet *teams;
+
+// Incoming-call priority connect (defined below, called before their definitions).
+- (void)callConnectTick;
+- (void)scheduleCallConnectTickAfter:(NSTimeInterval)delay;
+- (void)stopCallConnect;
 @property (strong, nonatomic, nullable) NSDate *lastConnected;
 
 @property (strong, nonatomic) MessageQueueHandler *messageQueueHandler;
@@ -70,6 +96,8 @@
 
 NSTimeInterval const kChatStatePausedTimeout   = 5;
 NSTimeInterval const kChatStateInactiveTimeout = 120;
+/// Minimum spacing between /glacier-users credential refreshes while SASL keeps failing.
+static NSTimeInterval const kCredentialRefreshInterval = 60;
 
 
 /** For XEP-0352 CSI Client State Indication */
@@ -153,8 +181,8 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
 	
 	_xmppReconnect = [[XMPPReconnect alloc] init];
     // XMPPReconnect auto-reconnect is controlled per-disconnect via the delegate
-    // (xmppReconnect:shouldAttemptAutoReconnect:) based on _lastDisconnectWasClean.
-    // See xmppStreamDidDisconnect:withError: for the flag that drives this.
+    // (xmppReconnect:shouldAttemptAutoReconnect:) based on _intentionalDisconnect.
+    // See that property's declaration for the flag that drives this.
 
 	// Setup roster
 	// 
@@ -474,10 +502,38 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
 - (void)authenticateWithStream:(XMPPStream *)stream {
     NSError * error = nil;
     BOOL status = YES;
-    if (self.chatAccount.password == nil) {
-        //[GlacierLog glogWithLogMsg:@"authenticateWithStream nil password" detail:self.chatAccount.uniqueId];
+
+    // ejabberd's JWT auth rides on SASL PLAIN: the JID user goes in the username
+    // field and the signed JWT in the password field (there is no token-specific
+    // SASL mechanism). When we have a token, authenticate with PLAIN explicitly so
+    // we never fall into SCRAM/DIGEST, which cannot validate a JWT. Otherwise use
+    // the normal password path (glacierpwd), which stays intact for backward compat.
+    NSString *accessToken = self.chatAccount.accessToken;
+    BOOL useToken = accessToken.length > 0 && !self.skipTokenAuth && [stream supportsPlainAuthentication];
+    self.lastAuthUsedToken = useToken;
+    if (useToken) {
+        XMPPPlainAuthentication *tokenAuth = [[XMPPPlainAuthentication alloc] initWithStream:stream password:accessToken];
+        status = [stream authenticate:tokenAuth error:&error];
+    } else {
+        if (accessToken.length > 0 && self.skipTokenAuth) {
+            DDLogWarn(@"%@: server rejected a fresh access token — using password auth", THIS_FILE);
+        } else if (accessToken.length > 0) {
+            DDLogWarn(@"%@: have an access token but the stream does not offer PLAIN — falling back to password auth", THIS_FILE);
+        } else {
+            DDLogInfo(@"%@: no access token on the account — using password auth", THIS_FILE);
+        }
+        if (self.chatAccount.password == nil) {
+            //[GlacierLog glogWithLogMsg:@"authenticateWithStream nil password" detail:self.chatAccount.uniqueId];
+        }
+        status = [stream authenticateWithPassword:self.chatAccount.password error:&error];
     }
-    status = [stream authenticateWithPassword:self.chatAccount.password error:&error];
+
+    // -authenticate: can refuse before anything reaches the wire (no stream, wrong state,
+    // mechanism unavailable). That never produced didNotAuthenticate, so the failure used
+    // to be completely silent.
+    if (!status) {
+        DDLogError(@"%@: authenticate refused locally: %@", THIS_FILE, error);
+    }
 }
 
 ///////////////////////////////
@@ -494,8 +550,25 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
             @"urn:xmpp:jingle:apps:rtp:audio",
             @"urn:xmpp:jingle:apps:rtp:video",
             @"urn:xmpp:jingle:transports:ice-udp:1",
-            @"urn:xmpp:jingle-message:0"
+            @"urn:xmpp:jingle-message:0",
+            // Asks the server to push XEP-0402 bookmark updates to us over PEP,
+            // so a group created on another device shows up without a reconnect.
+            GlacierBookmarks2NotifyFeature
     ];
+}
+
+// XEP-0030 requires a disco#info result to carry at least one <identity/>, but
+// XMPPFramework only ever emits the features above. Strict clients discard an
+// identity-less reply outright, so they conclude we support no Jingle and never
+// signal their outgoing calls to us at all. Seen with the Dino-based Guardian Mac
+// app, whose InfoResult.create_from_iq returns null when no <identity/> is present.
+- (void)xmppCapabilities:(XMPPCapabilities *)sender collectingMyCapabilities:(NSXMLElement *)query
+{
+    NSXMLElement *identity = [NSXMLElement elementWithName:@"identity"];
+    [identity addAttributeWithName:@"category" stringValue:@"client"];
+    [identity addAttributeWithName:@"type" stringValue:@"phone"];
+    [identity addAttributeWithName:@"name" stringValue:@"Glacier"];
+    [query addChild:identity];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -571,11 +644,11 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
     NSLog(@"***** startConnection");
 
     [self setLoginStatus:GlacierLoginStatusConnecting];
-    self.lastConnectAttempt = [NSDate date];
 
     XMPPJID *jid = [XMPPJID jidWithString:self.chatAccount.username resource:self.chatAccount.resource];
     
     if (![jid.domain isEqualToString:self.xmppStream.myJID.domain]) {
+        self.intentionalDisconnect = YES;  // we drive the reconnect immediately below
         [self.xmppStream disconnect];
     }
     self.xmppStream.myJID = jid;
@@ -625,12 +698,20 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
     // Worst case: 4s probe timeout + 8s XMPP timeout = 12s, same as the old VPN-specific path.
     if (vpnActive && domainString.length > 0) {
         if (!self.vpnProbeInFlight) {
+            // Stamped here rather than at the top of the method so that a call which
+            // does no work — a re-authenticate, or a duplicate arriving while a probe
+            // is already in flight — cannot buy another full suppression window from
+            // xmppReconnect:shouldAttemptAutoReconnect:. Stamped at probe start, not in
+            // the probe completion, so the window covers probe + connect (up to 12s):
+            // vpnProbeInFlight only covers the probe's own 4s.
+            self.lastConnectAttempt = [NSDate date];
             [self warmVPNTunnelWithHostname:domainString thenConnectWithTimeout:connectTimeout];
         }
         // If probe is already in flight it will call connectWithTimeout when done.
         return YES;
     }
 
+    self.lastConnectAttempt = [NSDate date];
     if (![self.xmppStream connectWithTimeout:connectTimeout error:&error])
 	{
 		[self failedToConnect:error];
@@ -660,6 +741,7 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
     self.lastDisconnect = nowdate;
     
     //[self goOffline]; //tells the server no longer interested in receiving stanzas
+    self.intentionalDisconnect = YES;
     [self.xmppStream disconnect];
     
     //call method on account that does async stuff and handles completion block
@@ -711,6 +793,7 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
 {
     self.isRegisteringNewAccount = YES;
     if (self.xmppStream.isConnected) {
+        self.intentionalDisconnect = YES;
         [self.xmppStream disconnect];
         return NO;
     }
@@ -997,7 +1080,11 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
 {
 	DDLogVerbose(@"%@", THIS_METHOD);
     
-    settings[GCDAsyncSocketSSLProtocolVersionMin] = @(kTLSProtocol1);
+    // TLS 1.2 floor. Our servers have rejected 1.0 and 1.1 for some time, so this
+    // costs nothing against Glacier infrastructure; it closes the client half of
+    // the gap, where a downgrade was still on the table for user-managed servers.
+    // No Max is set, so 1.3 stays available.
+    settings[GCDAsyncSocketSSLProtocolVersionMin] = @(kTLSProtocol12);
     settings[GCDAsyncSocketSSLCipherSuites] = [GlacierUtilities cipherSuites];
     settings[GCDAsyncSocketManuallyEvaluateTrust] = @(YES);
     
@@ -1053,14 +1140,37 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
     
     self.loginStatus = GlacierLoginStatusDisconnected;
 
+    // Consume the intent flag: it describes THIS disconnect and must not survive it.
+    // XMPPReconnect has already read it (it is a delegate ahead of us on the stream), so
+    // clearing here is safe and guarantees the next unintended drop is not judged by a
+    // teardown that happened minutes or hours ago.
+    BOOL wasIntentional = self.intentionalDisconnect;
+    self.intentionalDisconnect = NO;
+
+    // This disconnect is the terminal event of whatever attempt was running, so the
+    // suppression window in xmppReconnect:shouldAttemptAutoReconnect: has nothing left to
+    // protect — release it rather than making XMPPReconnect wait out the remainder.
+    // Without this, an attempt that takes 12s (4s VPN probe + 8s connect) is followed 2s
+    // later by XMPPReconnect's reconnectDelay tick, which the 15s guard refuses at age 14,
+    // costing a full 20s reconnectTimerInterval cycle before the next opportunity.
+    //
+    // Held back in two cases. A probe in flight means a connect is still queued behind it
+    // (the stream is disconnected but not idle), which is the one state the time guard was
+    // legitimately covering. And a disconnect we asked for is not a failed attempt — the
+    // framework already suppresses reconnect for those (XMPPReconnect's
+    // xmppStreamWasToldToDisconnect: clears shouldReconnect), but there is no reason to
+    // widen the gate on a teardown either.
+    if (!wasIntentional && !self.vpnProbeInFlight) {
+        self.lastConnectAttempt = nil;
+    }
+
     if (error)
     {
         NSLog(@"***** xmppStreamDidDisconnect error: %@ %@", self.chatAccount.bareJID.domain, error);
-        self.lastDisconnectWasClean = NO;  // real error → XMPPReconnect may fire fast
         [self failedToConnect:error];
     } else {
-        NSLog(@"***** xmppStreamDidDisconnect (clean): %@", self.chatAccount.bareJID.domain);
-        self.lastDisconnectWasClean = YES; // our timeout fired → status timer handles retry
+        NSLog(@"***** xmppStreamDidDisconnect (clean, intentional=%@): %@",
+              wasIntentional ? @"YES" : @"NO", self.chatAccount.bareJID.domain);
     }
 
     if (!self.disconnectedBuddies) {
@@ -1073,27 +1183,64 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
 ///
 /// Controls whether XMPPReconnect fires an immediate no-timeout reconnect.
 ///
-/// XMPPReconnect is activated on the stream (line 222) before GlacierXMPPManager adds
-/// itself as a stream delegate (line 233), so XMPPReconnect's xmppStreamDidDisconnect:
-/// fires FIRST and calls this delegate method before our handler has set lastDisconnectWasClean.
-/// The flag is therefore unreliable as a race guard.
+/// Two independent filters, because there are two ways a reconnect here would be wrong:
 ///
-/// Instead we use the lastConnectAttempt timestamp: a connectWithTimeout:12s always fires
-/// within 12s of startConnection, so if we're called less than 15s after the last attempt
-/// we know we're in the timeout-retry loop — the status timer owns those retries.
-/// For mid-session drops (network switch, RST) lastConnectAttempt is minutes old and
-/// lastDisconnectWasClean (set by our handler before XMPPReconnect calls its own next
-/// shouldAttemptAutoReconnect: in a future cycle) provides the secondary filter.
+/// 1. An attempt we own is still in flight. XMPPReconnect only asks when the stream reads
+///    as disconnected, so it cannot race a live XMPPStream connect; the only way an
+///    attempt of ours can be pending while the stream looks idle is a VPN warm-up probe
+///    with the connect queued behind it, which vpnProbeInFlight names directly.
+///
+///    lastConnectAttempt backs that up on a timer, but it is a backstop, not the primary
+///    signal: it is cleared in xmppStreamDidDisconnect:withError: as soon as an attempt
+///    ends. It used to be the only filter, and as a pure timer it was wrong in a way that
+///    cost real reconnect opportunities — XMPPReconnect's reconnectDelay tick lands 2s
+///    after the disconnect, while an attempt through the probe takes 12s (4s probe + 8s
+///    connect), so the first and fastest retry after every failed attempt was refused at
+///    age 14 and the next one did not come until a full 20s reconnectTimerInterval later.
+///
+/// 2. We asked for the disconnect. intentionalDisconnect is set at the call site *before*
+///    -[XMPPStream disconnect], which matters: XMPPReconnect is activated on the stream
+///    (line 222) before GlacierXMPPManager adds itself as a stream delegate (line 233), so
+///    XMPPReconnect's xmppStreamDidDisconnect: — and therefore this method — runs before
+///    our own disconnect handler. A flag set reactively in that handler would always be one
+///    disconnect stale here; a flag set at the call site is current.
+///
+/// Everything else — a graceful </stream> from the server, a silent stream death — is an
+/// unintended drop and must stay eligible, or the app can sit offline indefinitely with no
+/// retry owner at all. When we are backgrounded and not in a call, XMPPReconnect is the
+/// only mechanism left: the foreground status timer is not running and callConnect only
+/// exists for the duration of an incoming call.
 - (BOOL)xmppReconnect:(XMPPReconnect *)sender shouldAttemptAutoReconnect:(SCNetworkConnectionFlags)connectionFlags {
+    // An armed incoming-call window owns reconnection outright. Previously this was left
+    // to the lastConnectAttempt guard below, which only holds while that loop is actively
+    // connecting — now that the window also stays armed over a healthy stream, say so
+    // explicitly rather than relying on a timestamp that goes stale while it idles.
+    if (self.callConnectActive) {
+        NSLog(@"***** xmppReconnect:shouldAttemptAutoReconnect: NO (callConnect window owns reconnect)");
+        return NO;
+    }
+    // A probe in flight means startConnection has committed to a connect that has not been
+    // issued yet: the stream reads as disconnected (which is the only reason XMPPReconnect
+    // is asking at all — see maybeAttemptReconnectWithReachabilityFlags:) but it is not
+    // idle. This is the one state the age guard below was genuinely protecting, so say it
+    // outright instead of inferring it from a timestamp.
+    if (self.vpnProbeInFlight) {
+        NSLog(@"***** xmppReconnect:shouldAttemptAutoReconnect: NO (VPN probe in flight, connect pending)");
+        return NO;
+    }
+    // Backstop only. lastConnectAttempt is cleared in xmppStreamDidDisconnect:withError:
+    // once an attempt has actually ended, so in the normal case this window is already
+    // open by the time XMPPReconnect asks. It still holds for a path that leaves an
+    // attempt running with no terminal event to release it.
     NSTimeInterval age = [[NSDate date] timeIntervalSinceDate:self.lastConnectAttempt ?: [NSDate distantPast]];
     if (age < 15.0) {
         NSLog(@"***** xmppReconnect:shouldAttemptAutoReconnect: NO (connect attempt was %.0fs ago, in retry loop)", age);
         return NO;
     }
-    BOOL allow = !self.lastDisconnectWasClean;
-    NSLog(@"***** xmppReconnect:shouldAttemptAutoReconnect: %@ (lastDisconnectWasClean=%@, %.0fs since last attempt)",
+    BOOL allow = !self.intentionalDisconnect;
+    NSLog(@"***** xmppReconnect:shouldAttemptAutoReconnect: %@ (intentionalDisconnect=%@, %.0fs since last attempt)",
           allow ? @"YES" : @"NO",
-          self.lastDisconnectWasClean ? @"YES" : @"NO",
+          self.intentionalDisconnect ? @"YES" : @"NO",
           age);
     return allow;
 }
@@ -1110,7 +1257,13 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
     }*/
     
 	DDLogVerbose(@"%@", THIS_METHOD);
+    // Deliberately does NOT stop an in-flight incoming-call connect window. Authenticating
+    // is not the same as having a stream that survives the next write: we have seen the
+    // server close the socket 0.4s after a successful SASL, and with the window already
+    // torn down nothing retried for the next 7 seconds while the phone rang. The window
+    // now runs to its own deadline and callConnectTick idles while the stream is healthy.
     self.disconnectedBuddies = NO;
+    self.credentialRefreshDate = nil;
 
     NSArray *ackedStanzaIds = nil;
     NSXMLElement *resumeResponse = nil;
@@ -1179,6 +1332,31 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
     //}
 }
 
+- (void)awaitCognitoSignIn
+{
+    if (self.awaitingCognitoSignIn) { return; }
+    self.awaitingCognitoSignIn = YES;
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(cognitoCredentialsUpdated:)
+                                                 name:@"GlacierXMPPCredentialsUpdated"
+                                               object:nil];
+}
+
+- (void)cognitoCredentialsUpdated:(NSNotification *)notification
+{
+    ChatAccountModel *account = notification.object;
+    if (!self.awaitingCognitoSignIn || ![account.uniqueId isEqualToString:self.chatAccount.uniqueId]) {
+        return;
+    }
+    self.awaitingCognitoSignIn = NO;
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"GlacierXMPPCredentialsUpdated" object:nil];
+    DDLogInfo(@"%@: sign-in delivered new XMPP credentials — reconnecting", THIS_FILE);
+    // A fresh failure run: let the next rejection (if any) refresh straight away.
+    self.credentialRefreshDate = nil;
+    self.skipTokenAuth = NO;
+    [self connectUserInitiated:YES];
+}
+
 - (void)xmppStream:(XMPPStream *)sender didNotAuthenticate:(NSXMLElement *)error
 {
     /*if ([GlacierAppDelegate isTestFlight]) {
@@ -1190,7 +1368,72 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
         [SentrySDK addBreadcrumb:crumb];
     }*/
 	//DDLogWarn(@"%@: %@ %@", THIS_FILE, THIS_METHOD, error);
+    // The server's own SASL failure element says *why* it rejected us (not-authorized vs
+    // temporary-auth-failure vs malformed-request), which is the difference between a
+    // badly formatted token and a correctly formatted one the server won't accept.
+    BOOL usedToken = self.lastAuthUsedToken;
+    DDLogError(@"%@: SASL rejected (token path: %@): %@",
+               THIS_FILE,
+               usedToken ? @"YES" : @"NO",
+               error);
     NSError *err = [GlacierXMPPError errorForXMLElement:error];
+
+    // A refresh is already fetching new credentials and will reconnect when it lands;
+    // this rejection came from a retry that raced it.
+    if (self.credentialRefreshInFlight) {
+        [self disconnect];
+        return;
+    }
+
+    // We refreshed in this failure run, the token path got the fresh token, and it was
+    // still refused: the server is not taking JWTs (e.g. rolled back to passwords while
+    // the Console still issues tokens). Try the password before giving up. XMPPStream
+    // reverts to CONNECTED after a SASL failure, so retry on the same stream.
+    if (usedToken && self.credentialRefreshDate != nil && self.chatAccount.password.length > 0) {
+        DDLogWarn(@"%@: fresh token rejected — retrying with password auth", THIS_FILE);
+        self.skipTokenAuth = YES;
+        [self authenticateWithStream:sender];
+        return;
+    }
+
+    // Any rejection, on either path, re-reads credentials from /glacier-users and
+    // reconnects. That covers an expired JWT, a server switched to JWT-only while we
+    // were running on the password (the token used to reach the account only at cold
+    // launch, so this needed a swipe-kill), and a token the Console has withdrawn.
+    // Throttled rather than one-shot so a failure run outlasting a server/Console
+    // rollout still picks the new credentials up without a relaunch.
+    NSDate *lastRefresh = self.credentialRefreshDate;
+    if (lastRefresh == nil || -[lastRefresh timeIntervalSinceNow] >= kCredentialRefreshInterval) {
+        self.credentialRefreshDate = [NSDate date];
+        self.credentialRefreshInFlight = YES;
+        DDLogWarn(@"%@: auth rejected — refreshing XMPP credentials", THIS_FILE);
+        [self disconnect];
+        __weak typeof(self) weakSelf = self;
+        [[AWSAcctManager sharedMgr] refreshXMPPCredentialsFor:self.chatAccount completion:^(GlacierCredentialRefreshResult result) {
+            __strong typeof(weakSelf) strongSelf = weakSelf;
+            if (!strongSelf) { return; }
+            strongSelf.credentialRefreshInFlight = NO;
+            if (result == GlacierCredentialRefreshResultRefreshed) {
+                DDLogInfo(@"%@: credential refresh succeeded — reconnecting", THIS_FILE);
+                strongSelf.skipTokenAuth = NO;
+                [strongSelf startConnection];
+            } else if (result == GlacierCredentialRefreshResultSignedOut) {
+                // No Cognito session means no xmpp_token, and a JWT-only server takes
+                // nothing else, so retrying cannot help and a "connection error" alert
+                // only hides the real problem. Ask for the password instead, in a prompt
+                // that cannot be swiped away, and reconnect once sign-in has delivered
+                // a token.
+                DDLogError(@"%@: credential refresh found no Cognito session — requiring sign-in", THIS_FILE);
+                [strongSelf awaitCognitoSignIn];
+                [[GlacierAppDelegate appDelegate] requireReauthForXMPP];
+            } else {
+                DDLogError(@"%@: credential refresh failed — surfacing auth error", THIS_FILE);
+                [strongSelf failedToConnect:err];
+            }
+        }];
+        return;
+    }
+
     [self failedToConnect:err];
     [self disconnect];
 }
@@ -1278,6 +1521,7 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
     if (self.loginStatus == GlacierLoginStatusDisconnecting) {
         [self sendAcknowledgments]; // flush acks before dropping connection
         //[self.xmppStream disconnectAfterSending];
+        self.intentionalDisconnect = YES;
         [self.xmppStream disconnect];
     }
 }
@@ -1452,14 +1696,21 @@ typedef NS_ENUM(NSInteger, XMPPClientState) {
         //if (!buddy) { return; }
             
         NSString *nameStr = [item attributeStringValueForName:@"name"];
-        if (![nameStr isEqualToString:vCard.nickname]) {
+        // The contact's own name (vCard / presence) wins; the roster name only
+        // fills in until we know one. A roster item with no name must not blank
+        // the name either ([nil isEqualToString:] is NO, which would pass).
+        if (nameStr.length && buddy.hasPlaceholderDisplayName &&
+            ![nameStr isEqualToString:vCard.nickname]) {
             vCard.nickname = nameStr;
             buddy.displayName = nameStr;
+            // Only write when the name changed. The vCard here came from our own storage,
+            // so otherwise this rewrote the unchanged record (avatar blob included) and
+            // touched the thread for every contact on every roster fetch.
+            [buddy updateVCard:vCard];
         }
             
         //buddy.vCardTemp = vCard;
         //[buddy saveThread];
-        [buddy updateVCard:vCard];
     }];
 }
 
@@ -1662,10 +1913,116 @@ failedToDisablePushWithErrorIq:(nullable XMPPIQ*)errorIq
     if (([self.xmppStream isConnected] && [self.xmppStream isAuthenticated]) || [self.xmppStream isConnecting] || [self.xmppStream isAuthenticating]) {
         return NO;
     }
-    
+
     //NSLog(@"***** connectFromBackground to get latest data on com.apple.pushLaunch");
     [self startConnection];
     return YES;
+}
+
+#pragma mark - Incoming-call priority connect
+
+// Force XMPP up NOW for a ringing incoming call, with a bounded retry, because the
+// foreground ChatViewController status timer (the normal retry owner) is not running
+// when we are woken by a VoIP push. This is the missing "retry owner" for the woken
+// path — the reason a call arriving right after a push could not reconnect (0720c).
+//
+// Design constraints (see xmppReconnect:shouldAttemptAutoReconnect:):
+//   * Reconnects ONLY through connectUserInitiated:, which is re-entrancy guarded
+//     (isConnecting/isAuthenticating -> no-op), so it cannot double-drive with the
+//     foreground status timer.
+//   * Owns reconnection outright while armed: shouldAttemptAutoReconnect: returns NO
+//     for as long as callConnectActive, so XMPPReconnect cannot drive the stream in
+//     parallel. That fencing used to fall out of lastConnectAttempt being refreshed by
+//     each startConnection, which no longer holds now that the window idles over a
+//     healthy stream — so it is stated explicitly there instead.
+//   * Ends only at its deadline, then hands reconnection back to XMPPReconnect.
+//
+// Call only when woken for an incoming call: it forces a fresh connection (a
+// VoIP-push wake means we were suspended and the socket is very likely half-open —
+// reports connected but is dead on the next write; the 0720c EPIPE). There is no
+// XMPP ping in this codebase to probe liveness, so we cannot trust isConnected/
+// isAuthenticated and must rebuild. The drop below sets intentionalDisconnect so
+// XMPPReconnect stays out of the way while this loop owns the retry.
+- (void)ensureConnectedForIncomingCall
+{
+    dispatch_async(self.workQueue, ^{
+        // Refresh the window on every call push so repeated pushes extend, not restart.
+        self.callConnectDeadline = [NSDate dateWithTimeIntervalSinceNow:30.0];
+        if (self.callConnectActive) { return; }
+        self.callConnectActive = YES;
+        NSLog(@"***** callConnect: begin (30s window)");
+
+        // Clear any stale/half-open stream so a stale isAuthenticated==YES cannot fool
+        // the tick into thinking we are connected, and so the reconnect does not race a
+        // dying socket's teardown.
+        self.intentionalDisconnect = YES;  // callConnect owns the retry for this drop
+        [self.xmppStream disconnect];
+        // Give the teardown a moment to settle before the first reconnect so
+        // startConnection's "if (!isDisconnected) authenticate" branch is not tripped.
+        [self scheduleCallConnectTickAfter:1.0];
+    });
+}
+
+- (void)scheduleCallConnectTickAfter:(NSTimeInterval)delay
+{
+    if (!self.callConnectActive) { return; }
+    __weak typeof(self) weakSelf = self;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), self.workQueue, ^{
+        [weakSelf callConnectTick];
+    });
+}
+
+- (void)callConnectTick
+{
+    // Always runs on self.workQueue.
+    if (!self.callConnectActive) { return; }
+
+    // The deadline is the only thing that ends the window. Checking it first means a
+    // healthy stream still gets released on time rather than holding the window open.
+    if ([self.callConnectDeadline timeIntervalSinceNow] <= 0) {
+        NSLog(@"***** callConnect: deadline reached, stopping (authenticated=%@)",
+              [self.xmppStream isAuthenticated] ? @"YES" : @"NO");
+        [self stopCallConnect];
+        return;
+    }
+
+    // Healthy: nothing to do, but stay armed. If this stream dies before the deadline a
+    // later tick reconnects it — which is the whole point of not stopping at authenticate.
+    if ([self.xmppStream isAuthenticated]) {
+        [self scheduleCallConnectTickAfter:3.0];
+        return;
+    }
+
+    NSLog(@"***** callConnect: stream not authenticated with %.0fs left in window",
+          [self.callConnectDeadline timeIntervalSinceNow]);
+
+    // Only kick when idle: connectUserInitiated:/startConnection guard against
+    // re-entrancy and duplicate VPN probes, but re-kicking mid-attempt would reset
+    // lastConnectAttempt needlessly.
+    if (![self.xmppStream isConnecting] && ![self.xmppStream isAuthenticating] && !self.vpnProbeInFlight) {
+        if ([self.xmppStream isConnected]) {
+            // Connected-but-unauthenticated (stale/stuck) — drop it now and reconnect on
+            // the next tick, once the disconnect has settled (avoids the teardown race).
+            NSLog(@"***** callConnect: dropping stale connected stream");
+            self.intentionalDisconnect = YES;  // reconnected on the next tick
+            [self.xmppStream disconnect];
+        } else {
+            NSLog(@"***** callConnect: attempting connect");
+            [self connectUserInitiated:YES];
+        }
+    }
+
+    [self scheduleCallConnectTickAfter:3.0];
+}
+
+- (void)stopCallConnect
+{
+    if (!self.callConnectActive) { return; }
+    self.callConnectActive = NO;
+    self.callConnectDeadline = nil;
+    // From here XMPPReconnect is eligible again, so an unintended drop after the window
+    // closes still has an owner.
+    NSLog(@"***** callConnect: stopped (handing reconnect back to XMPPReconnect)");
 }
 
 - (void)sendChatStateMessage:(XMPPMessage *)xMessage {

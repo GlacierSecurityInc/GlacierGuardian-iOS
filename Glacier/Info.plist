@@ -32,7 +32,6 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>glaciermessenger</string>
-				<string>xmpp</string>
 			</array>
 		</dict>
 	</array>
@@ -116,10 +115,6 @@
 	<string>Allows bluetooth usage with voice and video calls</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>Allows bluetooth usage with voice and video calls</string>
-	<key>NSBonjourServices</key>
-	<array>
-		<string>_glacier._tcp</string>
-	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Allows user to make video calls as well as take and send photos.</string>
 	<key>NSContactsUsageDescription</key>
@@ -135,7 +130,7 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Allows user to make Guardian Chat calls and send voice messages.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Access to the photo library is required for option to save incoming photos.</string>
+	<string>Access to the photo library is required for option to save incoming photos and videos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Access to the photo library is required to send your existing photos.</string>
 	<key>UIAppFonts</key>

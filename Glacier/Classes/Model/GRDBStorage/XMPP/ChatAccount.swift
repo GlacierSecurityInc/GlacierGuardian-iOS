@@ -9,6 +9,7 @@
 import Foundation
 import GRDB
 import SAMKeychain
+import Security
 import CryptoKit
 import CocoaLumberjack
 import XMPPFramework
@@ -44,8 +45,14 @@ extension ChatAccountModel: ChatvCard {
             return vtemp
         }
         set {
+            // Through avatarData, not the record, so the photoHash we advertise in
+            // presence stays current and a stale avatar image is evicted.
             if let photo = newValue?.photo {
-                self.grdbRecord?.avatarData = photo
+                self.avatarData = photo
+            } else {
+                // Keep the stored avatar, but drop its hash. Otherwise an empty
+                // presence hash never matches it and every presence refetches.
+                self.grdbRecord?.photoHash = nil
             }
             if let nick = newValue?.nickname {
                 self.grdbRecord?.displayName = nick
@@ -87,7 +94,7 @@ extension ChatAccountModel: ChatvCard {
             return self.grdbRecord?.avatarData
         }
         set {
-            if let avatarData = self.grdbRecord?.avatarData, avatarData != newValue {
+            if self.grdbRecord?.avatarData != newValue {
                 //GlacierImageCache.shared().removeImage(self.uniqueId)
                 GlacierImages.removeImage(withIdentifier: self.uniqueId)
             }
@@ -161,14 +168,26 @@ extension ChatAccountModel {
         return password
     }*/
     
+    /// An account holds exactly one of a password (glacierpwd) or an access token
+    /// (xmpp_token), so the *other* one is legitimately absent and SAMKeychain reports
+    /// that as errSecItemNotFound. Logging that at error level puts a line that reads
+    /// like a failure into every connect, on both credential paths — it is the normal
+    /// state for whichever mechanism this account does not use. Only a genuine keychain
+    /// fault (locked, entitlement/access-group mismatch, corruption) is an error.
+    private func logKeychainReadFailure(_ error: NSError?, credential: String) {
+        guard let error = error else { return }
+        if error.code == errSecItemNotFound {
+            DDLogDebug("No \(credential) in keychain for this account (this is normal when the account authenticates the other way)")
+            return
+        }
+        DDLogError("Error retreiving \(credential) from keychain: \(error.localizedDescription) \(error.userInfo)")
+    }
+
     @objc public var password: String? {
         get {
             var error: NSError?
             let password = SAMKeychain.password(forService: kOTRServiceName, account: self.uniqueId, accessGroup: kGlacierKeyGroup, error:&error)
-            if (error != nil) {
-                DDLogError("Error retreiving password from keychain: \(String(describing: error?.localizedDescription)) \(String(describing: error?.userInfo))")
-                //[GlacierLog glogWithLogMsg:@"Error retrieving account password from keychain" detail:self.uniqueId];
-            }
+            self.logKeychainReadFailure(error, credential: "password")
             
             return password
         }
@@ -189,6 +208,40 @@ extension ChatAccountModel {
         }
     }
     
+    @objc public var accessToken: String? {
+        get {
+            var error: NSError?
+            let token = SAMKeychain.password(forService: kGlacierAccessTokenServiceName, account: self.uniqueId, accessGroup: kGlacierKeyGroup, error:&error)
+            self.logKeychainReadFailure(error, credential: "access token")
+
+            return token
+        }
+        set {
+            guard let token = newValue else { return }
+            if token.count == 0 {
+                DDLogError("Improperly removing access token! To remove call removeKeychainAccessToken!")
+                return
+            }
+
+            var error: NSError?
+            let result = SAMKeychain.setPassword(token, forService: kGlacierAccessTokenServiceName, account: self.uniqueId, accessGroup:kGlacierKeyGroup, error:&error)
+            if result == false {
+                DDLogError("Error saving access token to keychain: \(String(describing: error?.localizedDescription)) \(String(describing: error?.userInfo))")
+            }
+        }
+    }
+
+    @objc func removeKeychainAccessToken(_ error:NSError?) throws {
+        var error: NSError?
+        let result = SAMKeychain.deletePassword(forService: kGlacierAccessTokenServiceName, account: self.uniqueId, accessGroup: kGlacierKeyGroup, error:&error)
+        if let error = error {
+            throw KeychainError.failure(description: "error deleting access token: \(error)")
+        }
+        guard result else {
+            throw KeychainError.failure(description: "could not delete access token")
+        }
+    }
+
     @objc public var domain: String? {
         get {
             return self.grdbRecord?.domain
@@ -536,7 +589,13 @@ extension ChatAccountModel {
         } catch {
             DDLogDebug("ChatAccountModel.remove account, removeKeychainPassword with error: \(error)")
         }
-        
+
+        do {
+            try self.removeKeychainAccessToken(nil)
+        } catch {
+            DDLogDebug("ChatAccountModel.remove account, removeKeychainAccessToken with error: \(error)")
+        }
+
         DBManager.sharedDB().grdbStorage.asyncWrite(block: { transaction in
             self.grdbRecord?.grdbRemove(transaction: transaction)
         })

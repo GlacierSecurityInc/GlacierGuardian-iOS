@@ -20,6 +20,12 @@ private let pushLog = Logger(subsystem: "com.glaciersec.push", category: "Envelo
 @objc public protocol NotificationMessageDelegate: NSObjectProtocol {
     func decryptedMessage(_ message:NotificationMessage)
     func failedToDecryptMessage(_ message:NotificationMessage)
+    /// Resolve the push path by delivering the original push content unchanged, without falling
+    /// back to MAM. NOTE: iOS still shows the notification — an alert push cannot be cancelled
+    /// from the NSE — so this means "show whatever the server sent, don't add reaction text," not
+    /// "hide it." Used for a cleared reaction (the server normally won't push one) where there is
+    /// nothing to add and MAM can't help.
+    func deliverOriginalContent()
 }
 
 /**
@@ -128,12 +134,82 @@ private let pushLog = Logger(subsystem: "com.glaciersec.push", category: "Envelo
         guard let fields = PushMetadataEnvelope.open(kid: kid, base64Data: base64Data) else {
             return false
         }
+        if fields.isReaction {
+            return handleReactionEnvelope(fields)
+        }
         return decryptPushPayload(base64Payload: fields.payloadB64,
                                   messageFrom: fields.from,
                                   messageType: fields.type,
                                   senderRealJID: fields.sender,
                                   originId: fields.origin,
                                   stanzaId: fields.sid)
+    }
+
+    /**
+     Reaction-over-push entry point. A reaction rides in the sealed envelope as a cleartext
+     `emoji` set (the reaction stanza is never OMEMO-encrypted, so there is no `<encrypted>`
+     payload to decrypt). This path is DISPLAY-ONLY: it builds "<reactor> reacted 👍" and
+     notifies the delegate, but never touches Signal/OMEMO and never writes to the DB — the app
+     reconciles reaction state from MAM/live stanzas when it foregrounds.
+
+     Returns `true` in every case so the NSE keeps this instant, no-network result and does NOT
+     fall back to MAM (MAM cannot represent a reaction). An empty/whitespace emoji set means the
+     reactor cleared their reaction; the server normally won't push those, but if one slips
+     through we deliver the server's original push content unchanged (an alert push can't be
+     hidden from the NSE) rather than fabricate "un-reacted" text. Group-vs-1:1 is inferred from
+     `sender` (present ⇒ group), matching how the OMEMO path attributes group messages.
+     */
+    private func handleReactionEnvelope(_ fields: PushMetadataEnvelope.Fields) -> Bool {
+        let emoji = (fields.emoji ?? [])
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        guard !emoji.isEmpty else {
+            pushLog.info("reaction: empty set -> deliver original content")
+            delegate?.deliverOriginalContent()
+            return true
+        }
+        let emojiText = emoji.joined(separator: " ")
+        let isGroup = (fields.sender?.isEmpty == false)
+        let msg = NotificationMessage()
+
+        if isGroup, let roomJID = XMPPJID(string: fields.from) {
+            // Title = room name, body = "<reactor> reacted 👍" (mirrors the group message layout).
+            let roomUniqueId = ChatRoomModel.createUniqueId(accountKey, jid: roomJID.bare)
+            let roomLocalPart = roomJID.bare.components(separatedBy: "@").first ?? roomJID.bare
+            if let xroom = ChatRoomModel.getXMPPRoom(uniqueId: roomUniqueId) {
+                let roomName = xroom.threadName
+                msg.from = (roomName.isEmpty || roomName.contains("@")) ? roomLocalPart : roomName
+                msg.threadId = xroom.threadIdentifier
+            } else {
+                msg.from = roomLocalPart
+            }
+            msg.threadCollection = ChatRoomModel.collection()
+
+            var reactorName: String? = nil
+            if let sender = fields.sender, let senderJID = XMPPJID(string: sender) {
+                reactorName = getBuddyInfo(NotificationMessage(), from: senderJID.bareJID).from
+            }
+            if let name = reactorName, !name.isEmpty {
+                msg.message = "\(name) reacted \(emojiText)"
+            } else {
+                msg.message = "Reacted \(emojiText)"
+            }
+        } else if let reactorJID = XMPPJID(string: fields.from) {
+            // 1:1: title = reactor display name, body = "Reacted 👍".
+            let info = getBuddyInfo(NotificationMessage(), from: reactorJID.bareJID)
+            msg.from = info.from
+            msg.threadId = info.threadId
+            msg.threadCollection = ChatBuddyModel.collection()
+            msg.message = "Reacted \(emojiText)"
+        } else {
+            pushLog.error("reaction: unparseable from -> deliver original content")
+            delegate?.deliverOriginalContent()
+            return true
+        }
+
+        pushLog.info("reaction: displayed group=\(isGroup, privacy: .public) count=\(emoji.count, privacy: .public)")
+        delegate?.decryptedMessage(msg)
+        return true
     }
 
     @objc public func decryptPushPayload(base64Payload: String, messageFrom: String, messageType: String, senderRealJID: String?, originId: String?, stanzaId: String?) -> Bool {

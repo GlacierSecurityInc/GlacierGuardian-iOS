@@ -9,7 +9,6 @@ import CallKit
 import TwilioVoice
 import AVFoundation
 import WebRTC
-import Network
 
 @objc public protocol GlacierCallDelegateProtocol:NSObjectProtocol {
     //func activateAudio(_ activate: Bool)
@@ -31,6 +30,14 @@ protocol WebRTCConnectionDelegate:AnyObject {
     func webRTCCallVideoRejected()
     func webRTCCallFailed()
     func webRTCCallClosed()
+}
+
+private enum OutgoingRingbackState {
+    /// Waiting for the callee's device to ring.
+    case idle
+    /// The callee is ringing; waiting for CallKit to activate call audio.
+    case pending
+    case playing
 }
 
 public enum SpeakerChoice : UInt {
@@ -64,6 +71,7 @@ public class CallManager: XMPPModule {
 
     let kCachedDeviceToken = "CachedDeviceToken"
     let kCachedBindingDate = "CachedBindingDate"
+    let kCachedRegisteredIdentity = "CachedRegisteredIdentity"
     let kRegistrationTTLInDays = 365
     
     var tracker:XMPPIDTracker?
@@ -111,6 +119,12 @@ public class CallManager: XMPPModule {
     var callTimeout: DispatchWorkItem?
     var unconnectedAnswerCallAction: CXAnswerCallAction?
     var player: AVAudioPlayer?
+    // Outgoing ringback, main thread only (`makeCall` runs there). `ringbackCallId` is the call
+    // allowed to ring back, cleared once it is answered or ends; `wakeCommand` ties the
+    // wake-command IQ to its call so a late response can't start ringback for another one.
+    private var ringbackCallId: String?
+    private var ringbackState = OutgoingRingbackState.idle
+    private var wakeCommand: (iqId: String, callId: String)?
     var incomingCallHandle:CXHandle?
 
     private var callObserver: CXCallObserver?
@@ -132,6 +146,9 @@ public class CallManager: XMPPModule {
     private var pendingIncomingCalls: [UUID: PendingIncomingCall] = [:]
     private var pendingAnswerCallActions: [UUID: CXAnswerCallAction] = [:]
     private var retractedCallIds: Set<String> = []
+    /// Maps the server call id carried by VoIP pushes to the CallKit UUID, so a later
+    /// call-status push (which carries only the call id) can find its call.
+    private var pushCallIdToUuid: [String: UUID] = [:]
 
     private func callStatusString(_ status: CallStatus?) -> String {
         guard let status else { return "nil" }
@@ -209,6 +226,73 @@ public class CallManager: XMPPModule {
     private var iceServersRefreshDeadline: Date?
     //var iceCandidates:[RTCIceCandidate] = []
     let syncQueue = DispatchQueue(label: "callManager.syncQueue")
+
+    /// Keeps the process alive across incoming-call setup.
+    ///
+    /// A VoIP-push wake gives us no process assertion of our own. callservicesd holds one
+    /// for the reportNewIncomingCall round-trip and releases it the moment that completes
+    /// ("Invalidating process assertion ... from completion handler"). It is supposed to
+    /// take a second, call-lifetime assertion to cover the rest — but on a wake from
+    /// suspension that request has been observed going out for bundle identifier `(null)`
+    /// and never taking effect, with no matching "Acquired initial process assertion" line.
+    /// We are then suspended ~100ms after reporting: the call cannot ring, callConnect
+    /// cannot tick, the answer cannot be handled, and callservicesd kills us when its own
+    /// timeout expires. That is the 0xBAADCA11 termination captured on builds 1208 and
+    /// 1218 (incidents C13E2380 and 14C935AA), in both of which every thread was parked —
+    /// the app was killed for inaction while suspended, not for being slow.
+    ///
+    /// So hold our own assertion instead of depending on theirs. This deliberately does
+    /// NOT change any CallKit timing or fulfilment semantics; it only buys runtime.
+    private var callSetupBackgroundTask: UIBackgroundTaskIdentifier = .invalid
+    /// Hard ceiling, so a terminal path we failed to hook cannot leak the assertion.
+    private var callSetupBackgroundTaskCeiling: DispatchWorkItem?
+
+    /// Idempotent. Safe to call for a call that already holds the assertion.
+    private func beginCallSetupBackgroundTask() {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self] in self?.beginCallSetupBackgroundTask() }
+            return
+        }
+        guard callSetupBackgroundTask == .invalid else { return }
+
+        callSetupBackgroundTask = UIApplication.shared.beginBackgroundTask(withName: "incomingCallSetup") { [weak self] in
+            // iOS is reclaiming the time. Ending here is mandatory — an unended task is
+            // itself a termination reason.
+            DDLogInfo("***** callSetupBackgroundTask: expired")
+            self?.endCallSetupBackgroundTask()
+        }
+        guard callSetupBackgroundTask != .invalid else {
+            DDLogInfo("***** callSetupBackgroundTask: unavailable")
+            return
+        }
+
+        // Outlast callConnect's 30s window slightly, so in the normal case the window is
+        // what ends first and this is only ever the backstop.
+        let ceiling = DispatchWorkItem { [weak self] in
+            DDLogInfo("***** callSetupBackgroundTask: ceiling reached")
+            self?.endCallSetupBackgroundTask()
+        }
+        callSetupBackgroundTaskCeiling = ceiling
+        DispatchQueue.main.asyncAfter(deadline: .now() + 35.0, execute: ceiling)
+        DDLogInfo("***** callSetupBackgroundTask: begin")
+    }
+
+    /// Idempotent. Safe to call from any terminal path, more than once.
+    private func endCallSetupBackgroundTask() {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self] in self?.endCallSetupBackgroundTask() }
+            return
+        }
+        callSetupBackgroundTaskCeiling?.cancel()
+        callSetupBackgroundTaskCeiling = nil
+
+        let task = callSetupBackgroundTask
+        guard task != .invalid else { return }
+        // Clear before ending so a re-entrant call cannot end the same identifier twice.
+        callSetupBackgroundTask = .invalid
+        DDLogInfo("***** callSetupBackgroundTask: end")
+        UIApplication.shared.endBackgroundTask(task)
+    }
 
     deinit {
         // CallKit has an odd API...must call invalidate or the CXProvider is leaked.
@@ -421,12 +505,6 @@ public class CallManager: XMPPModule {
      * </iq>
      * Note: caller is a bare/full JID, but receiver is the bare JID of the receiver
      */
-    /// Triggers the Local Network permission probe if it hasn't run yet this login session.
-    /// Call early (e.g. on login) so the permission dialog appears before any call attempt.
-    public func probeLocalNetworkPermissionIfNeeded() {
-        LocalNetworkProbe.shared.maybeProbe(account: self.cAccount)
-    }
-
 
     public func makeCall(_ receivers: [String], name: String, callType:CallType) -> Bool
     {
@@ -435,7 +513,7 @@ public class CallManager: XMPPModule {
             return false
         }
 
-        LocalNetworkProbe.shared.maybeProbe(account: self.cAccount)
+        GuardianPermissionManager.shared.request(.localNetwork)
         
         let call = TwilioCall()
         let iceServers = self.createIceServers()
@@ -460,6 +538,10 @@ public class CallManager: XMPPModule {
         call.calltitle = name// ?? call.receiver?.components(separatedBy: "@")[0]
         self.currentCall = call
         self.userInitiatedDisconnect = false
+        self.ringbackCallId = call.callid
+        self.ringbackState = .idle
+        let wakeIqId = self.xmppStream?.generateUUID ?? UUID().uuidString
+        self.wakeCommand = (wakeIqId, call.callid ?? "")
         
         //call CallKit here before sending to ejabberd
         if let uuid = self.currentUuid {
@@ -541,7 +623,7 @@ public class CallManager: XMPPModule {
             
             command.addChild(x)
             let tojid = XMPPJID(string: "p2." + GlacierInfo.defaultHost())
-            let iq = XMPPIQ.init(iqType: XMPPIQ.IQType.set, to: tojid, elementID: self.xmppStream?.generateUUID, child: command)
+            let iq = XMPPIQ.init(iqType: XMPPIQ.IQType.set, to: tojid, elementID: wakeIqId, child: command)
             iq.addAttribute(withName: "from", stringValue: from!)
             
             self.tracker?.add(iq, target: self, selector: #selector(self.handleMakeCallResponse(_:)), timeout: 15)
@@ -552,9 +634,10 @@ public class CallManager: XMPPModule {
         return true
     }
     
-    @objc private func handleMakeCallResponse(_ iq: XMPPIQ) {
-        let x = iq.childElement?.element(forName: "x", xmlns: "jabber:x:data")
-        guard let fields = x?.elements(forName: "field") else {
+    /// `iq` is nil on timeout.
+    @objc private func handleMakeCallResponse(_ iq: XMPPIQ?) {
+        let x = iq?.childElement?.element(forName: "x", xmlns: "jabber:x:data")
+        guard x?.elements(forName: "field") != nil, let iqId = iq?.elementID else {
             //handle failed case, alert user
             performCancelCallAction(userInitiated: false)
                 
@@ -562,9 +645,44 @@ public class CallManager: XMPPModule {
             return
         }
         
-        guard let url = Bundle.main.url(forResource: "outboundring", withExtension: "wav") else { return }
+        // Fallback for callees that never send JMI `ringing` (Android only sends it with
+        // "Confirm messages" on): a push went out, so the callee's phone should be ringing.
+        DispatchQueue.main.async {
+            guard let wakeCommand = self.wakeCommand, wakeCommand.iqId == iqId else { return }
+            self.requestOutgoingRingback(callId: wakeCommand.callId)
+        }
+    }
+
+    /// Ringback tells the caller the callee's device is ringing, so it starts on the callee's JMI
+    /// `ringing` (or the wake-command fallback), not when the call is placed. It plays once
+    /// CallKit has activated call audio, and at most once per call.
+    func requestOutgoingRingback(callId: String) {
+        DispatchQueue.main.async {
+            guard self.ringbackCallId == callId, self.ringbackState == .idle else { return }
+            self.ringbackState = .pending
+            self.startOutgoingRingbackIfReady()
+        }
+    }
+
+    private func startOutgoingRingbackIfReady() {
+        guard ringbackState == .pending, ringbackCallId != nil, audioSession != nil,
+              let url = Bundle.main.url(forResource: "outboundring", withExtension: "wav") else { return }
+        ringbackState = .playing
         playSound(soundUrl: url)
         player?.numberOfLoops = 3
+    }
+
+    /// Called when the call is answered, connects, fails, or ends. Leaves other tones alone.
+    func stopOutgoingRingback() {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { self.stopOutgoingRingback() }
+            return
+        }
+        ringbackCallId = nil
+        ringbackState = .idle
+        if player?.url?.lastPathComponent == "outboundring.wav" {
+            player?.stop()
+        }
     }
     
     func makeVoiceCall(_ receiver: String, name: String) {
@@ -1262,7 +1380,7 @@ extension CallManager: XMPPStreamDelegate {
                         return // MAM is doubling up
                     }
 
-                    LocalNetworkProbe.shared.maybeProbe(account: self.cAccount)
+                    GuardianPermissionManager.shared.request(.localNetwork)
 
                     var callType:CallType = .audio
                     if self.hasVideoDescription(in: propose) {
@@ -1275,7 +1393,10 @@ extension CallManager: XMPPStreamDelegate {
                 //}
                 DDLogInfo("Received JMI propose message: \(propose)")
             } else if let ringing = message.element(forName: "ringing", xmlnsPrefix: CallManager.JINGLE_MESSAGE) {
-                //shows call was received on other side?
+                // The callee's device is ringing.
+                if let callid = ringing.attributeStringValue(forName: "id") {
+                    requestOutgoingRingback(callId: callid)
+                }
                 DDLogInfo("Received JMI ringing message: \(ringing)")
             } else if let retract = message.element(forName: "retract", xmlnsPrefix: CallManager.JINGLE_MESSAGE) {
                 let callid = retract.attributeStringValue(forName: "id") ?? ""
@@ -1287,6 +1408,9 @@ extension CallManager: XMPPStreamDelegate {
                 reportCallCancelled()
                 // DDLogInfo("***** Received JMI retract message: \(retract)")
             } else if let proceed = message.element(forName: "proceed", xmlns: CallManager.JINGLE_MESSAGE), let callid = proceed.attributeStringValue(forName: "id"), let from = message.from, let device = proceed.element(forName: "device"), let deviceId = device.attributeStringValue(forName: "id") {
+                if callid == self.currentCall?.callid {
+                    stopOutgoingRingback()
+                }
                 reportCallAccepted(from.full, callid: callid, deviceid: deviceId)
                 DDLogInfo("Received JMI proceed message: \(proceed)")
             } else if let reject = message.element(forName: "reject", xmlnsPrefix: CallManager.JINGLE_MESSAGE), let from = message.from, let callid = reject.attributeStringValue(forName: "id") {
@@ -1365,6 +1489,7 @@ extension CallManager : CXProviderDelegate {
 
     public func providerDidReset(_ provider: CXProvider) {
         DDLogInfo("Twilio providerDidReset:")
+        self.stopOutgoingRingback()
 
         // AudioDevice is enabled by default
         // The Phone code has this as false. why?
@@ -1379,6 +1504,10 @@ extension CallManager : CXProviderDelegate {
     }
 
     public func provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession) {
+        // Call audio is running: the active call keeps us alive now, so stop borrowing
+        // background time.
+        endCallSetupBackgroundTask()
+
         if !isObservingAudioRouteChanges {
             NotificationCenter.default.addObserver(
                 self,
@@ -1396,6 +1525,8 @@ extension CallManager : CXProviderDelegate {
         } else {
             self.audioSession = audioSession
             self.didActivate(audioSession: audioSession)
+            // The callee may have started ringing before CallKit handed over call audio.
+            self.startOutgoingRingbackIfReady()
         }
     }
 
@@ -1411,6 +1542,9 @@ extension CallManager : CXProviderDelegate {
 
     public func provider(_ provider: CXProvider, timedOutPerforming action: CXAction) {
         DDLogInfo("Twilio provider:timedOutPerformingAction:")
+        if let startAction = action as? CXStartCallAction, startAction.callUUID == currentUuid {
+            self.stopOutgoingRingback()
+        }
     }
 
     public func provider(_ provider: CXProvider, perform action: CXStartCallAction) {
@@ -1485,6 +1619,7 @@ extension CallManager : CXProviderDelegate {
     }
 
     public func provider(_ provider: CXProvider, perform action: CXEndCallAction) {
+        self.stopOutgoingRingback()
         //print("Twilio provider:performEndCallAction: with *** userInitiatedDisconnect: \(userInitiatedDisconnect)")
         // DDLogInfo("***** CXProvider:CXEndCallAction:")
         
@@ -1541,6 +1676,7 @@ extension CallManager : CXProviderDelegate {
         self.receivedRetract = false
         clearPendingCall(uuid: action.callUUID)
         action.fulfill()
+        endCallSetupBackgroundTask()
         //DDLogInfo("***** CXProvider:CXEndCallAction: end")
     }
     
@@ -1651,6 +1787,9 @@ extension CallManager {
         callKitCallController.request(transaction)  { error in
             if let error = error {
                 DDLogError("StartCallAction transaction request failed: \(error.localizedDescription)")
+                if self.currentUuid == uuid {
+                    self.stopOutgoingRingback()
+                }
                 return
             }
             DDLogInfo("StartCallAction transaction request successful")
@@ -2071,6 +2210,10 @@ extension CallManager {
     //not for use for Twilio voice calls
     public func reportIncomingCallFromNotification(uuid: UUID, callId: String, caller: String, suppressBusy: Bool = false, completion: ((NSError?) -> Void)? = nil) {
 
+        // Before anything else: callservicesd's assertion covers only the report itself,
+        // and we are suspended the moment it lets go unless we hold our own.
+        beginCallSetupBackgroundTask()
+
         var inOtherCall = false
         let curcall = self.currentCall
         if let calltest = curcall, calltest.callUuid != uuid {
@@ -2096,6 +2239,15 @@ extension CallManager {
                 completion?(nil)
             }
             return
+        }
+
+        if !callId.isEmpty {
+            pushCallIdToUuid[callId] = uuid
+            DispatchQueue.main.asyncAfter(deadline: .now() + 120.0) { [weak self] in
+                if self?.pushCallIdToUuid[callId] == uuid {
+                    self?.pushCallIdToUuid.removeValue(forKey: callId)
+                }
+            }
         }
 
         var pending = ensurePendingCall(uuid: uuid, callId: callId)
@@ -2163,7 +2315,33 @@ extension CallManager {
             schedulePendingTimeout(for: uuid)
         }
     }
-    
+
+    /// PushKit contract safety net. On iOS 13+, every `.voIP` push MUST result in a
+    /// `reportNewIncomingCall` before the push handler completes, or the OS terminates the
+    /// app with `0xBAADCA11` (and eventually stops delivering VoIP pushes altogether). If a
+    /// VoIP push arrives that we cannot turn into a real incoming call (e.g. an unexpected or
+    /// malformed payload that fails to parse into a caller/callId/room), we still have to
+    /// satisfy the contract: report a placeholder call and immediately end it. This should
+    /// essentially never fire in production; it exists purely so a bad payload can't kill the app.
+    public func reportPlaceholderCallAndEnd(completion: (() -> Void)? = nil) {
+        let uuid = UUID()
+        let callUpdate = CXCallUpdate()
+        callUpdate.remoteHandle = CXHandle(type: .generic, value: "Call")
+        callUpdate.supportsDTMF = false
+        callUpdate.supportsHolding = false
+        callUpdate.supportsGrouping = false
+        callUpdate.supportsUngrouping = false
+        callUpdate.hasVideo = false
+        callKitProvider.reportNewIncomingCall(with: uuid, update: callUpdate) { [weak self] error in
+            if let error = error {
+                DDLogInfo("reportPlaceholderCallAndEnd failed to report: \(error.localizedDescription)")
+            }
+            // End it immediately; the contract is satisfied by the report above.
+            self?.callKitProvider.reportCall(with: uuid, endedAt: Date(), reason: .failed)
+            completion?()
+        }
+    }
+
     func handleJMIPropose(uuid: UUID, callId: String, caller: String, callType: CallType) {
         // DDLogInfo("***** handleJMIPropose with uuid \(uuid.uuidString)")
         logIncomingState("handleJMIPropose start", uuid: uuid, callId: callId)
@@ -2274,40 +2452,65 @@ extension CallManager {
         logIncomingState("handleJMIPropose(callType) end")
     }
     
+    /// Handles a call-status VoIP push: the call identified by `callId` was accepted, rejected,
+    /// or busy on another device. Only the matching call is ended, and only while it has not
+    /// been answered or connected on this device. The push itself is always satisfied with a
+    /// throwaway CallKit report, so it can never collide with (and end) a live call's UUID.
     @objc public func reportMAMCallResponse(callId: String, status: String, completion: ((NSError?) -> Void)? = nil) {
-        
-        let caller = self.currentCall?.caller ?? "caller"
-        let lastuuid = self.lastUuid ?? UUID()
-        let uuid = self.currentCall?.callUuid ?? lastuuid
-        
-        let callHandle = CXHandle(type: .generic, value: caller)
-        
+        let resolvedElsewhere = ["accept", "reject", "busy"].contains(status)
+        let uuid = pushCallIdToUuid[callId]
+            ?? (currentCall?.callid == callId ? currentCall?.callUuid : nil)
+            ?? pendingIncomingCalls.first(where: { $0.value.pushCallId == callId || $0.value.jmiCallId == callId })?.key
 
-        let callUpdate = CXCallUpdate()
-        callUpdate.remoteHandle = callHandle
-        callUpdate.supportsDTMF = false
-        callUpdate.supportsHolding = false
-        callUpdate.supportsGrouping = false
-        callUpdate.supportsUngrouping = false
-        callUpdate.hasVideo = false
-        // DDLogInfo("***** reportNewIncomingCall Report MAM Call Response")
-
-        callKitProvider.reportNewIncomingCall(with: uuid, update: callUpdate) { error in
-            if status == "accept" {
-                self.awaitingCallResponse = false
-            }
-            
-            if error == nil {
-                DDLogInfo("Incoming call successfully reported.")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    self.performEndCallAction(uuid: uuid, userInitiated: false)
+        if resolvedElsewhere, let uuid {
+            if let call = currentCall, call.callUuid == uuid {
+                if shouldEndCallForStatus(call, status: status) {
+                    if status == "accept" {
+                        awaitingCallResponse = false
+                    }
+                    // Resolved on another device: end locally without sending a reject or
+                    // retract that would reach the caller.
+                    receivedRetract = true
+                    performEndCallAction(uuid: uuid, userInitiated: false)
                 }
-            } else {
-                DDLogInfo("Failed to report incoming call successfully: \(String(describing: error?.localizedDescription)).")
-                self.performEndCallAction(uuid: uuid, userInitiated: false)
+            } else if let pending = pendingIncomingCalls[uuid] {
+                // Still waiting on the JMI propose. Keep a late propose (or MAM replay) from
+                // starting it, and end only this call in CallKit, not the current call.
+                let resolvedIds = [callId, pending.jmiCallId].compactMap { $0 }
+                retractedCallIds.formUnion(resolvedIds)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 60.0) { [weak self] in
+                    self?.retractedCallIds.subtract(resolvedIds)
+                }
+                if pending.reportedToCallKit {
+                    callKitProvider.reportCall(with: uuid, endedAt: Date(), reason: endedReason(forStatus: status))
+                }
+                clearPendingCall(uuid: uuid)
             }
-            
-            completion?(error as NSError?)
+        }
+
+        reportPlaceholderCallAndEnd {
+            completion?(nil)
+        }
+    }
+
+    private func shouldEndCallForStatus(_ call: TwilioCall, status: String) -> Bool {
+        let answeredOrConnected = call.answerCallAction != nil
+            || call.callKitAnswerFulfilled
+            || call.callstatus == .connecting
+            || call.callstatus == .connected
+        guard !answeredOrConnected else { return false }
+        if call.outgoing {
+            // The callee declined or was busy; an accept means our call is about to connect.
+            return status == "reject" || status == "busy"
+        }
+        return true
+    }
+
+    private func endedReason(forStatus status: String) -> CXCallEndedReason {
+        switch status {
+        case "accept": return .answeredElsewhere
+        case "reject": return .declinedElsewhere
+        default: return .remoteEnded
         }
     }
     
@@ -2763,6 +2966,7 @@ extension CallManager {
     
     func performEndCallAction(uuid: UUID, userInitiated: Bool) {
         logIncomingState("performEndCallAction start", uuid: uuid)
+        self.stopOutgoingRingback()
         self.endedCall = true
         clearPendingCall(uuid: uuid)
         if let tcall = self.currentCall, userInitiated, !self.busyTone {
@@ -2853,6 +3057,8 @@ extension CallManager {
     }
 
     private func performNullifyCallState() {
+        endCallSetupBackgroundTask()
+
         self.endedCall = false
         self.hasIncomingVoiceCall = false
         self.awaitingCallResponse = false
@@ -2892,6 +3098,7 @@ extension CallManager {
     }
     
     func reportCallDisconnected(uuid: UUID, error: Error?) {
+        self.stopOutgoingRingback()
         self.isBusy = false
         self.busyTone = false
         
@@ -2917,6 +3124,7 @@ extension CallManager {
     }
     
     @objc public func reportCallConnected(uuid: UUID?, connectTime: Date) {
+        self.stopOutgoingRingback()
         self.stopSound()
         
         self.currentCall?.status = "inprogress"
@@ -3069,12 +3277,45 @@ extension CallManager {
         self.registerWithTwilio()
     }
     
+    /// The Twilio identity a registration belongs to: the local part of the account JID,
+    /// which is what TwilioBackendManager sends as `username` when it mints the voice token.
+    var currentTwilioIdentity: String? {
+        guard let username = ChatAccountModel.firstAccount()?.username, !username.isEmpty else {
+            return nil
+        }
+        return username.components(separatedBy: "@").first
+    }
+
+    /// Forgets which Twilio binding this device holds. Call on sign-out.
+    ///
+    /// Without this, the guard in `registerWithTwilio()` below sees an unchanged device token
+    /// and a binding date under TTL/2 and skips registration entirely - so the *next* account
+    /// to sign in on this install never registers, and never receives an incoming call, for up
+    /// to 182 days. `callInviteReceived` refreshes the date on every inbound call, so an
+    /// actively used device keeps pushing that window out rather than ageing out of it.
+    ///
+    /// This only forgets the local cache. The binding itself still exists on Twilio's side
+    /// until its one-year TTL expires: tearing that down needs
+    /// `TwilioVoiceSDK.unregister(accessToken:deviceToken:)` with a live access token, which
+    /// sign-out no longer has by the time it gets here, or a server-side binding delete.
+    @objc public func clearPushRegistrationCache() {
+        UserDefaults.standard.removeObject(forKey: kCachedDeviceToken)
+        UserDefaults.standard.removeObject(forKey: kCachedBindingDate)
+        UserDefaults.standard.removeObject(forKey: kCachedRegisteredIdentity)
+    }
+
     func registerWithTwilio() {
         guard let accessToken = self.callToken, let deviceToken = self.deviceToken else {
             return
         }
         
-        guard (registrationRequired() || UserDefaults.standard.data(forKey: kCachedDeviceToken) != deviceToken) else {  return  }
+        // Identity is part of the condition as a backstop: sign-out clears the cache, but a
+        // sign-out that never completes - a crash, a force-quit - would otherwise leave the
+        // stale entry in place and silently cost the next account its incoming calls.
+        let identity = self.currentTwilioIdentity
+        let identityChanged = (UserDefaults.standard.string(forKey: kCachedRegisteredIdentity) != identity)
+        
+        guard (registrationRequired() || identityChanged || UserDefaults.standard.data(forKey: kCachedDeviceToken) != deviceToken) else {  return  }
         
         /*
         * Perform registration if a new device token is detected.
@@ -3087,6 +3328,7 @@ extension CallManager {
                     
                 // Save the device token after successfully registered.
                 UserDefaults.standard.set(deviceToken, forKey: self.kCachedDeviceToken)
+                UserDefaults.standard.set(identity, forKey: self.kCachedRegisteredIdentity)
                     
                 /**
                 * The TTL of a registration is 1 year. The TTL for registration for this device/identity
@@ -3394,14 +3636,32 @@ extension CallManager: NotificationDelegate {
                     }
                 }
             }
+        } else {
+            // We have a valid invite but couldn't parse a caller. reportIncomingCall above is our
+            // only reportNewIncomingCall for this VoIP push, so if we skip it the push completes
+            // unreported and iOS kills us with 0xBAADCA11. Report using the invite's own uuid so
+            // the contract is satisfied, then end it immediately.
+            DDLogInfo("callInviteReceived with unparseable 'from'; reporting placeholder to satisfy CallKit contract")
+            reportPlaceholderCallAndEnd()
         }
     }
     
     public func cancelledCallInviteReceived(cancelledCallInvite: CancelledCallInvite, error: Error) {
         DDLogInfo("cancelledCallInviteCanceled:error:, error: \(error.localizedDescription)")
-        
+
         if let callUuid = self.currentCall?.callUuid {
             performEndCallAction(uuid: callUuid, userInitiated: false)
+            activeCallInvite = nil
+        } else {
+            // A Twilio VoIP push was delivered as a *cancellation* with no call ever reported
+            // (e.g. the ring push was deduped/missed, or we were woken cold just for the cancel).
+            // The VoIP-push branch in GlacierAppDelegate set awaitingAsyncCompletion = true and
+            // trusted the Twilio SDK to report the call, so the placeholder safety net there did
+            // NOT fire. Nothing has called reportNewIncomingCall — iOS 13+ kills the app with
+            // 0xBAADCA11 for any VoIP push that completes without a report. Satisfy the contract
+            // here by reporting a placeholder call and immediately ending it.
+            DDLogInfo("cancelledCallInviteReceived with no currentCall; reporting placeholder to satisfy CallKit contract")
+            reportPlaceholderCallAndEnd()
             activeCallInvite = nil
         }
     }
@@ -3569,52 +3829,6 @@ extension CallManager: WebRTCClientDelegate {
     func webRTCClient(_ client: WebRTCClient, didAddVideo video: Bool) {
         if video == true {
             self.webRtcConnectionDelegate?.webRTCCallVideoAdded()
-        }
-    }
-}
-
-private final class LocalNetworkProbe {
-    static let shared = LocalNetworkProbe()
-
-    private let queue = DispatchQueue(label: "LocalNetworkProbe")
-    private var activeConnection: NWConnection?
-
-    private init() {}
-
-    func maybeProbe(account: ChatAccountModel?) {
-        guard let account else { return }
-        let loginStamp = Int((account.loginDate ?? Date()).timeIntervalSince1970)
-        let key = "localNetworkProbe.\(account.uniqueId).\(loginStamp)"
-        guard !UserDefaults.standard.bool(forKey: key) else { return }
-        UserDefaults.standard.set(true, forKey: key)
-        probeLocalNetwork()
-    }
-
-    private func probeLocalNetwork() {
-        let connection = NWConnection(host: "224.0.0.251", port: 5353, using: .udp)
-        activeConnection = connection
-
-        connection.stateUpdateHandler = { [weak self] state in
-            switch state {
-            case .ready:
-                let payload = Data([0x00])
-                connection.send(content: payload, completion: .contentProcessed { _ in
-                    connection.cancel()
-                })
-            case .failed, .cancelled:
-                self?.activeConnection = nil
-            default:
-                break
-            }
-        }
-
-        connection.start(queue: queue)
-
-        queue.asyncAfter(deadline: .now() + 3) { [weak self] in
-            connection.cancel()
-            if self?.activeConnection === connection {
-                self?.activeConnection = nil
-            }
         }
     }
 }

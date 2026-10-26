@@ -94,7 +94,7 @@ open class OMEMOStorageManager {
      - parameter parentKey: The key to attach the device to
      - parameter parentCollection: the collection to attach the device to
      */
-    fileprivate func storeDevices(_ devices:[NSNumber], parentKey:String, parentCollection:String) {
+    fileprivate func storeDevices(_ devices:[NSNumber], parentKey:String, parentCollection:String, completion:(()->Void)? = nil) {
         DBManager.sharedDB().grdbStorage.asyncWrite(block: { transaction in
             var previouslyStoredDevices:[ChatOmemoDevice] = []
             do {
@@ -210,6 +210,12 @@ open class OMEMOStorageManager {
                 })
                 
             }
+        }, completionQueue: .global(qos: .userInitiated), completion: {
+            // Fires once the write has COMMITTED. Anything waiting on a refreshed device
+            // list has to be resolved from here, or it re-reads the rows this write is
+            // still in the middle of replacing. Deliberately not the main queue: this sits
+            // in the message send path.
+            completion?()
         })
     }
     
@@ -218,9 +224,11 @@ open class OMEMOStorageManager {
      
      - parameter devices: An array of the device numbers. Should be UInt32.
      */
-    open func storeOurDevices(_ devices:[NSNumber]) {
+    open func storeOurDevices(_ devices:[NSNumber], completion:(()->Void)? = nil) {
 #if !TARGET_IS_EXTENSION
-        self.storeDevices(devices, parentKey: self.accountKey, parentCollection: self.accountCollection)
+        self.storeDevices(devices, parentKey: self.accountKey, parentCollection: self.accountCollection, completion: completion)
+#else
+        completion?()
 #endif
     }
     
@@ -236,9 +244,14 @@ open class OMEMOStorageManager {
         guard let jid = XMPPJID(string: buddyUsername), let buddy = ChatBuddyModel.fetchBuddy(jid: jid, accountUniqueId: self.accountKey) else {
             // If this is teh first launch the buddy will not be in the buddy list becuase the roster comes in after device list from PEP.
             DDLogWarn("Could not find buddy to store devices \(buddyUsername)")
+            // Still call back on this path: callers park a waiter on this completion and
+            // would otherwise sit there until their timeout.
+            completion?()
             return
         }
-        self.storeDevices(devices, parentKey: buddy.uniqueId, parentCollection: ChatBuddyModel.collection())
+        // completion now fires after the write commits, not straight after queueing it.
+        self.storeDevices(devices, parentKey: buddy.uniqueId, parentCollection: ChatBuddyModel.collection(), completion: completion)
+#else
         completion?()
 #endif
     }

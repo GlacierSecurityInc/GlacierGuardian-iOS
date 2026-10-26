@@ -107,6 +107,13 @@
     GlacierViewSetting *securityHubViewSetting = [[GlacierViewSetting alloc] initWithTitle:@"Security Hub" description:nil viewControllerClass:[SecurityCenterViewController class]];
     securityHubViewSetting.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     
+    // Standing view of what Guardian has been granted. iOS only ever prompts once per
+    // permission, so anything the user declined can only be changed from their own
+    // Settings page -- before this the only thing pointing there was a transient alert at
+    // the moment a call failed, and notifications had nothing at all.
+    GlacierViewSetting *permissionsViewSetting = [[GlacierViewSetting alloc] initWithTitle:@"Permissions" description:nil viewControllerClass:[GuardianPermissionsViewController class]];
+    permissionsViewSetting.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+    
     GlacierBoolSetting *rebootAlertViewSetting = [[GlacierBoolSetting alloc] initWithTitle:@"Reboot Reminder" description:nil settingsKey:@"kRebootReminderKey"];
     rebootAlertViewSetting.enabled = YES; //check against account
     
@@ -132,7 +139,7 @@
     [newSettingsDictionary setObject:rebootAlertViewSetting forKey:@"kRebootReminderKey"];
     [newSettingsDictionary setObject:trackingEnabledViewSetting forKey:@"kTrackingOnKey"];
     
-    NSArray *chatSettings = @[self.globalMessageTimerSetting, clearHistorySetting, coreConnectionViewSetting, threatDetectionViewSetting, linkPreviewSetting, readReceiptsSetting];
+    NSArray *chatSettings = @[self.globalMessageTimerSetting, clearHistorySetting, coreConnectionViewSetting, permissionsViewSetting, threatDetectionViewSetting, linkPreviewSetting, readReceiptsSetting];
     GlacierSettingsGroup *chatSettingsGroup = [[GlacierSettingsGroup alloc] initWithTitle:@"Privacy" settings:chatSettings];
     [settingsGroups addObject:chatSettingsGroup];
     

@@ -144,6 +144,15 @@
     [self loginAccount:account userInitiated:NO];
 }
 
+- (void)ensureConnectedForIncomingCall:(ChatAccountModel *)account
+{
+    NSParameterAssert(account);
+    if (!account) { return; }
+    id <GlacierProtocol> protocol = [self xmppManagerForChatAccount:account];
+
+    [protocol ensureConnectedForIncomingCall];
+}
+
 - (void)loginAccounts:(NSArray *)accounts
 {
     [accounts enumerateObjectsUsingBlock:^(ChatAccountModel * account, NSUInteger idx, BOOL *stop) {

@@ -15,7 +15,7 @@
 #import "UITableView+Glacier.h"
 #import "Glacier-Swift.h"
 
-@interface GlacierXMPPRoomManager () <XMPPMUCDelegate, XMPPRoomDelegate, XMPPStreamDelegate>
+@interface GlacierXMPPRoomManager () <XMPPMUCDelegate, XMPPRoomDelegate, XMPPStreamDelegate, GlacierBookmarks2Delegate>
 
 @property (nonatomic, strong, readonly) NSMutableDictionary<XMPPJID*,XMPPRoom*> *rooms;
 
@@ -40,6 +40,13 @@
 
 @property (nonatomic) NSInteger highSeedNum;
 
+/** Bare room JIDs retracted from the bookmarks node by another device during
+    this session. Only ever used to stop us from re-publishing them. */
+@property (nonatomic, strong) NSMutableSet<NSString*> *retractedBookmarkJIDs;
+
+/** Whether we have already retried an inconclusive bookmarks fetch this authenticate. */
+@property (nonatomic) BOOL retriedBookmarkFetch;
+
 @end
 
 @implementation GlacierXMPPRoomManager
@@ -58,6 +65,8 @@
         _rooms = [[NSMutableDictionary alloc] init];
         _allRoomsWithNames = [[NSMutableDictionary alloc] init];
         _bookmarksModule = [[XMPPBookmarksModule alloc] initWithMode:XMPPBookmarksModePrivateXmlStorage dispatchQueue:nil];
+        _bookmarks2Module = [[GlacierBookmarks2Module alloc] initWithDispatchQueue:nil];
+        _retractedBookmarkJIDs = [[NSMutableSet alloc] init];
     }
     self.addedCapsDelegate = NO;
     self.updateRoomName = NO;
@@ -74,6 +83,9 @@
     
     [self.bookmarksModule activate:self.xmppStream];
     
+    [self.bookmarks2Module activate:self.xmppStream];
+    [self.bookmarks2Module addDelegate:self delegateQueue:moduleQueue];
+    
     return result;
 }
 
@@ -89,6 +101,8 @@
     [self.mucModule removeDelegate:self];
     [self.mucModule deactivate];
     [self.bookmarksModule deactivate];
+    [self.bookmarks2Module removeDelegate:self];
+    [self.bookmarks2Module deactivate];
     
     [multicastDelegate removeDelegate:self];
     
@@ -103,6 +117,8 @@
     _roomsToConfigure = nil;
     _rooms = nil;
     _bookmarksModule = nil;
+    _bookmarks2Module = nil;
+    _retractedBookmarkJIDs = nil;
 }
 
 - (void)joinRoom:(XMPPJID *)jid withNickname:(NSString *)name subject:(NSString *)subject password:(nullable NSString *)password completion:(void (^)(NSString*))completion
@@ -235,10 +251,12 @@
             if (room) {
                 xroom = [self roomWithXMPPRoom:room];
                 __block BOOL changed = NO;
+                BOOL nameChanged = NO;
                 if (name != nil) {
                     if (xroom && ![xroom.roomName isEqualToString:name]) {
                         xroom.roomName = name;
                         changed = YES;
+                        nameChanged = YES;
                     }
                 } //if its a new room (ie invited) there might not be a name
                 
@@ -261,6 +279,10 @@
                 
                 if (changed) {
                     [xroom saveThread];
+                }
+                if (nameChanged) {
+                    // The bookmark carries the name other clients display.
+                    [self publishBookmarkForRoom:xroom];
                 }
             }
         }
@@ -300,11 +322,7 @@
     [self.roomStatusDict setObject:[NSNumber numberWithBool:ispublic] forKey:roomName.bare];
     [self.roomsToConfigure addObject:roomName.bare];
     XMPPConferenceBookmark *bookmark = [[XMPPConferenceBookmark alloc] initWithJID:roomName bookmarkName:subject nick:name autoJoin:YES];
-    [self.bookmarksModule fetchAndPublishWithBookmarksToAdd:@[bookmark] bookmarksToRemove:nil completion:^(NSArray<id<XMPPBookmark>> * _Nullable newBookmarks, XMPPIQ * _Nullable responseIq) {
-        if (newBookmarks) {
-            DDLogInfo(@"Joined new room, added to merged bookmarks: %@", newBookmarks);
-        }
-    } completionQueue:nil];
+    [self publishConferenceBookmarks:@[bookmark]];
     //save thread first?
     [self joinRoom:roomName withNickname:name subject:subject password:nil isPublic:ispublic completion:completion];
 }
@@ -417,10 +435,153 @@
         [self joinRoom:obj.roomJID withNickname:nickname subject:obj.subject password:obj.roomPassword completion:nil];
     }];
     
-    [self addRoomsToBookmarks:roomArray];
+    // ejabberd creates the bookmarks node with send_last_published_item: never,
+    // so there is no presence-triggered delivery of the current items; read it
+    // explicitly. Local rooms are upstreamed from the fetch callbacks below,
+    // which replaces the unconditional private-XML merge iOS used to do here.
+    self.retriedBookmarkFetch = NO;
+    [self.bookmarks2Module fetchBookmarks];
+}
+
+#pragma mark - Bookmarks 2 (XEP-0402)
+
+/**
+ * The one way rooms get published as bookmarks from a local action. Publishing
+ * is deliberate, so it also clears any retraction we recorded for that room:
+ * the user (re)joining or renaming a group outranks another device's earlier
+ * removal of it.
+ */
+- (void)publishConferenceBookmarks:(NSArray<XMPPConferenceBookmark *> *)bookmarks {
+    if (bookmarks.count == 0) { return; }
+    [self performBlockAsync:^{
+        NSMutableArray<XMPPConferenceBookmark *> *toPublish = [[NSMutableArray alloc] init];
+        for (XMPPConferenceBookmark *bookmark in bookmarks) {
+            NSString *bareJID = bookmark.jid.bare;
+            if (bareJID.length == 0) { continue; }
+            [self.retractedBookmarkJIDs removeObject:bareJID];
+            [toPublish addObject:bookmark];
+        }
+        [self.bookmarks2Module publishBookmarks:toPublish];
+    }];
+}
+
+/** Publishes the bookmark for a room whose name we just changed. */
+- (void)publishBookmarkForRoom:(ChatRoomModel *)room {
+    XMPPConferenceBookmark *bookmark = room.bookmark;
+    if (bookmark == nil || bookmark.jid == nil) { return; }
+    [self publishConferenceBookmarks:@[bookmark]];
+}
+
+- (void)glacierBookmarks2:(GlacierBookmarks2Module *)sender
+        didFetchBookmarks:(NSArray<XMPPConferenceBookmark *> *)bookmarks {
+    [self handleIncomingConferenceBookmarks:bookmarks];
     
+    // Upstream the rooms the node doesn't know about. Bookmarks the node
+    // already has are left alone, including autojoin="false" ones: that is
+    // another device saying "don't join this", not something to overwrite.
+    NSMutableArray<NSString*> *excluded = [[NSMutableArray alloc] init];
+    for (XMPPConferenceBookmark *bookmark in bookmarks) {
+        NSString *bareJID = bookmark.jid.bare;
+        if (bareJID.length > 0) {
+            [excluded addObject:bareJID];
+        }
+    }
+    // -deactivate clears this set, and a delegate call can still be in flight
+    // at that point, so nothing here may assume it is non-nil.
+    NSArray<NSString*> *retracted = self.retractedBookmarkJIDs.allObjects;
+    if (retracted.count > 0) {
+        [excluded addObjectsFromArray:retracted];
+    }
+    [self publishLocalRoomBookmarksExcluding:excluded];
+}
+
+- (void)glacierBookmarks2:(GlacierBookmarks2Module *)sender
+     didNotFetchBookmarks:(XMPPIQ *)errorIq
+              nodeMissing:(BOOL)nodeMissing {
+    if (!nodeMissing) {
+        // We do not know what is on the node, so we must not write to it: a
+        // publish replaces the whole item, which would overwrite another
+        // device's rename, password or autojoin="false" with our local values.
+        // Nothing is lost by waiting - the rooms are already joined locally,
+        // and a publish only ever seeds items the node is missing - so retry
+        // the read once and otherwise leave the remote store alone until the
+        // next authenticate.
+        if (!self.retriedBookmarkFetch) {
+            self.retriedBookmarkFetch = YES;
+            DDLogInfo(@"Bookmarks 2: fetch was inconclusive, retrying the read before publishing anything");
+            __weak typeof(self) weakSelf = self;
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(30.0 * NSEC_PER_SEC)), moduleQueue, ^{
+                [weakSelf.bookmarks2Module fetchBookmarks];
+            });
+        }
+        return;
+    }
+
+    // No node: there is nothing to overwrite, and this first publish creates it
+    // with the XEP-0402 configuration pinned through publish-options.
+    NSArray<NSString*> *retracted = self.retractedBookmarkJIDs.allObjects;
+    [self publishLocalRoomBookmarksExcluding:retracted ?: @[]];
+    [self fetchLegacyBookmarksAsFallback];
+}
+
+- (void)glacierBookmarks2:(GlacierBookmarks2Module *)sender
+      didReceiveBookmarks:(NSArray<XMPPConferenceBookmark *> *)bookmarks {
+    for (XMPPConferenceBookmark *bookmark in bookmarks) {
+        NSString *bareJID = bookmark.jid.bare;
+        if (bareJID.length > 0) {
+            // Published again after a retraction: the room is back.
+            [self.retractedBookmarkJIDs removeObject:bareJID];
+        }
+    }
+    [self handleIncomingConferenceBookmarks:bookmarks];
+}
+
+- (void)glacierBookmarks2:(GlacierBookmarks2Module *)sender
+didReceiveRetractionsForJIDs:(NSArray<XMPPJID *> *)jids {
+    // Deliberately non-destructive. A retraction stops us re-asserting the
+    // bookmark and nothing else: bookmark state has proven fragile enough
+    // (one malformed row in the server's pubsub table isolated iOS for over a
+    // year) that it must never be able to delete a conversation, its history,
+    // or its media. Leaving the room is the user's action to take here.
+    for (XMPPJID *jid in jids) {
+        NSString *bareJID = jid.bare;
+        if (bareJID.length == 0) { continue; }
+        [self.retractedBookmarkJIDs addObject:bareJID];
+        DDLogInfo(@"Bookmarks 2: %@ was removed on another device, keeping local history", bareJID);
+    }
+}
+
+/**
+ * One-shot read of XEP-0048 private XML, used only when this server has no
+ * XEP-0402 node for us. ejabberd 24.10 bridges the two stores in both
+ * directions, but an older deployment - or an account that has not written a
+ * bookmark since the server was upgraded - can still have groups only in
+ * private XML. Read-only and additive: iOS no longer writes private XML.
+ */
+- (void)fetchLegacyBookmarksAsFallback {
+    DDLogInfo(@"Bookmarks 2: no node on this server, reading legacy private XML bookmarks once");
+    __weak typeof(self) weakSelf = self;
     [self.bookmarksModule fetchBookmarks:^(NSArray<id<XMPPBookmark>> * _Nullable bookmarks, XMPPIQ * _Nullable responseIq) {
-        
+        typeof(self) strongSelf = weakSelf;
+        if (strongSelf == nil || bookmarks.count == 0) { return; }
+        NSMutableArray<XMPPConferenceBookmark *> *conferences = [[NSMutableArray alloc] init];
+        for (id<XMPPBookmark> bookmark in bookmarks) {
+            if ([bookmark isKindOfClass:[XMPPConferenceBookmark class]]) {
+                [conferences addObject:(XMPPConferenceBookmark *)bookmark];
+            }
+        }
+        [strongSelf performBlockAsync:^{
+            [strongSelf handleIncomingConferenceBookmarks:conferences];
+            NSMutableArray<XMPPConferenceBookmark *> *toPublish = [[NSMutableArray alloc] init];
+            for (XMPPConferenceBookmark *bookmark in conferences) {
+                NSString *bareJID = bookmark.jid.bare;
+                if (bookmark.autoJoin && bareJID.length > 0 &&
+                    ![strongSelf.retractedBookmarkJIDs containsObject:bareJID]) {
+                    [toPublish addObject:bookmark];
+                }
+            }
+            [strongSelf.bookmarks2Module publishBookmarks:toPublish];
+        }];
     } completionQueue:nil];
 }
 
@@ -694,6 +855,13 @@
         }
         //create thread?
         [self joinRoom:roomJID withNickname:nickname subject:nil password:password completion:nil];
+        // This room is ours now, so bookmark it: our other devices then see it
+        // immediately instead of at their next authenticate.
+        XMPPConferenceBookmark *bookmark = [[XMPPConferenceBookmark alloc] initWithJID:roomJID.bareJID
+                                                                         bookmarkName:nil
+                                                                                 nick:nickname
+                                                                             autoJoin:YES];
+        [self publishConferenceBookmarks:@[bookmark]];
     }];
 }
 
@@ -847,6 +1015,7 @@
         if (xroom && ![xroom.roomName isEqualToString:name]) {
             xroom.roomName = name;
             [xroom setModified];
+            [self publishBookmarkForRoom:xroom];
             [xroom saveThreadWithCompletion:^{
                 [GlacierAppDelegate.appDelegate.chatRoomViewController resetRoom];
                 dispatch_async(moduleQueue, ^{

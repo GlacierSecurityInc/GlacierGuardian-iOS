@@ -55,6 +55,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) connect;
 - (void) connectUserInitiated:(BOOL)userInitiated;
 - (BOOL) connectFromBackground;
+/// Force XMPP up for a ringing incoming call, with a bounded retry. Use only on the
+/// VoIP-push woken path (it forces a fresh connection). See
+/// -ensureConnectedForIncomingCall in GlacierXMPPManager for the rationale.
+- (void) ensureConnectedForIncomingCall;
 
 - (void) disconnect;
 - (void) disconnectSocketOnly:(BOOL)socketOnly;

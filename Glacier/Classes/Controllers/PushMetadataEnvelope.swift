@@ -143,12 +143,30 @@ private let envelopeLog = Logger(subsystem: "com.glaciersec.push", category: "En
     /// Sealed-envelope JSON contract (produced by p2/ejabberd, opened here):
     ///   {
     ///     "v":       <int>      // envelope format version
-    ///     "type":    <string>   // stanza type, e.g. "chat" / "groupchat"
+    ///     "type":    <string>   // "chat" / "groupchat" for messages; "reaction" for reactions
     ///     "from":    <string>   // bare from — room JID for groups, sender JID for 1:1
     ///     "sender":  <string?>  // group only: sender's real bare JID
-    ///     "payload": <string>   // base64 of the serialized <encrypted> element
+    ///     "payload": <string>   // base64 of the serialized <encrypted> element (messages only)
     ///     "origin":  <string?>  // XEP-0359 origin-id stamped by the sending client
     ///     "sid":     <string?>  // XEP-0359 stanza-id (see by-JID rule below)
+    ///   }
+    ///
+    /// Reaction envelope (type == "reaction"): the reaction stanza is NOT OMEMO-encrypted, so it
+    /// carries no `payload`; ejabberd's mod_push summary supplies the emoji in cleartext (safe —
+    /// the sealed box already protects the envelope end-to-end to the device key, exactly as it
+    /// does for `from`). `from`/`sender` are reused verbatim from the reaction's message-from /
+    /// sender-real-jid, so group-vs-1:1 is inferred the same way as messages (group ⇔ `sender`
+    /// present). This path is DISPLAY-ONLY — the NSE renders "<reactor> reacted 👍" and never
+    /// writes to the DB (the app reconciles reaction state from MAM/live stanzas on foreground).
+    ///   {
+    ///     "v":       <int>
+    ///     "type":    "reaction"
+    ///     "from":    <string>   // room JID for groups, reactor JID for 1:1
+    ///     "sender":  <string?>  // group only: reactor's real bare JID
+    ///     "emoji":   [<string>] // reactor's full current set; empty = cleared (normally not pushed)
+    ///     "target":  <string?>  // id of the message reacted to (optional; used to thread only)
+    ///     "origin":  <string?>  // push-dedup only here — NOT a DB dedup key (reactions aren't stored)
+    ///     "sid":     <string?>
     ///   }
     ///
     /// `sid` is the XEP-0359 <stanza-id>, but WHICH one depends on the message type, because
@@ -168,6 +186,18 @@ private let envelopeLog = Logger(subsystem: "com.glaciersec.push", category: "En
         public let payloadB64: String
         public let origin: String?
         public let sid: String?
+        /// Reaction envelopes only: the reactor's full current emoji set (cleartext). nil for
+        /// message envelopes; an empty array means the reactor cleared their reaction (the server
+        /// normally won't push those — if one arrives the NSE just leaves the notification as the
+        /// server sent it, since an alert push can't be hidden from the extension).
+        public let emoji: [String]?
+        /// Reaction envelopes only: id of the message being reacted to. Optional and display-only
+        /// (used to thread the notification); reactions are never persisted from the push path.
+        public let target: String?
+
+        /// True when this envelope carries a reaction rather than a message. Reaction envelopes
+        /// omit `payload` and carry `emoji` instead; the NSE renders them display-only.
+        public var isReaction: Bool { type == "reaction" }
     }
 
     /// Opens the sealed box for `kid` and parses the inner JSON. Returns nil on any failure
@@ -207,19 +237,28 @@ private let envelopeLog = Logger(subsystem: "com.glaciersec.push", category: "En
         return Data(plain)
     }
 
-    /// Parses the opened plaintext JSON {v, type, from, sender?, payload, origin?, sid?}.
+    /// Parses the opened plaintext JSON {v, type, from, sender?, payload|emoji, origin?, sid?}.
     public static func parse(_ plain: Data) -> Fields? {
         guard let json = try? JSONSerialization.jsonObject(with: plain) as? [String: Any],
               let type = json["type"] as? String,
-              let from = json["from"] as? String,
-              let payload = json["payload"] as? String else {
+              let from = json["from"] as? String else {
+            return nil
+        }
+        // A message envelope must carry the OMEMO <encrypted> payload; a reaction envelope has no
+        // payload and carries the cleartext emoji set instead. Requiring payload for reactions is
+        // what keeps OLD clients backward compatible: they lack the reaction branch, fail this
+        // guard, return nil, and fall back to MAM (no crash, just no reaction notification).
+        let payload = json["payload"] as? String
+        if type != "reaction" && payload == nil {
             return nil
         }
         return Fields(type: type,
                       from: from,
                       sender: json["sender"] as? String,
-                      payloadB64: payload,
+                      payloadB64: payload ?? "",
                       origin: json["origin"] as? String,
-                      sid: json["sid"] as? String)
+                      sid: json["sid"] as? String,
+                      emoji: json["emoji"] as? [String],
+                      target: json["target"] as? String)
     }
 }

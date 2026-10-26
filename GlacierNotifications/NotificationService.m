@@ -567,6 +567,18 @@ static os_log_t GlacierPushLog(void) {
     self.contentHandler(self.bestAttemptContent);
 }
 
+// Nothing to add (e.g. a reaction that was cleared). Resolve the push path by delivering the
+// server's original push content unchanged — do NOT fall back to MAM (nothing there for us).
+// This does not hide the notification: an alert push always shows; we just don't modify it.
+- (void)deliverOriginalContent {
+    if (self.msgDecrypted) {return;}
+    self.msgDecrypted = YES;
+    self.attemptingPushPath = NO;
+    if (self.failTimer) { [self.failTimer invalidate]; self.failTimer = nil; }
+    os_log_info(GlacierPushLog(), "push: reaction has nothing to add -> deliver original content");
+    self.contentHandler(self.bestAttemptContent);
+}
+
 - (void)failedToDecryptMessage:(NotificationMessage *)message {
     if (self.msgDecrypted) {return;}
 

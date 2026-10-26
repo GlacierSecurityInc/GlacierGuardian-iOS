@@ -309,6 +309,9 @@ import UniformTypeIdentifiers
     }
     
     public func attachmentPicker(_ attachmentPicker: AttachmentPicker, gotVideoURL videoURL: URL) {
+        // The avatar picker only wants images, but AttachmentPicker has already
+        // staged a copy in tmp by the time we are called.
+        GlacierCacheHygiene.removeStagedTemporaryFile(at: videoURL)
         self.avatarPicker = nil
     }
     
@@ -340,10 +343,17 @@ import UniformTypeIdentifiers
                     })
                     
                     if publish, let coorder = xmpp.omemoSignalCoordinator {
-                        coorder.omemoModule?.publishBundle(bundle, elementId: nil)
-                        if let bjid = account.bareJID {
-                            let nsdevices = coorder.fetchDeviceIds(for: bjid, transaction: transaction)
-                            coorder.omemoModule?.publishDeviceIds(nsdevices, elementId: nil)
+                        // Read under the transaction, publish once it commits. Both
+                        // publish calls dispatch_sync onto the OMEMO queue, which
+                        // deadlocks against the writer. See afterCommit(block:).
+                        let nsdevices = account.bareJID.map {
+                            coorder.fetchDeviceIds(for: $0, transaction: transaction)
+                        }
+                        transaction.afterCommit {
+                            coorder.omemoModule?.publishBundle(bundle, elementId: nil)
+                            if let nsdevices = nsdevices {
+                                coorder.omemoModule?.publishDeviceIds(nsdevices, elementId: nil)
+                            }
                         }
                     }
                 }

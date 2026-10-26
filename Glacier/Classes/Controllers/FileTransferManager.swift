@@ -650,6 +650,12 @@ public class FileTransferManager: NSObject, GlacierServerCapabilitiesDelegate {
                 self.send(url: compressionUrl, thread: thread, type: .video, label: label, isPublic:isPublic, completion: completion)
                 FileTransferManager.deleteFile(url.absoluteString)
             } else if exporter.status == AVAssetExportSession.Status.cancelled {
+                // Nothing downstream will claim either file now. The success branch
+                // above deletes the source once the export lands, and send(url:)
+                // deletes whatever it uploads, so a cancel is the one exit where
+                // both would otherwise stay in tmp.
+                GlacierCacheHygiene.removeStagedTemporaryFile(at: url)
+                GlacierCacheHygiene.removeStagedTemporaryFile(at: compressionUrl)
                 self.callbackQueue.async {
                     completion(false, FileTransferError.userCanceled)
                 }
@@ -795,6 +801,7 @@ public class FileTransferManager: NSObject, GlacierServerCapabilitiesDelegate {
                 let resources = try url.resourceValues(forKeys:[.fileSizeKey])
                 let fileSize2 = resources.fileSize!
                 if let service = self.servers.first, fileSize2 > service.maxSize {
+                    GlacierCacheHygiene.removeStagedTemporaryFile(at: url)
                     self.callbackQueue.async {
                         completion(false, FileTransferError.exceedsMaxSize)
                     }
@@ -815,6 +822,7 @@ public class FileTransferManager: NSObject, GlacierServerCapabilitiesDelegate {
             }
             guard let mediaItem = item else {
                 DDLogError("No media item to share for URL: \(url)")
+                GlacierCacheHygiene.removeStagedTemporaryFile(at: url)
                 self.callbackQueue.async {
                     completion(false, nil)
                 }
@@ -823,6 +831,7 @@ public class FileTransferManager: NSObject, GlacierServerCapabilitiesDelegate {
             
             guard let message = self.newOutgoingMessage(to: thread, mediaItem: mediaItem) else {
                 DDLogError("No message could be created for \(thread) \(mediaItem)")
+                GlacierCacheHygiene.removeStagedTemporaryFile(at: url)
                 self.callbackQueue.async {
                     completion(false, nil)
                 }
@@ -883,6 +892,15 @@ public class FileTransferManager: NSObject, GlacierServerCapabilitiesDelegate {
                     
                     self.send(mediaItem: mediaItem, prefetchedData: prefetchedData, message: message, label: label, completion: completion)
                 }, completionQueue: self.internalQueue)
+            } else {
+                // Without a destination path nothing copies the file in and nothing
+                // deletes it back out. This branch also used to return without
+                // calling completion, which left the caller's upload HUD up.
+                DDLogError("No media path for \(mediaItem) on thread \(thread)")
+                GlacierCacheHygiene.removeStagedTemporaryFile(at: url)
+                self.callbackQueue.async {
+                    completion(false, nil)
+                }
             }
         }
     }

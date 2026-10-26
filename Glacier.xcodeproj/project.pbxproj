@@ -7,18 +7,30 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0FA214E68CA8E3D97813BB88 /* Pods_GlacierPods_GlacierTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE0E5C510FA6179A27F9B298 /* Pods_GlacierPods_GlacierTests.framework */; };
+		1B1C1BA983F825E39FA511D3 /* GlacierJailbreakChecks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BCDC7E4E60CE6CF00ABF7B8 /* GlacierJailbreakChecks.swift */; };
+		6518427313EA5F288B524826 /* GlacierICEInterfaceFilter.c in Sources */ = {isa = PBXBuildFile; fileRef = C7BBB56125B1A943B13FA229 /* GlacierICEInterfaceFilter.c */; };
 		9251C3051F345DD5003ACE4A /* RoomOccupants.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9251C3041F345DD5003ACE4A /* RoomOccupants.storyboard */; };
 		9251C34E1F35CC44003ACE4A /* ios-icon-font.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9251C34C1F35CC44003ACE4A /* ios-icon-font.ttf */; };
 		9251C34F1F35CC44003ACE4A /* MaterialIcons-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9251C34D1F35CC44003ACE4A /* MaterialIcons-Regular.ttf */; };
 		92CC68BF1F42F0710006CDF8 /* ComposeGroup.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 92CC68BE1F42F0710006CDF8 /* ComposeGroup.storyboard */; };
+		97B14EDDC4F13272D80220F9 /* GlacierCacheHygiene.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8FE484244904EAEFE4FDDA0 /* GlacierCacheHygiene.swift */; };
+		9BCB776ED9044A4C4FFB89EC /* GlacierICEInterfacePolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = B5B6512497E89C4F064B0006 /* GlacierICEInterfacePolicy.m */; };
 		A96C0A07DB53615C8E3B35AF /* Pods_GlacierPods_Glacier.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B866C535BDB41B0E0C05ED27 /* Pods_GlacierPods_Glacier.framework */; };
 		AA1B00110000000000000011 /* GlacierSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1B00010000000000000001 /* GlacierSetting.swift */; };
 		AA1B00120000000000000012 /* GlacierValueSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1B00020000000000000002 /* GlacierValueSetting.swift */; };
 		AA1B00130000000000000013 /* GlacierBoolSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1B00030000000000000003 /* GlacierBoolSetting.swift */; };
 		AA1B00160000000000000016 /* GlacierViewSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1B00060000000000000006 /* GlacierViewSetting.swift */; };
 		AA1B00180000000000000018 /* GlacierSettingsGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1B00080000000000000008 /* GlacierSettingsGroup.swift */; };
+		AE8CAC8EF9AD1D0321257D22 /* GlacierMediaSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12EBF73CFFAF6BCC0DBD409A /* GlacierMediaSession.swift */; };
 		AF0000000000000000000002 /* PushMetadataEnvelope.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF0000000000000000000001 /* PushMetadataEnvelope.swift */; };
 		AF0000000000000000000003 /* PushMetadataEnvelope.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF0000000000000000000001 /* PushMetadataEnvelope.swift */; };
+		AF0000000000000000000011 /* GuardianPermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF0000000000000000000010 /* GuardianPermissionManager.swift */; };
+		AF0000000000000000000013 /* PermissionsPrimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF0000000000000000000012 /* PermissionsPrimerView.swift */; };
+		AF0000000000000000000015 /* PermissionsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF0000000000000000000014 /* PermissionsSettingsView.swift */; };
+		AF000000000000000000CE01 /* GlacierMessageContentCells.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF000000000000000000CE02 /* GlacierMessageContentCells.swift */; };
+		AF7DE0022C0000000000CB02 /* VideoViewHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF7DE0012C0000000000CB01 /* VideoViewHelper.swift */; };
+		B1A7C0DE0000000000000101 /* GlacierAccountMetadataMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A7C0DE0000000000000102 /* GlacierAccountMetadataMigration.swift */; };
 		B1B1CC4E3FB04F068B794237 /* GlacierPinningConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F92DC40C63D456AB48580C1 /* GlacierPinningConfiguration.swift */; };
 		C10401F22EC4E84200EBADEA /* String+NameInitials.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10401F12EC4E83700EBADEA /* String+NameInitials.swift */; };
 		C10E3D6F2E8AE02600A5E23D /* InputBarAccessoryView+ResetSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10E3D6E2E8AE01D00A5E23D /* InputBarAccessoryView+ResetSize.swift */; };
@@ -43,11 +55,13 @@
 		C1ED02E82EBA64D4006A3B00 /* AudioPlaybackSpeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1ED02E72EBA64C5006A3B00 /* AudioPlaybackSpeed.swift */; };
 		C418A3A288D24D549CD29CB6 /* GlacierCertificatePinning.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE7F3951D7B54FCC90AB6B84 /* GlacierCertificatePinning.swift */; };
 		CE495EE5AC6B43A897B89AF7 /* LPMetadataProvider+Glacier.m in Sources */ = {isa = PBXBuildFile; fileRef = D9021D4F52B349E4B740B7BA /* LPMetadataProvider+Glacier.m */; };
+		D93696048D78BBE3639A4401 /* GlacierICESymbolRebinding.c in Sources */ = {isa = PBXBuildFile; fileRef = 0CE1C62547E868DFD81A1D37 /* GlacierICESymbolRebinding.c */; };
 		D99F17861BAB932800604558 /* GlacierImages.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D9AE3A231BA8D02800255537 /* GlacierImages.xcassets */; };
 		D99F17881BAB936100604558 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 633104D61A169EC800C17BAE /* Localizable.strings */; };
 		D99F178A1BAB946800604558 /* Branding.plist in Resources */ = {isa = PBXBuildFile; fileRef = D99F17891BAB946800604558 /* Branding.plist */; };
 		D99F178C1BAB947E00604558 /* Secrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = D99F178B1BAB947E00604558 /* Secrets.plist */; };
 		D99F17921BABA84600604558 /* UsernameCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = D9C6E69D1B7148EF00572273 /* UsernameCell.xib */; };
+		EFEBE110F90029F0220A7BDB /* GlacierBookmarks2Stanzas.m in Sources */ = {isa = PBXBuildFile; fileRef = 2CD65AA12EA2F3E7636F2E4B /* GlacierBookmarks2Stanzas.m */; };
 		F5091BAD2A8F955900366A81 /* SMSChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5091BAC2A8F955900366A81 /* SMSChatViewController.swift */; };
 		F5091BAF2A93CFAE00366A81 /* AttachmentsInputBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5091BAE2A93CFAE00366A81 /* AttachmentsInputBarView.swift */; };
 		F5091BB22A94EE7200366A81 /* SMSChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5091BB12A94EE7200366A81 /* SMSChatMessage.swift */; };
@@ -313,9 +327,9 @@
 		F571A2A12DC9274900F25C77 /* WebRTCCallVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F571A2A02DC9274800F25C77 /* WebRTCCallVideoView.swift */; };
 		F579769D286C8F55002A2554 /* TitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F579769C286C8F55002A2554 /* TitleView.swift */; };
 		F57DB2C92B4C3A0200D50366 /* ZeroSizeCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F57DB2C82B4C3A0200D50366 /* ZeroSizeCalculator.swift */; };
-		F57F83482F3F7EF400FE3B94 /* BuildFile in Frameworks */ = {isa = PBXBuildFile; };
-		F57F834A2F3F7EF400FE3B94 /* BuildFile in Frameworks */ = {isa = PBXBuildFile; };
-		F57F834B2F3F7EF400FE3B94 /* BuildFile in Frameworks */ = {isa = PBXBuildFile; };
+		F57F83482F3F7EF400FE3B94 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
+		F57F834A2F3F7EF400FE3B94 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
+		F57F834B2F3F7EF400FE3B94 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		F581760C28DCB74900341745 /* SMSComposeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F581760B28DCB74900341745 /* SMSComposeViewController.swift */; };
 		F58CBDBC22B3D59A00DEE48C /* FilePreviewView.xib in Resources */ = {isa = PBXBuildFile; fileRef = F58CBDBB22B3D59A00DEE48C /* FilePreviewView.xib */; };
 		F58D215F257EA25B00EA7BAF /* GlacierImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F58D215E257EA25B00EA7BAF /* GlacierImageCache.swift */; };
@@ -397,10 +411,18 @@
 		F5F29D812AFD12D6009C7BBB /* MessageKit in Frameworks */ = {isa = PBXBuildFile; productRef = F5F29D802AFD12D6009C7BBB /* MessageKit */; };
 		F5F29D832AFD3D3D009C7BBB /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5F29D822AFD3D3D009C7BBB /* Colors.swift */; };
 		F5FB4C9C2A17A8B800BA1966 /* EmptyStateTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5FB4C9B2A17A8B800BA1966 /* EmptyStateTableView.swift */; };
+		F6E7708D2A430DD4E2A86ECB /* GlacierBookmarks2Module.m in Sources */ = {isa = PBXBuildFile; fileRef = 66950C6E30A53F906DB5E353 /* GlacierBookmarks2Module.m */; };
 		F92EC97382D8AF3721B69A86 /* Pods_GlacierNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83F830570D46BBDB2914ABFF /* Pods_GlacierNotifications.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		7AEC2A6870BD3CF028D26DFF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6396AF921A169D54009F3E6C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F5AE284024993496009056F2;
+			remoteInfo = Glacier;
+		};
 		F529325B2C7CBFB6003EAE92 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 6396AF921A169D54009F3E6C /* Project object */;
@@ -464,9 +486,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0CE1C62547E868DFD81A1D37 /* GlacierICESymbolRebinding.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = GlacierICESymbolRebinding.c; sourceTree = "<group>"; };
 		1117C5B58007B46614589BBE /* Pods-GlacierShare.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GlacierShare.debug.xcconfig"; path = "Pods/Target Support Files/Pods-GlacierShare/Pods-GlacierShare.debug.xcconfig"; sourceTree = "<group>"; };
+		12EBF73CFFAF6BCC0DBD409A /* GlacierMediaSession.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GlacierMediaSession.swift; sourceTree = "<group>"; };
 		1F92DC40C63D456AB48580C1 /* GlacierPinningConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlacierPinningConfiguration.swift; sourceTree = "<group>"; };
+		25021B6A850003DA500124CD /* GlacierTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GlacierTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2CD65AA12EA2F3E7636F2E4B /* GlacierBookmarks2Stanzas.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = GlacierBookmarks2Stanzas.m; sourceTree = "<group>"; };
 		56641F8C2F032D3B4948666B /* Pods_GlacierShare.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_GlacierShare.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		5BCDC7E4E60CE6CF00ABF7B8 /* GlacierJailbreakChecks.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GlacierJailbreakChecks.swift; sourceTree = "<group>"; };
 		633104D51A169EC800C17BAE /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/Localizable.strings; sourceTree = "<group>"; };
 		633104D81A169F0E00C17BAE /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
 		633104DA1A169FF900C17BAE /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -501,22 +528,36 @@
 		63DC0EB31A1ABC86002C9598 /* OTR_Codesigning.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = OTR_Codesigning.xcconfig; path = configurations/OTR_Codesigning.xcconfig; sourceTree = "<group>"; };
 		63DC0EB41A1ABC86002C9598 /* OTR_Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = OTR_Debug.xcconfig; path = configurations/OTR_Debug.xcconfig; sourceTree = "<group>"; };
 		63DC0EB61A1ABC86002C9598 /* OTR_Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = OTR_Release.xcconfig; path = configurations/OTR_Release.xcconfig; sourceTree = "<group>"; };
+		66950C6E30A53F906DB5E353 /* GlacierBookmarks2Module.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = GlacierBookmarks2Module.m; sourceTree = "<group>"; };
 		6B8479E5450012C24F7F5099 /* Pods-GlacierShare.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GlacierShare.release.xcconfig"; path = "Pods/Target Support Files/Pods-GlacierShare/Pods-GlacierShare.release.xcconfig"; sourceTree = "<group>"; };
 		6E2C7319B54652879C5D79B9 /* Pods-GlacierNotifications.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GlacierNotifications.debug.xcconfig"; path = "Pods/Target Support Files/Pods-GlacierNotifications/Pods-GlacierNotifications.debug.xcconfig"; sourceTree = "<group>"; };
+		6F11654B59EF2B4D49355E19 /* GlacierICEInterfacePolicy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GlacierICEInterfacePolicy.h; sourceTree = "<group>"; };
+		76BD0B66CE39BE30568A4FDE /* GlacierICESymbolRebinding.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GlacierICESymbolRebinding.h; sourceTree = "<group>"; };
 		83F830570D46BBDB2914ABFF /* Pods_GlacierNotifications.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_GlacierNotifications.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9251C3041F345DD5003ACE4A /* RoomOccupants.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = RoomOccupants.storyboard; path = Interface/RoomOccupants.storyboard; sourceTree = "<group>"; };
 		9251C34C1F35CC44003ACE4A /* ios-icon-font.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "ios-icon-font.ttf"; sourceTree = "<group>"; };
 		9251C34D1F35CC44003ACE4A /* MaterialIcons-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "MaterialIcons-Regular.ttf"; sourceTree = "<group>"; };
 		92CC68BE1F42F0710006CDF8 /* ComposeGroup.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = ComposeGroup.storyboard; path = Interface/ComposeGroup.storyboard; sourceTree = "<group>"; };
+		A8FE484244904EAEFE4FDDA0 /* GlacierCacheHygiene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GlacierCacheHygiene.swift; sourceTree = "<group>"; };
 		AA1B00010000000000000001 /* GlacierSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlacierSetting.swift; sourceTree = "<group>"; };
 		AA1B00020000000000000002 /* GlacierValueSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlacierValueSetting.swift; sourceTree = "<group>"; };
 		AA1B00030000000000000003 /* GlacierBoolSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlacierBoolSetting.swift; sourceTree = "<group>"; };
 		AA1B00060000000000000006 /* GlacierViewSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlacierViewSetting.swift; sourceTree = "<group>"; };
 		AA1B00080000000000000008 /* GlacierSettingsGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlacierSettingsGroup.swift; sourceTree = "<group>"; };
 		AF0000000000000000000001 /* PushMetadataEnvelope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushMetadataEnvelope.swift; sourceTree = "<group>"; };
+		AF0000000000000000000010 /* GuardianPermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianPermissionManager.swift; sourceTree = "<group>"; };
+		AF0000000000000000000012 /* PermissionsPrimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsPrimerView.swift; sourceTree = "<group>"; };
+		AF0000000000000000000014 /* PermissionsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsSettingsView.swift; sourceTree = "<group>"; };
+		AF000000000000000000CE02 /* GlacierMessageContentCells.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlacierMessageContentCells.swift; sourceTree = "<group>"; };
+		AF7DE0012C0000000000CB01 /* VideoViewHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoViewHelper.swift; sourceTree = "<group>"; };
 		B002B9AEAE989739DF09B07E /* Pods-GlacierPods-Glacier.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GlacierPods-Glacier.release.xcconfig"; path = "Pods/Target Support Files/Pods-GlacierPods-Glacier/Pods-GlacierPods-Glacier.release.xcconfig"; sourceTree = "<group>"; };
+		B1A7C0DE0000000000000102 /* GlacierAccountMetadataMigration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GlacierAccountMetadataMigration.swift; sourceTree = "<group>"; };
 		B36659ABD8AA949C811465C3 /* Pods-GlacierPods-Glacier.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GlacierPods-Glacier.debug.xcconfig"; path = "Pods/Target Support Files/Pods-GlacierPods-Glacier/Pods-GlacierPods-Glacier.debug.xcconfig"; sourceTree = "<group>"; };
+		B37DFD1C5C019AC950622B0B /* GlacierICEInterfaceFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GlacierICEInterfaceFilter.h; sourceTree = "<group>"; };
+		B52263D19974369BE6A3CDDD /* Pods-GlacierPods-GlacierTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GlacierPods-GlacierTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-GlacierPods-GlacierTests/Pods-GlacierPods-GlacierTests.release.xcconfig"; sourceTree = "<group>"; };
+		B5B6512497E89C4F064B0006 /* GlacierICEInterfacePolicy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GlacierICEInterfacePolicy.m; sourceTree = "<group>"; };
 		B866C535BDB41B0E0C05ED27 /* Pods_GlacierPods_Glacier.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_GlacierPods_Glacier.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C0906F7CCC411E2BA46B37E3 /* GlacierBookmarks2Module.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = GlacierBookmarks2Module.h; sourceTree = "<group>"; };
 		C10401F12EC4E83700EBADEA /* String+NameInitials.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+NameInitials.swift"; sourceTree = "<group>"; };
 		C10E3D6E2E8AE01D00A5E23D /* InputBarAccessoryView+ResetSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "InputBarAccessoryView+ResetSize.swift"; sourceTree = "<group>"; };
 		C10FBB352E85BB0800D5F2B8 /* Date+Formatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Formatting.swift"; sourceTree = "<group>"; };
@@ -537,15 +578,20 @@
 		C1ED02E52EB8A320006A3B00 /* GlacierAudioMessageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlacierAudioMessageCell.swift; sourceTree = "<group>"; };
 		C1ED02E72EBA64C5006A3B00 /* AudioPlaybackSpeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlaybackSpeed.swift; sourceTree = "<group>"; };
 		C25515301B32495881273218 /* LPMetadataProvider+Glacier.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LPMetadataProvider+Glacier.h"; sourceTree = "<group>"; };
+		C7BBB56125B1A943B13FA229 /* GlacierICEInterfaceFilter.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = GlacierICEInterfaceFilter.c; sourceTree = "<group>"; };
 		CCD1F8E85C658C8D3865B584 /* Pods.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE0E5C510FA6179A27F9B298 /* Pods_GlacierPods_GlacierTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_GlacierPods_GlacierTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D24FC2E4918E44B94A9583A7 /* Pods-GlacierPods-GlacierTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GlacierPods-GlacierTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-GlacierPods-GlacierTests/Pods-GlacierPods-GlacierTests.debug.xcconfig"; sourceTree = "<group>"; };
 		D9021D4F52B349E4B740B7BA /* LPMetadataProvider+Glacier.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LPMetadataProvider+Glacier.m"; sourceTree = "<group>"; };
 		D93027561BAA381F000CC975 /* GlacierResources.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GlacierResources.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		D93027581BAA381F000CC975 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D99C6146E8D4E9D391AE5BD2 /* GlacierBookmarks2Stanzas.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = GlacierBookmarks2Stanzas.h; sourceTree = "<group>"; };
 		D99F17891BAB946800604558 /* Branding.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Branding.plist; sourceTree = "<group>"; };
 		D99F178B1BAB947E00604558 /* Secrets.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
 		D9AE3A231BA8D02800255537 /* GlacierImages.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = GlacierImages.xcassets; path = Images/GlacierImages.xcassets; sourceTree = "<group>"; };
 		D9C6E69D1B7148EF00572273 /* UsernameCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = UsernameCell.xib; path = Interface/UsernameCell.xib; sourceTree = "<group>"; };
 		DDE7772A094310875367BD98 /* Pods-GlacierNotifications.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GlacierNotifications.release.xcconfig"; path = "Pods/Target Support Files/Pods-GlacierNotifications/Pods-GlacierNotifications.release.xcconfig"; sourceTree = "<group>"; };
+		DF4298126266D0E5E08966B8 /* fishhook-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "fishhook-LICENSE.txt"; sourceTree = "<group>"; };
 		F5091BAC2A8F955900366A81 /* SMSChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMSChatViewController.swift; sourceTree = "<group>"; };
 		F5091BAE2A93CFAE00366A81 /* AttachmentsInputBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentsInputBarView.swift; sourceTree = "<group>"; };
 		F5091BB12A94EE7200366A81 /* SMSChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMSChatMessage.swift; sourceTree = "<group>"; };
@@ -907,7 +953,23 @@
 		FE7F3951D7B54FCC90AB6B84 /* GlacierCertificatePinning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlacierCertificatePinning.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		7A56CA43DB1AAD32249ADE98 /* GlacierTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = GlacierTests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		8D8B1642FB16C41C9C8D12E7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0FA214E68CA8E3D97813BB88 /* Pods_GlacierPods_GlacierTests.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D93027531BAA381F000CC975 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -922,7 +984,7 @@
 				F529326A2C7CD02B003EAE92 /* libwg-go.a in Frameworks */,
 				F52932552C7CBFB6003EAE92 /* NetworkExtension.framework in Frameworks */,
 				F52932AD2C7E6D21003EAE92 /* WireGuardKit in Frameworks */,
-				F57F834B2F3F7EF400FE3B94 /* BuildFile in Frameworks */,
+				F57F834B2F3F7EF400FE3B94 /* (null) in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -934,7 +996,7 @@
 				F5C8A5532CD25B6A00235CBE /* libgpg-error.a in Frameworks */,
 				F5F29D812AFD12D6009C7BBB /* MessageKit in Frameworks */,
 				F5C8A5522CD25B6A00235CBE /* libgcrypt.a in Frameworks */,
-				F57F834A2F3F7EF400FE3B94 /* BuildFile in Frameworks */,
+				F57F834A2F3F7EF400FE3B94 /* (null) in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -955,7 +1017,7 @@
 				F5095A042E9E8A35007BA0FE /* AWSCognitoAuthPlugin in Frameworks */,
 				F5C8A5512CD25B5600235CBE /* libgpg-error.a in Frameworks */,
 				F5095A062E9E8A48007BA0FE /* AWSS3StoragePlugin in Frameworks */,
-				F57F83482F3F7EF400FE3B94 /* BuildFile in Frameworks */,
+				F57F83482F3F7EF400FE3B94 /* (null) in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -974,6 +1036,7 @@
 				6396AF9B1A169D54009F3E6C /* Products */,
 				C1E90FC219EFFEE2E8C7EECF /* Pods */,
 				DB9AACD6ED82090C7A6B0076 /* Frameworks */,
+				7A56CA43DB1AAD32249ADE98 /* GlacierTests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -984,6 +1047,7 @@
 				F5AE286724993496009056F2 /* Glacier.app */,
 				F53AD9D62518C6D000AD46FA /* GlacierNotifications.appex */,
 				F52932542C7CBFB6003EAE92 /* WireGuardNetworkExtension.appex */,
+				25021B6A850003DA500124CD /* GlacierTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -996,6 +1060,20 @@
 				63DC0EB61A1ABC86002C9598 /* OTR_Release.xcconfig */,
 			);
 			name = Configurations;
+			sourceTree = "<group>";
+		};
+		8A425E66F3B7DEE3F355ED9F /* ICEInterfacePolicy */ = {
+			isa = PBXGroup;
+			children = (
+				C7BBB56125B1A943B13FA229 /* GlacierICEInterfaceFilter.c */,
+				B37DFD1C5C019AC950622B0B /* GlacierICEInterfaceFilter.h */,
+				6F11654B59EF2B4D49355E19 /* GlacierICEInterfacePolicy.h */,
+				B5B6512497E89C4F064B0006 /* GlacierICEInterfacePolicy.m */,
+				0CE1C62547E868DFD81A1D37 /* GlacierICESymbolRebinding.c */,
+				76BD0B66CE39BE30568A4FDE /* GlacierICESymbolRebinding.h */,
+				DF4298126266D0E5E08966B8 /* fishhook-LICENSE.txt */,
+			);
+			path = ICEInterfacePolicy;
 			sourceTree = "<group>";
 		};
 		C10FBB342E85BB0000D5F2B8 /* Extensions */ = {
@@ -1039,6 +1117,8 @@
 				B002B9AEAE989739DF09B07E /* Pods-GlacierPods-Glacier.release.xcconfig */,
 				1117C5B58007B46614589BBE /* Pods-GlacierShare.debug.xcconfig */,
 				6B8479E5450012C24F7F5099 /* Pods-GlacierShare.release.xcconfig */,
+				B52263D19974369BE6A3CDDD /* Pods-GlacierPods-GlacierTests.release.xcconfig */,
+				D24FC2E4918E44B94A9583A7 /* Pods-GlacierPods-GlacierTests.debug.xcconfig */,
 			);
 			name = Pods;
 			sourceTree = "<group>";
@@ -1078,6 +1158,7 @@
 				B866C535BDB41B0E0C05ED27 /* Pods_GlacierPods_Glacier.framework */,
 				56641F8C2F032D3B4948666B /* Pods_GlacierShare.framework */,
 				F529323B2C78C0E8003EAE92 /* NetworkExtension.framework */,
+				CE0E5C510FA6179A27F9B298 /* Pods_GlacierPods_GlacierTests.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1312,6 +1393,8 @@
 				F5091BAE2A93CFAE00366A81 /* AttachmentsInputBarView.swift */,
 				F59778B32B1E1F3800577256 /* MessagesInputBarVew.swift */,
 				F5BFABD72D08CDA4003061BD /* AuthView.swift */,
+				AF0000000000000000000012 /* PermissionsPrimerView.swift */,
+				AF0000000000000000000014 /* PermissionsSettingsView.swift */,
 				F51E3AC92D396E4600D3A78C /* DialedNumbersHeader.swift */,
 				C1833CCD2EA20CF400709B68 /* ContextMenu */,
 				C12B16A22ECE10750053BAC2 /* UserProfileView.swift */,
@@ -1323,6 +1406,7 @@
 			isa = PBXGroup;
 			children = (
 				C1ED02E52EB8A320006A3B00 /* GlacierAudioMessageCell.swift */,
+				AF000000000000000000CE02 /* GlacierMessageContentCells.swift */,
 				C1D27B432EB22A94003CD1FB /* UserReactionDetailsTableViewCell.swift */,
 				F58E30A52CE6401A0049BBF1 /* KeyPadCell.swift */,
 				F51E3ACB2D396E6300D3A78C /* BackspaceCell.swift */,
@@ -1408,7 +1492,10 @@
 				F547720A2B1F4F3000BE2C06 /* AudioPlaybackController.swift */,
 				F52932882C7D200A003EAE92 /* WireGuardManager.swift */,
 				F54164492CAD673B00FCE991 /* LocationManager.swift */,
+				AF0000000000000000000010 /* GuardianPermissionManager.swift */,
 				F55A2C832D92CD32006C32AE /* WebRTCClient.swift */,
+				5BCDC7E4E60CE6CF00ABF7B8 /* GlacierJailbreakChecks.swift */,
+				8A425E66F3B7DEE3F355ED9F /* ICEInterfacePolicy */,
 			);
 			path = Controllers;
 			sourceTree = "<group>";
@@ -1431,6 +1518,10 @@
 				F52B90E5249943E600657875 /* RoomManager.swift */,
 				F52B90DA249943E600657875 /* Storage */,
 				F52B90E6249943E600657875 /* XMPPManager.swift */,
+				C0906F7CCC411E2BA46B37E3 /* GlacierBookmarks2Module.h */,
+				66950C6E30A53F906DB5E353 /* GlacierBookmarks2Module.m */,
+				D99C6146E8D4E9D391AE5BD2 /* GlacierBookmarks2Stanzas.h */,
+				2CD65AA12EA2F3E7636F2E4B /* GlacierBookmarks2Stanzas.m */,
 			);
 			path = XMPP;
 			sourceTree = "<group>";
@@ -1483,6 +1574,9 @@
 				F52B912D249943E600657875 /* AppTheme.h */,
 				F52B9127249943E600657875 /* DefaultTheme.swift */,
 				F52B913B249943E600657875 /* GlacierLog.swift */,
+				A8FE484244904EAEFE4FDDA0 /* GlacierCacheHygiene.swift */,
+				B1A7C0DE0000000000000102 /* GlacierAccountMetadataMigration.swift */,
+				12EBF73CFFAF6BCC0DBD409A /* GlacierMediaSession.swift */,
 				F52B9130249943E600657875 /* GlacierColors.h */,
 				F52B9124249943E600657875 /* GlacierColors.m */,
 				F52B912E249943E600657875 /* GlacierConstants.h */,
@@ -1502,6 +1596,7 @@
 				F54164472CAC89B100FCE991 /* RNCryptor.swift */,
 				F52B912C249943E600657875 /* UIAlertController+Glacier.swift */,
 				F5211A5E2880B2D300F45C21 /* ImageViewHelper.swift */,
+				AF7DE0012C0000000000CB01 /* VideoViewHelper.swift */,
 				F547F24029270AE000A0B584 /* SwiftyToolTip.swift */,
 				F59958AA296DFC1500ACBFFC /* UnfairLock.h */,
 				F59958AB296DFC2D00ACBFFC /* UnfairLock.m */,
@@ -1735,6 +1830,29 @@
 /* End PBXLegacyTarget section */
 
 /* Begin PBXNativeTarget section */
+		0CA71F6DE540758AD425AC12 /* GlacierTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 82C09F4A20B7B7606259A1A5 /* Build configuration list for PBXNativeTarget "GlacierTests" */;
+			buildPhases = (
+				4AD8F47D315DC8CE666BA3CD /* [CP] Check Pods Manifest.lock */,
+				3D9D8597565AE1A414D45EE8 /* Sources */,
+				8D8B1642FB16C41C9C8D12E7 /* Frameworks */,
+				32EFA8EA0611FB55D6E0CFAF /* Resources */,
+				796771D79020984FD20FB5DD /* [CP] Embed Pods Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DAB37D4271730046FF68C143 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				7A56CA43DB1AAD32249ADE98 /* GlacierTests */,
+			);
+			name = GlacierTests;
+			productName = GlacierTests;
+			productReference = 25021B6A850003DA500124CD /* GlacierTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		D93027551BAA381F000CC975 /* GlacierResources */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D930275C1BAA381F000CC975 /* Build configuration list for PBXNativeTarget "GlacierResources" */;
@@ -1927,11 +2045,19 @@
 				F53AD9D52518C6D000AD46FA /* GlacierNotifications */,
 				F529324C2C7CBDE3003EAE92 /* WireGuardGoBridge */,
 				F52932532C7CBFB6003EAE92 /* WireGuardNetworkExtension */,
+				0CA71F6DE540758AD425AC12 /* GlacierTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		32EFA8EA0611FB55D6E0CFAF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D93027541BAA381F000CC975 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -2007,6 +2133,28 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		4AD8F47D315DC8CE666BA3CD /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-GlacierPods-GlacierTests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
 		51A8ADFF9A694988BA7A730E /* Upload Debug Symbols to Sentry */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -2044,6 +2192,27 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		796771D79020984FD20FB5DD /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-GlacierPods-GlacierTests/Pods-GlacierPods-GlacierTests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			inputPaths = (
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-GlacierPods-GlacierTests/Pods-GlacierPods-GlacierTests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-GlacierPods-GlacierTests/Pods-GlacierPods-GlacierTests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		8994457C2585A98ECA60920C /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -2074,9 +2243,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-GlacierPods-Glacier/Pods-GlacierPods-Glacier-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-GlacierPods-Glacier/Pods-GlacierPods-Glacier-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -2086,6 +2259,13 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		3D9D8597565AE1A414D45EE8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D93027521BAA381F000CC975 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -2226,6 +2406,9 @@
 				F52B9209249943E800657875 /* RoomStorage.swift in Sources */,
 				C1833CCF2EA20D0500709B68 /* ContextMenuDelegate.swift in Sources */,
 				F52B923F249943E900657875 /* GlacierLog.swift in Sources */,
+				97B14EDDC4F13272D80220F9 /* GlacierCacheHygiene.swift in Sources */,
+				B1A7C0DE0000000000000101 /* GlacierAccountMetadataMigration.swift in Sources */,
+				AE8CAC8EF9AD1D0321257D22 /* GlacierMediaSession.swift in Sources */,
 				F581760C28DCB74900341745 /* SMSComposeViewController.swift in Sources */,
 				F547F24129270AE000A0B584 /* SwiftyToolTip.swift in Sources */,
 				F52B9207249943E800657875 /* MessageStorage.swift in Sources */,
@@ -2239,7 +2422,10 @@
 				F5F29D772AF97C1A009C7BBB /* ChatViewControllerExt.swift in Sources */,
 				C10E3D6F2E8AE02600A5E23D /* InputBarAccessoryView+ResetSize.swift in Sources */,
 				C1ED02E62EB8A331006A3B00 /* GlacierAudioMessageCell.swift in Sources */,
+				AF000000000000000000CE01 /* GlacierMessageContentCells.swift in Sources */,
 				F5BFABD82D08CDA4003061BD /* AuthView.swift in Sources */,
+				AF0000000000000000000013 /* PermissionsPrimerView.swift in Sources */,
+				AF0000000000000000000015 /* PermissionsSettingsView.swift in Sources */,
 				F526E24E2B2A1CBF007F637E /* ChatSignalHelper.swift in Sources */,
 				F52B920B249943E800657875 /* GlacierXMPPManager.m in Sources */,
 				F51E3ACA2D396E4600D3A78C /* DialedNumbersHeader.swift in Sources */,
@@ -2263,6 +2449,7 @@
 				F52B9152249943E700657875 /* VideoCallViewController.swift in Sources */,
 				F54E17A8255497150081E889 /* ProfileManager.m in Sources */,
 				F5211A5F2880B2D300F45C21 /* ImageViewHelper.swift in Sources */,
+				AF7DE0022C0000000000CB02 /* VideoViewHelper.swift in Sources */,
 				F526E2462B29FB44007F637E /* ChatSignalSession.swift in Sources */,
 				F5624832255D883D00707D9E /* FlowLabelTableViewCell.swift in Sources */,
 				F52B921D249943E900657875 /* ServerCheck.swift in Sources */,
@@ -2288,6 +2475,7 @@
 				F56505292D5BB5CF0052E7DB /* CallRecord.swift in Sources */,
 				F52B9242249943E900657875 /* GlacierAppDelegate.swift in Sources */,
 				F541644A2CAD673B00FCE991 /* LocationManager.swift in Sources */,
+				AF0000000000000000000011 /* GuardianPermissionManager.swift in Sources */,
 				F52B921E249943E900657875 /* AccountSignalEncryptionManager.swift in Sources */,
 				F526E2482B29FB62007F637E /* ChatAccountSignalIdentity.swift in Sources */,
 				F5091BDD2AB1E82100366A81 /* OutgoingChatMessage.swift in Sources */,
@@ -2422,6 +2610,9 @@
 				F52B9222249943E900657875 /* NSData+Glacier.swift in Sources */,
 				F53CB67D25793D2700EE07ED /* BackupManager.swift in Sources */,
 				F52B9217249943E900657875 /* AudioSessionManager.m in Sources */,
+				6518427313EA5F288B524826 /* GlacierICEInterfaceFilter.c in Sources */,
+				9BCB776ED9044A4C4FFB89EC /* GlacierICEInterfacePolicy.m in Sources */,
+				D93696048D78BBE3639A4401 /* GlacierICESymbolRebinding.c in Sources */,
 				F52B9233249943E900657875 /* GlacierColors.m in Sources */,
 				F52B91C3249943E800657875 /* BuddyInfoCell.m in Sources */,
 				F52B915D249943E700657875 /* SettingsViewController.m in Sources */,
@@ -2433,12 +2624,21 @@
 				F52B923C249943E900657875 /* GlacierXMPPError.m in Sources */,
 				F52B91EF249943E800657875 /* PushController.swift in Sources */,
 				F53C95162ABCCB06007121BD /* ChatAudioItem.swift in Sources */,
+				1B1C1BA983F825E39FA511D3 /* GlacierJailbreakChecks.swift in Sources */,
+				F6E7708D2A430DD4E2A86ECB /* GlacierBookmarks2Module.m in Sources */,
+				EFEBE110F90029F0220A7BDB /* GlacierBookmarks2Stanzas.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		DAB37D4271730046FF68C143 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Glacier;
+			target = F5AE284024993496009056F2 /* Glacier */;
+			targetProxy = 7AEC2A6870BD3CF028D26DFF /* PBXContainerItemProxy */;
+		};
 		F529325C2C7CBFB6003EAE92 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F52932532C7CBFB6003EAE92 /* WireGuardNetworkExtension */;
@@ -2517,6 +2717,39 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		60F594482F6180164AD347D5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D24FC2E4918E44B94A9583A7 /* Pods-GlacierPods-GlacierTests.debug.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 5MXM7J8H38;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/Glacier/Classes/Controllers/XMPP",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.glacier.MessengerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Glacier.app/Glacier";
+			};
+			name = Debug;
+		};
 		6396AFBB1A169D54009F3E6C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2629,6 +2862,40 @@
 			};
 			name = Release;
 		};
+		64E094E420671BA598D135D3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = B52263D19974369BE6A3CDDD /* Pods-GlacierPods-GlacierTests.release.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 5MXM7J8H38;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/Glacier/Classes/Controllers/XMPP",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.glacier.MessengerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Glacier.app/Glacier";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		D93027591BAA381F000CC975 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2691,7 +2958,7 @@
 				DEBUGGING_SYMBOLS = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 5MXM7J8H38;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -2700,7 +2967,7 @@
 				MTL_FAST_MATH = YES;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
-				PATH = "$(PATH):/opt/homebrew/bin:/usr/local/bin:/opt/homebrew/Cellar/go/1.22.5/bin";
+				PATH = "$(PATH):/opt/homebrew/bin:/usr/local/bin";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Glacier/Wireguard/WireGuard-Bridging-Header.h";
 			};
@@ -2724,13 +2991,13 @@
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 5MXM7J8H38;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_FAST_MATH = YES;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
-				PATH = "$(PATH):/opt/homebrew/bin:/usr/local/bin:/opt/homebrew/Cellar/go/1.22.5/bin";
+				PATH = "$(PATH):/opt/homebrew/bin:/usr/local/bin";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Glacier/Wireguard/WireGuard-Bridging-Header.h";
 			};
@@ -2860,7 +3127,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1196;
+				CURRENT_PROJECT_VERSION = 1208;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 5MXM7J8H38;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -2882,7 +3149,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Glacier/Includes",
 				);
-				MARKETING_VERSION = 7.1;
+				MARKETING_VERSION = 7.1.1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.glacier.Messenger.GlacierNotifications;
@@ -2915,7 +3182,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1196;
+				CURRENT_PROJECT_VERSION = 1208;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 5MXM7J8H38;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -2937,7 +3204,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Glacier/Includes",
 				);
-				MARKETING_VERSION = 7.1;
+				MARKETING_VERSION = 7.1.1;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.glacier.Messenger.GlacierNotifications;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2966,7 +3233,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1196;
+				CURRENT_PROJECT_VERSION = 1265;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 5MXM7J8H38;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -2987,7 +3254,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Glacier/Includes",
 				);
-				MARKETING_VERSION = 7.1;
+				MARKETING_VERSION = 7.3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.glacier.Messenger;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -3019,7 +3286,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1196;
+				CURRENT_PROJECT_VERSION = 1265;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 5MXM7J8H38;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3040,7 +3307,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Glacier/Includes",
 				);
-				MARKETING_VERSION = 7.1;
+				MARKETING_VERSION = 7.3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.glacier.Messenger;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -3063,6 +3330,15 @@
 			buildConfigurations = (
 				6396AFBB1A169D54009F3E6C /* Debug */,
 				6396AFBC1A169D54009F3E6C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		82C09F4A20B7B7606259A1A5 /* Build configuration list for PBXNativeTarget "GlacierTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				64E094E420671BA598D135D3 /* Release */,
+				60F594482F6180164AD347D5 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -3152,7 +3428,7 @@
 			repositoryURL = "https://github.com/stasel/WebRTC.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 140.0.0;
+				minimumVersion = 150.0.0;
 			};
 		};
 		F5AA1E092E9E7EF800843B7F /* XCRemoteSwiftPackageReference "amplify-swift" */ = {

@@ -9,6 +9,8 @@
 @import Foundation;
 @import XMPPFramework;
 
+#import "GlacierBookmarks2Module.h"
+
 @class RoomStorage;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -16,7 +18,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, strong, readonly) RoomStorage *roomStorage;
 @property (nonatomic, strong, readonly) XMPPMessageArchiveManagement *archiving;
+/** XEP-0048 private XML storage. Read-only fallback for servers that do not
+    have the XEP-0402 node; iOS no longer writes to it. */
 @property (nonatomic, strong, readonly) XMPPBookmarksModule *bookmarksModule;
+/** XEP-0402 PEP native bookmarks. The store iOS reads and writes.
+    nil once the module has been deactivated. */
+@property (nonatomic, strong, readonly, nullable) GlacierBookmarks2Module *bookmarks2Module;
 @property (nonatomic, strong, readonly, nullable)  NSArray<NSString*> *conferenceServicesJID;
 @property (nonatomic, strong, readonly)  NSArray<NSString*> * _Nullable availableRooms;
 @property (nonatomic, strong, readonly)  NSArray<NSString*> * _Nullable allRooms;
@@ -59,6 +66,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)xmppMUC:(nullable XMPPMUC *)sender roomJID:(XMPPJID *)roomJID didReceiveInvitation:(XMPPMessage *)message;
 
 - (void) publishJoinedRoom:(XMPPJID *)roomjid withName:(NSString *)name;
+
+/** Publishes these rooms to the XEP-0402 bookmarks node, one item each. */
+- (void)publishConferenceBookmarks:(NSArray<XMPPConferenceBookmark *> *)bookmarks;
 
 - (void)clearOccupantRoleWithJID:(XMPPJID *)occupantJID;
 

@@ -31,7 +31,7 @@ static NSString *const kOTRFeedbackEmail = @"kOTRFeedbackEmail";
 }
 
 + (NSString*) backendAPIEndpoint {
-    return [[self defaultPlist] objectForKey:@"backendAPIEndpoint"]; //devAPIEndpoint stageAPIEndpoint
+    return [[self defaultPlist] objectForKey:@"backendAPIEndpoint"]; //devAPIEndpoint backendAPIEndpoint stageAPIEndpoint
 }
 
 + (NSString*) stageAPIEndpoint {

@@ -38,6 +38,7 @@ extern NSString *const kGlacierNotificationAccountCollectionKey;
 
 extern NSString *const kOTRServiceName;
 extern NSString *const kOTRCertificateServiceName;
+extern NSString *const kGlacierAccessTokenServiceName;
 
 extern NSString *const kGlacierServiceName;
 extern NSString *const kGlacierKeyGroup;

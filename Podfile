@@ -72,7 +72,7 @@ abstract_target 'GlacierPods' do
 
   pod 'Font-Awesome-Swift', :git => 'https://github.com/afriedmanGlacier/Font-Awesome-Swift.git'
   pod 'TwilioVoice', '~> 6.12.0'
-  pod 'IOSSecuritySuite', '~> 2.2.0'
+  pod 'IOSSecuritySuite', '1.9.11' # pinned to the last BSD-2-Clause release; 2.x is under a proprietary EULA
   #pod 'TwilioConversationsClient', '~> 4.0.3'
   pod 'DifferenceKit'
 
@@ -96,6 +96,10 @@ abstract_target 'GlacierPods' do
   pod 'XLForm', '~> 4.1'
 
   target 'Glacier'
+
+  # Unit tests are hosted by the Glacier app and use `@testable import Glacier`, so they
+  # need the same pod set on their search/link paths (notably Sodium and GRDB).
+  target 'GlacierTests'
 end
 
 target 'GlacierNotifications' do

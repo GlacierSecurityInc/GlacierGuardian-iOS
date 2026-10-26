@@ -135,7 +135,7 @@ open class AudioPlaybackController: NSObject, AVAudioPlayerDelegate {
   }
     
     func getData(from url: URL, completion: @escaping (Data?, URLResponse?, Error?) -> ()) {
-        URLSession.shared.dataTask(with: url, completionHandler: completion).resume()
+        GlacierMediaSession.session.dataTask(with: url, completionHandler: completion).resume()
     }
 
   /// Used to pause the audio sound

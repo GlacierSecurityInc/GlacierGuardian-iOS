@@ -58,14 +58,12 @@ class JingleUtility {
         var currentMedia: MediaDescription?
         
         var groupBundle = false
-        var groupNames: [String] = []
         var extmapAllowMixed = false
         
         for line in lines {
             if line.starts(with: "a=group:BUNDLE") {
                 //print("***** parseSDP \(line)")
                 groupBundle = true
-                groupNames = line.split(separator: " ").dropFirst(1).map { String($0) }
             } else if line.starts(with: "a=extmap-allow-mixed") {
                 extmapAllowMixed = true
             } else if line.starts(with: "m=") {
@@ -73,13 +71,16 @@ class JingleUtility {
                 let type = String(parts[0].dropFirst(2))
                 let port = String(parts[1])
                 let payloads = parts.dropFirst(3).map { String($0) }
-                var contentName = type
                 if let media = currentMedia {
                     mediaDescriptions.append(media)
                 }
-                if groupNames.count > mediaDescriptions.count {
-                    contentName = String(mediaDescriptions.count)
-                }
+                // Name the content by its media index, which is the same value generateSDP writes
+                // as `a=mid:` below. Peers that send an a=group:BUNDLE line already took this path.
+                // The old fallback to the media type only fired for peers that omit XEP-0338
+                // grouping (the Dino-based Mac app sends no <group> at all), and produced a content
+                // name that disagreed with the mid we use everywhere else — so those peers rejected
+                // our session-accept with <bad-request/> "unknown content" and DTLS never completed.
+                let contentName = String(mediaDescriptions.count)
                 currentMedia = MediaDescription(contentName: contentName, mediaType: type, port: port, payloadTypes: payloads)
                 currentMedia?.groupBundle = groupBundle
                 currentMedia?.extmapAllowMixed = extmapAllowMixed

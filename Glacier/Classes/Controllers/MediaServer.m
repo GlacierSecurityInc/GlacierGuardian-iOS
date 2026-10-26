@@ -14,6 +14,9 @@
 @interface MediaServer ()
 
 @property (nonatomic, strong) GCDWebServer *webServer;
+// GCDWebServer refuses to add handlers while it is running, and handlers survive
+// a stop/start cycle, so the request handler is installed exactly once.
+@property (nonatomic, assign) BOOL handlerInstalled;
 
 @end
 
@@ -37,8 +40,17 @@
     return [MediaFileManager sharedInstance].ioCipher;
 }
 
-- (BOOL)startOnPort:(NSUInteger)port error:(NSError **)error
+- (NSDictionary *)serverOptions
 {
+    return @{GCDWebServerOption_BindToLocalhost: @(YES),
+             GCDWebServerOption_AutomaticallySuspendInBackground: @(NO)};
+}
+
+- (void)installHandlerIfNeeded
+{
+    if (self.handlerInstalled) {
+        return;
+    }
     __weak typeof(self)weakSelf = self;
     [self.webServer addHandlerForMethod:@"GET"
                               pathRegex:[NSString stringWithFormat:@"/%@/.*",kOTRRootMediaDirectory]
@@ -47,18 +59,33 @@
                           __strong typeof(weakSelf)strongSelf = weakSelf;
                           [strongSelf handleMediaRequest:request completion:completionBlock];
                       }];
-    return [self.webServer startWithOptions:@{GCDWebServerOption_BindToLocalhost: @(YES),GCDWebServerOption_AutomaticallySuspendInBackground: @(NO)}
-                                      error:error];
-    //return [self.webServer startWithOptionsForExtension:@{GCDWebServerOption_BindToLocalhost: @(YES)}
-    //                                  error:error];
+    self.handlerInstalled = YES;
+}
+
+- (BOOL)startOnPort:(NSUInteger)port error:(NSError **)error
+{
+    @synchronized (self) {
+        [self installHandlerIfNeeded];
+        return [self.webServer startWithOptions:[self serverOptions] error:error];
+        //return [self.webServer startWithOptionsForExtension:@{GCDWebServerOption_BindToLocalhost: @(YES)}
+        //                                  error:error];
+    }
+}
+
+- (BOOL)ensureRunning
+{
+    @synchronized (self) {
+        if ([self.webServer isRunning]) {
+            return YES;
+        }
+        [self installHandlerIfNeeded];
+        return [self.webServer startWithOptions:[self serverOptions] error:NULL];
+    }
 }
 
 - (void) reconnectWebServer:(NSNotification *)notification
 {
-    if (![self.webServer isRunning]) {
-        [self.webServer startWithOptions:@{GCDWebServerOption_BindToLocalhost: @(YES),GCDWebServerOption_AutomaticallySuspendInBackground: @(NO)}
-                                          error:NULL];
-    }
+    [self ensureRunning];
 }
 
 - (void) disconnectWebServer:(void (^)(void))completionHandler

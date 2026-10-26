@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import AVFoundation
 import GRDB
 import KVOController
 import SAMKeychain
@@ -41,7 +40,6 @@ import SwiftUI
     var statusTimer:Timer?
     var statusCtr = 0
     var selectedRow = 0
-    var accountType:String?
     var welcoming = false
     var waitingForMigration = false
 
@@ -58,6 +56,7 @@ import SwiftUI
     var hasPresentedOnboarding = false
     let navTitleView:TitleView
     private var hasPresentedCompromiseAlert = false
+    private var permissionsPrimerHost: UIHostingController<PermissionsPrimerView>?
     
     @objc public var delegate: ConversationViewControllerDelegate?
     var tabBar:GlacierTabs
@@ -291,10 +290,6 @@ import SwiftUI
         
         
         self.addStatusGestures(false)
-        if (self.accountType == nil) {
-            let glacierDefaults = UserDefaults(suiteName: kGlacierGroup)
-            self.accountType = glacierDefaults?.string(forKey: "connection")
-        }
         
         self.composeBarButtonItem?.isEnabled = ChatAccountModel.countXMPPAccounts() > 0
     }
@@ -563,9 +558,15 @@ import SwiftUI
         if let curmgr = self.currentmgr, let acct = self.getFirstAccount(), let domain = acct.pushPubsubEndpoint, let serverJID = XMPPJID(user: nil, domain: domain, resource: nil) {
             curmgr.serverCheck.pushModule.disablePush(forServerJID: serverJID, node: acct.pushPubsubNode, elementId: nil)
         }
+
+        // The line above only unsubscribes XMPP push. Twilio keeps its own device binding, and
+        // its cache has to be dropped too or the next account on this install skips
+        // registration and gets no incoming calls. See clearPushRegistrationCache().
+        CallManager.sharedCallManager().clearPushRegistrationCache()
         
         let glacierDefaults = UserDefaults(suiteName: kGlacierGroup)
         glacierDefaults?.removePersistentDomain(forName: kGlacierGroup)
+        GlacierCacheHygiene.purgeOnLogout()
         
         self.statusCtr = 0
         self.statusTimer?.invalidate()
@@ -590,12 +591,13 @@ import SwiftUI
         var error: NSError?
         if let idresult = SAMKeychain.password(forService: kGlacierGroup, account: kGlacierAcct, error: &error) {
             SAMKeychain.deletePassword(forService: kGlacierGroup, account: idresult, accessGroup: kGlacierGroup, error: &error)
+            SAMKeychain.deletePassword(forService: kGlacierAccessTokenServiceName, account: idresult, accessGroup: kGlacierGroup, error: nil)
             SAMKeychain.deletePassword(forService: kGlacierGroup, account: kGlacierAcct, accessGroup: kGlacierGroup, error: nil)
         }
         if let error = error {
             DDLogError("Error deleting password from keychain: \(error.localizedDescription) \(error.userInfo)")
         }
-        
+
         error = nil
         if let idresult = SAMKeychain.password(forService: kGlacierGroup, account: kCognitoAcct, error: &error) {
             SAMKeychain.deletePassword(forService: kGlacierGroup, account: idresult, accessGroup: kGlacierGroup, error: &error)
@@ -627,6 +629,10 @@ import SwiftUI
         self.navigationController?.popToRootViewController(animated: false)
         let glacierDefaults = UserDefaults(suiteName: kGlacierGroup)
         glacierDefaults?.removePersistentDomain(forName: kGlacierGroup)
+
+        // Separate sign-out path: SettingsViewController calls straight here without going
+        // through doLogout(), so the Twilio cache has to be dropped here as well.
+        CallManager.sharedCallManager().clearPushRegistrationCache()
         
         var error: NSError?
         if let idresult = SAMKeychain.password(forService: kGlacierGroup, account: kCognitoAcct, accessGroup: kGlacierGroup, error: &error) {
@@ -638,6 +644,7 @@ import SwiftUI
         }
         
         AWSAcctManager.sharedMgr().teardownCognito()
+        GlacierCacheHygiene.purgeOnLogout()
 
         let swiftUIAuth = AuthView()
         amplifyAuth = UIHostingController(rootView: swiftUIAuth)
@@ -681,12 +688,13 @@ import SwiftUI
                 var error: NSError?
                 if let idresult = SAMKeychain.password(forService: kGlacierGroup, account: kGlacierAcct, error: &error) {
                     SAMKeychain.deletePassword(forService: kGlacierGroup, account: idresult, accessGroup: kGlacierGroup, error: &error)
+                    SAMKeychain.deletePassword(forService: kGlacierAccessTokenServiceName, account: idresult, accessGroup: kGlacierGroup, error: nil)
                     SAMKeychain.deletePassword(forService: kGlacierGroup, account: kGlacierAcct, accessGroup: kGlacierGroup, error: nil)
                 }
                 if let error = error {
                     DDLogError("Error deleting password from keychain: \(error.localizedDescription) \(error.userInfo)")
                 }
-                
+
                 self.clearDBKeychain()
             }
             
@@ -808,29 +816,38 @@ import SwiftUI
     }
     
 
-    // user account info can be shared among Glacier apps. Check for existing account info.
+    // Builds the ChatAccount record the first time someone signs in on this device.
+    //
+    // Only runs when the database holds no account - both callers check that - so the
+    // identity it needs can only have come from the sign-in a few calls back:
+    // fetchUserData -> endLogin -> endAuthLogin -> lookForAccountInfoIfNeeded -> here.
+    // AWSAcctManager stages it in memory for that hop. It used to travel through the
+    // shared app-group plist, which meant the name, JID and organization then sat in a
+    // backup-eligible file for the life of the install (GUA 02).
     func tryGlacierGroupAccount(_ altroute:Bool) -> Bool {
         if (self.tryingGlacierAcct) {
             return true // let the process finish
         }
         
-        let glacierDefaults = UserDefaults(suiteName: kGlacierGroup)
-        let uservalue = glacierDefaults?.string(forKey: "username")
-        var passvalue = glacierDefaults?.string(forKey: "password")
-        var displayvalue = glacierDefaults?.string(forKey: "displayname")
+        let awsMgr = AWSAcctManager.sharedMgr()
+        let uservalue = awsMgr.stagedUsername
+        var passvalue: String?
+        var displayvalue = awsMgr.stagedDisplayName
         
         var error: NSError?
         var deletionId:String?
+        var tokenvalue:String?
         if let idvalue = SAMKeychain.password(forService: kGlacierGroup, account: kGlacierAcct, accessGroup:kGlacierGroup, error: &error) {
             passvalue = SAMKeychain.password(forService: kGlacierGroup, account: idvalue, accessGroup:kGlacierGroup, error: &error)
+            tokenvalue = SAMKeychain.password(forService: kGlacierAccessTokenServiceName, account: idvalue, accessGroup:kGlacierGroup, error: nil)
             deletionId = idvalue
         }
         if let error = error {
             DDLogError("Error retreiving password from keychain: \(error.localizedDescription) \(error.userInfo)")
-            passvalue = glacierDefaults?.string(forKey: "password")
         }
         
-        if  let uservalue = uservalue, let passvalue = passvalue {
+        let hasToken = (tokenvalue?.isEmpty == false)
+        if let uservalue = uservalue, (passvalue != nil || hasToken) {
             let account = ChatAccountModel(username: "")
             // load account from glacier storage
             let components = uservalue.components(separatedBy: "@")
@@ -847,7 +864,7 @@ import SwiftUI
             }
             account.domain = components.last
             
-            if let org = glacierDefaults?.string(forKey: "orgid") {
+            if let org = awsMgr.currentOrganization {
                 account.grdbRecord?.org = org
             }
             
@@ -856,12 +873,17 @@ import SwiftUI
             
             self.setConnectionStatus()
             
-            account.password = passvalue
+            if let passvalue = passvalue {
+                account.password = passvalue
+            }
+            if let tokenvalue = tokenvalue, tokenvalue.count > 0 {
+                account.accessToken = tokenvalue
+            }
             account.displayName = displayvalue!
             
             let includesDomain = components.count == 2
             
-            if (account.password == nil) {
+            if (account.password == nil && account.accessToken == nil) {
                 DDLogError("Password nil, how is this possible?");
                 //[GlacierLog glogWithLogMsg:@"Error logging in, Password in account is nil" detail:account.uniqueId];
             }
@@ -939,6 +961,14 @@ import SwiftUI
             } else if (!self.connectionSuccess) {
                 self.connectionSuccess = true
                 
+                // Nothing may raise a permission prompt until the primer has been decided
+                // on, and if it is showing, until the user has actually hit Continue.
+                // doSecurityCheck below builds the settings table, and
+                // GlacierSettingsManager calls PushController.checkPushNotifications while
+                // it does — which would otherwise put the notifications prompt up in front
+                // of the screen that exists to explain it.
+                GuardianPermissionManager.shared.beginHoldingPrompts()
+                
                 GlacierAppDelegate.appDelegate.resetDoubleNotificationHandlerIfNeeded()
                 xaccount.loginDate = Date()
                 xaccount.grdbRecord?.lastHistoryFetchDate = Date()
@@ -972,13 +1002,11 @@ import SwiftUI
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                     if let curmgr = self.currentmgr {
                         PushController.setPushPreference(.enabled)
-                        PushController.registerForPushNotifications()
                         curmgr.serverCheck.refresh()
                         curmgr.serverCheck.pushModule.refresh()
                     }
                     
-                    self.requestCallPermissions()
-                    LocationManager.shared().uiReadyForLocation()
+                    self.beginPostLoginPermissionFlow()
                     
                     GlacierProtocolManager.shared.setLoggingOut(false)
                 }
@@ -1032,20 +1060,131 @@ import SwiftUI
         self.tabBar.setSecurityAlert(securityAwareness)
     }
 
-    func requestCallPermissions() {
-        if AVAudioSession.sharedInstance().recordPermission != .granted {
-            AVAudioSession.sharedInstance().requestRecordPermission( {(granted:Bool) in
-                //
-            })
+    /// Asks for the permissions Guardian needs settled before the first call arrives.
+    ///
+    /// Microphone and camera are deliberately not deferred to the first call. An outgoing
+    /// call checks them and can recover, but an *incoming* call cannot: by the time
+    /// `CallManager.reportCallConnected` runs `checkAudioPermissions` the call is already
+    /// live, and all the user gets is an alert pointing at iOS Settings. For the camera it
+    /// is worse — `VideoCallViewController.handleVideoDenied` says plainly that changing
+    /// it during a call drops the call.
+    ///
+    /// These used to be fired in parallel, alongside the notification request above, which
+    /// handed the user an opaque stack of system alerts seconds after login. They run one
+    /// at a time through `GuardianPermissionManager` now. Location is last because it
+    /// brings `LocationManager`'s own explanatory alert with it.
+    func requestLoginPermissions() {
+        GuardianPermissionManager.shared.requestSequentially(
+            [.microphone, .camera, .localNetwork, .location]
+        )
+    }
+
+    /// Shows the permissions primer once, then makes sure the rest of the login-time
+    /// permission work has happened either way.
+    ///
+    /// The primer is shown at most once per install. iOS only ever prompts once per
+    /// permission, so a second showing could not ask for anything — what a user who
+    /// declined needs is the route into iOS Settings, not the screen again.
+    private func beginPostLoginPermissionFlow() {
+        guard !GuardianPermissionManager.shared.hasShownPermissionsPrimer else {
+            GuardianPermissionManager.shared.endHoldingPrompts()
+            self.completeLoginPermissionSetup()
+            return
         }
 
-        if AVCaptureDevice.authorizationStatus(for: .video) != .authorized {
-            AVCaptureDevice.requestAccess(for: .video, completionHandler: { (granted:Bool) in
-                //
-            })
+        GuardianPermissionManager.shared.neededPermissions { [weak self] needed in
+            guard let self = self else { return }
+
+            // Nothing left unanswered, so there is nothing for the primer to explain.
+            guard !needed.isEmpty else {
+                GuardianPermissionManager.shared.hasShownPermissionsPrimer = true
+                GuardianPermissionManager.shared.endHoldingPrompts()
+                self.completeLoginPermissionSetup()
+                return
+            }
+
+            self.presentPermissionsPrimer(for: needed)
+        }
+    }
+
+    private func presentPermissionsPrimer(for kinds: [GuardianPermissionKind]) {
+        guard self.permissionsPrimerHost == nil else {
+            GuardianPermissionManager.shared.endHoldingPrompts()
+            return
         }
 
-        CallManager.sharedCallManager().probeLocalNetworkPermissionIfNeeded()
+        let model = PermissionsPrimerModel(
+            kinds: kinds,
+            onReadyToPrompt: {
+                // The run is queued and the first row is showing: let the prompts go.
+                GuardianPermissionManager.shared.endHoldingPrompts()
+            },
+            onFinished: { [weak self] in
+                guard let self = self else { return }
+                GuardianPermissionManager.shared.hasShownPermissionsPrimer = true
+                let host = self.permissionsPrimerHost
+                self.permissionsPrimerHost = nil
+                host?.dismiss(animated: true) {
+                    self.completeLoginPermissionSetup()
+                }
+            }
+        )
+
+        let host = UIHostingController(rootView: PermissionsPrimerView(model: model))
+        host.modalPresentationStyle = .fullScreen
+        // There is no skip control, so there must be no way round it either.
+        host.isModalInPresentation = true
+        self.permissionsPrimerHost = host
+
+        // The sign-in sheet is dismissed by now, but present from whatever is actually on
+        // top rather than assuming that.
+        self.topmostPresentedViewController().present(host, animated: true)
+
+        // If it never made it on screen, release the hold rather than leaving every
+        // permission prompt stuck for the rest of the session — including the ones an
+        // incoming call needs.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self = self, self.permissionsPrimerHost === host else { return }
+            guard host.viewIfLoaded?.window == nil else { return }
+
+            DDLogError("Permissions primer failed to present; releasing the prompt hold")
+            self.permissionsPrimerHost = nil
+            GuardianPermissionManager.shared.endHoldingPrompts()
+            self.completeLoginPermissionSetup()
+        }
+    }
+
+    /// The login-time permission work that has to happen whether or not the primer ran.
+    ///
+    /// `registerForPushNotifications` is here for its side effect rather than the prompt:
+    /// its completion is where the APNs token is refreshed, and that has to run on every
+    /// login even when notifications were answered long ago. `requestLoginPermissions`
+    /// likewise reaches `LocationManager.uiReadyForLocation`, which is what starts
+    /// tracking — the primer would not have covered location if it was already granted.
+    /// Everything else in it is a no-op once answered.
+    private func completeLoginPermissionSetup() {
+        if self.currentmgr != nil {
+            PushController.registerForPushNotifications()
+        }
+        self.requestLoginPermissions()
+    }
+
+    /// Like `topmostPresentedViewController`, but starting from the window's root, which
+    /// is not self while another tab is showing.
+    private func windowTopmostViewController() -> UIViewController {
+        var top: UIViewController = GlacierAppDelegate.appDelegate.window?.rootViewController ?? self
+        while let presented = top.presentedViewController, !presented.isBeingDismissed {
+            top = presented
+        }
+        return top
+    }
+
+    private func topmostPresentedViewController() -> UIViewController {
+        var top: UIViewController = self
+        while let presented = top.presentedViewController, !presented.isBeingDismissed {
+            top = presented
+        }
+        return top
     }
 
     func handlePermissionDenied(_ title: String, message: String, includeEnable: Bool) {
@@ -1131,18 +1270,36 @@ import SwiftUI
         }
     }
     
-    // Called once after an App Client ID rotation. Unlike setWelcomeController,
-    // this surfaces the explanatory alert *before* the login screen so the user
-    // understands why they're being asked to sign in again, and offers no way to
-    // dismiss without signing in.
-    @objc func setMigrationLoginController() {
+    /// Presents the login screen behind an explanatory alert, for the case where
+    /// the stored Cognito tokens are no longer usable — a session issued by a
+    /// retired App Client ID, or one whose refresh token has expired. Unlike
+    /// `setWelcomeController(true)` the alert comes *first*, so the user is told
+    /// why before a login screen appears, and it offers no way out but signing in.
+    ///
+    /// `required` is for an XMPP login that has already failed for want of a Cognito
+    /// session: messaging and calls stay down until the user signs in, so the sign-in
+    /// sheet cannot be swiped away either. Without it the sheet stays dismissable, as
+    /// the launch-time prompt always has been.
+    @objc func setExplainedReauthController(required: Bool = false) {
         self.welcoming = true
         let acct = self.getFirstAccount()?.bareJID?.user
 
         DispatchQueue.main.async {
+            // Already up (the XMPP refresh asks again every minute while auth keeps
+            // failing): just make sure it can no longer be dismissed.
+            if let existing = self.amplifyAuth, existing.presentingViewController != nil, !existing.isBeingDismissed {
+                if required {
+                    existing.isModalInPresentation = true
+                }
+                return
+            }
+
+            let message = required
+                ? "Your sign-in has expired, so messages and calls can’t connect. Enter your password to continue."
+                : "We’ve made some security updates. Enter your password to re-authenticate."
             let alert = UIAlertController(
                 title: "Re-authentication required",
-                message: "We’ve made some security updates. Enter your password to re-authenticate.",
+                message: message,
                 preferredStyle: .alert
             )
             let signInAction = UIAlertAction(title: "Continue", style: .default) { [weak self] _ in
@@ -1154,11 +1311,18 @@ import SwiftUI
                     authView = AuthView()
                 }
                 guard let swiftUIAuth = authView else { return }
-                self.amplifyAuth = UIHostingController(rootView: swiftUIAuth)
-                self.present(self.amplifyAuth!, animated: true)
+                let host = UIHostingController(rootView: swiftUIAuth)
+                host.isModalInPresentation = required
+                self.amplifyAuth = host
+                self.windowTopmostViewController().present(host, animated: true)
             }
             alert.addAction(signInAction)
-            self.present(alert, animated: true)
+            // Present over whatever is on top. The tab bar swaps the window's root for
+            // SMS, dialer and Security Hub, and Settings is pushed over self, so
+            // presenting from self would be dropped whenever self is not on screen.
+            let top = self.windowTopmostViewController()
+            if top is UIAlertController { return } // an alert is already asking
+            top.present(alert, animated: true)
         }
     }
 

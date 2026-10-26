@@ -55,18 +55,15 @@ open class PushController: NSObject {
     
     //MARK: Utility
     
+    /// Asks for notification authorization and, on success, re-registers for remote
+    /// notifications.
+    ///
+    /// The authorization request itself, the `GlacierUserNotificationsChanged` post and
+    /// the APNs re-registration all live in `GuardianPermissionManager` now, so this call
+    /// queues behind any other permission prompt already in flight instead of stacking a
+    /// system alert on top of one. Push *preference* is still this class's business.
     @objc public static func registerForPushNotifications() {
-        let center = UNUserNotificationCenter.current()
-        center.requestAuthorization(options: [.badge, .alert, .sound], completionHandler: { (granted, error) in
-            DispatchQueue.main.async(execute: {
-                // TODO: Handle push registration error
-                let app = Application.shared
-                NotificationCenter.default.post(name: Notification.Name(rawValue: GlacierUserNotificationsChanged), object: app.delegate, userInfo:nil)
-                if (granted) {
-                    app.registerForRemoteNotifications()
-                }
-            })
-        })
+        GuardianPermissionManager.shared.request(.notifications)
     }
     
     @objc public static func checkPushNotifications() {

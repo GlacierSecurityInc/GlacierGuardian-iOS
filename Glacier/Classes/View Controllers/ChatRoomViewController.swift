@@ -88,6 +88,7 @@ import MCEmojiPicker
     fileprivate let cellTopCache:NSCache<NSString, GlacierFloat> = NSCache.init()
     fileprivate let cellBottomCache:NSCache<NSString, GlacierFloat> = NSCache.init()
     fileprivate var retriedSet:Set<String> = []
+    fileprivate var mediaServerRecoverySet:Set<String> = []
     fileprivate var redrawSet:Set<IndexPath> = []
     fileprivate var activelyFetching:Set<String> = []
     
@@ -116,6 +117,8 @@ import MCEmojiPicker
     
     fileprivate let attrs = [NSAttributedString.Key.font: UIFontMetrics(forTextStyle: .caption2).scaledFont(for: UIFont.systemFont(ofSize: 10)), NSAttributedString.Key.foregroundColor: UIColor.lightGray]
     fileprivate let faattrs = [NSAttributedString.Key.font:UIFont(name: kFontAwesomeFont, size: 11) ?? UIFont.systemFont(ofSize: 11), NSAttributedString.Key.foregroundColor: UIColor.lightGray]
+    fileprivate let failattrs = [NSAttributedString.Key.font: UIFontMetrics(forTextStyle: .caption2).scaledFont(for: UIFont.systemFont(ofSize: 10)), NSAttributedString.Key.foregroundColor: UIColor.systemRed]
+    fileprivate let failfaattrs = [NSAttributedString.Key.font:UIFont(name: kFontAwesomeFont, size: 11) ?? UIFont.systemFont(ofSize: 11), NSAttributedString.Key.foregroundColor: UIColor.systemRed]
 
     fileprivate var lastDisplayed = Set<String>()
     fileprivate var displayedTextAttributes = [NSAttributedString.Key:AnyObject]()
@@ -460,33 +463,37 @@ import MCEmojiPicker
         //}
     }
     
-    private enum MessagePresentationCategory {
-        case text
-        case media
-        case location
-        case custom
-    }
-
-    private func messagePresentationCategory(for message: MessageType) -> MessagePresentationCategory {
-        if case .location = message.kind {
-            return .location
+    /// The reuse identifier of the cell that `collectionView(_:cellForItemAt:)` will actually
+    /// dequeue for `message`. This MUST stay in lock-step with the cell-selection logic in
+    /// `collectionView(_:cellForItemAt:)`: `reconfigureItems(at:)` requires the reconfigured cell
+    /// to keep the same reuse identifier, so the reconfigure/reload decision in `handleUpdates()`
+    /// compares these identities. Note that a `.text`-kind message resolves to a media or location
+    /// cell purely by body prefix ("aesgcm"/"geo:"), which a `MessageKind`-only check cannot see.
+    private func cellReuseIdentity(for message: ChatRoomMessage) -> String {
+        switch message.kind {
+        case .audio:
+            return String(describing: GlacierAudioMessageCell.self)
+        case .photo, .video:
+            return String(describing: MediaMessageCell.self)
+        case .location:
+            return String(describing: LocationMessageCell.self)
+        case .contact:
+            return String(describing: ContactMessageCell.self)
+        case .linkPreview:
+            return String(describing: LinkPreviewMessageCell.self)
+        case .custom:
+            return "custom"
+        case .text, .attributedText, .emoji:
+            // Mirrors the body-prefix rerouting applied to text cells in cellForItemAt.
+            if let txt = message.messageText {
+                if txt.starts(with: "geo:") {
+                    return String(describing: LocationMessageCell.self)
+                } else if txt.starts(with: "aesgcm") {
+                    return String(describing: MediaMessageCell.self)
+                }
+            }
+            return String(describing: TextMessageCell.self)
         }
-        if case .photo = message.kind {
-            return .media
-        }
-        if case .video = message.kind {
-            return .media
-        }
-        if case .audio = message.kind {
-            return .media
-        }
-        if case .contact = message.kind {
-            return .media
-        }
-        if case .custom = message.kind {
-            return .custom
-        }
-        return .text
     }
 
     private func handleUpdates() {
@@ -612,9 +619,8 @@ import MCEmojiPicker
                         if latestmsgs.count > idx, data.count > idx, idx >= 0, latestmsgs[idx].uniqueId != data[idx].uniqueId {
                             reconfigure = false
                         } else if latestmsgs.count > idx, data.count > idx {
-                            let newCategory = self.messagePresentationCategory(for: latestmsgs[idx])
-                            let oldCategory = self.messagePresentationCategory(for: data[idx])
-                            if newCategory != oldCategory {
+                            // Reconfigure is only valid when the cell keeps the same reuse identifier.
+                            if self.cellReuseIdentity(for: latestmsgs[idx]) != self.cellReuseIdentity(for: data[idx]) {
                                 reconfigure = false
                             }
                         }
@@ -637,9 +643,8 @@ import MCEmojiPicker
                     if latestmsgs.count > idx, data.count > idx, latestmsgs[idx].uniqueId != data[idx].uniqueId {
                         reconfigure = false
                     } else if latestmsgs.count > idx, data.count > idx {
-                        let newCategory = self.messagePresentationCategory(for: latestmsgs[idx])
-                        let oldCategory = self.messagePresentationCategory(for: data[idx])
-                        if newCategory != oldCategory {
+                        // Reconfigure is only valid when the cell keeps the same reuse identifier.
+                        if self.cellReuseIdentity(for: latestmsgs[idx]) != self.cellReuseIdentity(for: data[idx]) {
                             reconfigure = false
                         }
                     }
@@ -941,6 +946,7 @@ import MCEmojiPicker
             self.loadingMoreMessages = false
             self.updatedRoomSource = false
             self.retriedSet.removeAll()
+            self.mediaServerRecoverySet.removeAll()
             
             if let bkey = key {
                 self.room = ChatRoom.getRoom(uniqueId: bkey)
@@ -1084,6 +1090,9 @@ import MCEmojiPicker
             }
         }
             
+        // Rebuilt per room: this dictionary is keyed by buddy uniqueId and the controller is
+        // reused for every group, so anything left behind stays reachable from other rooms.
+        toAvatars.removeAll()
         if let room = self.room {
             let roomModel = ChatRoomModel(room: room)
             let roomBuddies = roomModel.allBuddies()
@@ -1228,9 +1237,16 @@ import MCEmojiPicker
     
     func configureMessageCollectionView() {
         messagesCollectionView.register(GlacierAudioMessageCell.self)
-        messagesCollectionView.register(LocationMessageCell.self)
-        messagesCollectionView.register(MediaMessageCell.self)
-        
+        // Register crash-hardened subclasses under MessageKit's built-in reuse identifiers so the
+        // framework's own dequeue (and our cellForItemAt/cellReuseIdentity) transparently vends
+        // them, guarding the avatarPositionUnresolved fatalError. Runs after MessagesCollectionView's
+        // init-time default registration, so these overrides win. See GlacierMessageContentCells.swift.
+        messagesCollectionView.register(GlacierTextMessageCell.self, forCellWithReuseIdentifier: String(describing: TextMessageCell.self))
+        messagesCollectionView.register(GlacierMediaMessageCell.self, forCellWithReuseIdentifier: String(describing: MediaMessageCell.self))
+        messagesCollectionView.register(GlacierLocationMessageCell.self, forCellWithReuseIdentifier: String(describing: LocationMessageCell.self))
+        messagesCollectionView.register(GlacierContactMessageCell.self, forCellWithReuseIdentifier: String(describing: ContactMessageCell.self))
+        messagesCollectionView.register(GlacierLinkPreviewMessageCell.self, forCellWithReuseIdentifier: String(describing: LinkPreviewMessageCell.self))
+
         messagesCollectionView.messagesDataSource = self
         messagesCollectionView.messageCellDelegate = self
 
@@ -1340,31 +1356,40 @@ import MCEmojiPicker
     }
     
     func sendVideoURL(_ videoURL:URL) {
-        if let xmpp = xmppManager(), let thread = getThread() {
+        // Bail out rather than drop the URL on the floor: the callers staged a copy
+        // in tmp, and FileTransferManager is what would normally clean it up.
+        guard let xmpp = xmppManager(), let thread = getThread() else {
+            GlacierCacheHygiene.removeStagedTemporaryFile(at: videoURL)
             self.removeUploadHUD()
-            let threadModel = ChatThreadModel(thread: thread)
-            let ispub = self.room?.isPublic ?? false
-            
-            xmpp.fileTransferManager.send(videoURL: videoURL, thread: threadModel, label: self.uploadHUD?.label, isPublic: ispub, completion: { (success:Bool, error:Error?) in
-                self.handleMediaError(error: error)
-                self.removeUploadHUD()
-            })
+            return
         }
+
+        self.removeUploadHUD()
+        let threadModel = ChatThreadModel(thread: thread)
+        let ispub = self.room?.isPublic ?? false
+
+        xmpp.fileTransferManager.send(videoURL: videoURL, thread: threadModel, label: self.uploadHUD?.label, isPublic: ispub, completion: { (success:Bool, error:Error?) in
+            self.handleMediaError(error: error)
+            self.removeUploadHUD()
+        })
     }
     
     func sendAudioFileURL(_ audioURL:URL) {
-        if let xmpp = xmppManager(), let thread = getThread() {
-            DispatchQueue.main.async {
-                self.addUploadHUD()
-            }
-            let threadModel = ChatThreadModel(thread: thread)
-            let ispub = self.room?.isPublic ?? false
-            
-            xmpp.fileTransferManager.send(audioURL: audioURL, thread: threadModel, label: self.uploadHUD?.label, isPublic: ispub, completion: { (success:Bool, error:Error?) in
-                self.handleMediaError(error: error)
-                self.removeUploadHUD()
-            })
+        guard let xmpp = xmppManager(), let thread = getThread() else {
+            GlacierCacheHygiene.removeStagedTemporaryFile(at: audioURL)
+            return
         }
+
+        DispatchQueue.main.async {
+            self.addUploadHUD()
+        }
+        let threadModel = ChatThreadModel(thread: thread)
+        let ispub = self.room?.isPublic ?? false
+
+        xmpp.fileTransferManager.send(audioURL: audioURL, thread: threadModel, label: self.uploadHUD?.label, isPublic: ispub, completion: { (success:Bool, error:Error?) in
+            self.handleMediaError(error: error)
+            self.removeUploadHUD()
+        })
     }
     
     func sendFileURLs(_ fileURLs:[URL]) {
@@ -1400,7 +1425,7 @@ import MCEmojiPicker
 
         Task { [weak self] in
             do {
-                let (data, _) = try await URLSession.shared.data(from: url)
+                let (data, _) = try await GlacierMediaSession.session.data(from: url)
                 let image: UIImage?
                 if asJPEG {
                     image = UIImage(data: data)
@@ -1663,6 +1688,8 @@ import MCEmojiPicker
     }
 
     open override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        // NOTE: any change to which cell class is dequeued below must be mirrored in
+        // `cellReuseIdentity(for:)`, which `handleUpdates()` relies on to keep reconfigure safe.
 
         if messagesCollectionView.messagesDataSource == nil {
             DDLogError("ChatRoomViewController.collectionView missing messagesDataSource for indexPath: \(indexPath). Reconfiguring message collection view.")
@@ -2144,6 +2171,27 @@ import MCEmojiPicker
     /** Currently uses clock for queued, and checkmark for delivered. */
     func deliveryStatusString(for message:ChatRoomMessage) -> NSAttributedString? {
         let deliveryStatusString = NSMutableAttributedString(string: "")
+        
+        // A group message that failed to encrypt never left the device, so say so
+        // rather than leaving it looking like every other sent message. Outgoing only:
+        // incoming messages carry download errors in the same field.
+        let isIncoming = message.state == ChatRoomMessageState.received.rawValue
+        if let merror = message.error, !isIncoming {
+            let nsErr = NSError(domain: merror.errDomain, code: merror.errCode)
+            if !nsErr.isUserCanceledError, !nsErr.isAutomaticDownloadError {
+                let warningChar: UniChar = 0xf06a
+                let warningString = String(format: " %C ", warningChar)
+                deliveryStatusString.append(NSAttributedString(string: warningString, attributes: failfaattrs))
+                deliveryStatusString.append(NSAttributedString(string: UNABLE_TO_SEND_STRING(), attributes: failattrs))
+                return deliveryStatusString
+            }
+        }
+        
+        // NOTE: sentDate is non-optional on ChatRoomMessage (it just returns messageDate),
+        // so this test is always false and the queued clock never renders for group
+        // messages. Left as-is deliberately: switching it to a state-based check turns on
+        // a pending indicator that group chats have never shown. See the send-status
+        // discussion before enabling it.
         if message.sentDate == nil { //} && ![message messageMediaItemKey]) {
             // Waiting to send message. This message is in the queue.
             let clockChar: UniChar = 0xf017
@@ -2189,6 +2237,8 @@ import MCEmojiPicker
                         self.sendVideoURL(newurl)
                     }
                 } else {
+                    // A failed write can still have left a partial file behind.
+                    GlacierCacheHygiene.removeStagedTemporaryFile(at: URL(fileURLWithPath: tmpPath))
                     self.removeUploadHUD()
                 }
             }
@@ -2851,6 +2901,7 @@ extension ChatRoomViewController: AttachmentsInputBarViewDelegate {
                 self.sendVideoURL(vidurl)
             }
         } catch {
+            GlacierCacheHygiene.removeStagedTemporaryFile(at: URL(fileURLWithPath: tmpPath))
             DDLogError("ChatRoomViewController.handleVideoPicked error copying video item")
         }
     }
@@ -3112,7 +3163,7 @@ extension ChatRoomViewController: AVPlayerViewControllerDelegate {
             let player = AVPlayer.init(url: videoURL)
             let moviePlayerViewController = AVPlayerViewController()
             moviePlayerViewController.player = player
-            
+
             moviePlayerViewController.delegate = self
             self.originalAudioCategory = AVAudioSession.sharedInstance().category as AVAudioSession.Category
             do {
@@ -3120,6 +3171,7 @@ extension ChatRoomViewController: AVPlayerViewControllerDelegate {
             } catch {
                 DDLogError("ChatRoomViewController.showVideo error setting category")
             }
+            VideoViewHelper.addSaveButton(to: moviePlayerViewController, videoItem: videoItem, buddyUniqueId: self.threadKey)
             present(moviePlayerViewController, animated: true, completion: nil)
         }
     }
@@ -3161,35 +3213,40 @@ extension ChatRoomViewController: MessagesDisplayDelegate {
         return .bubbleTail(tail, .curved)
     }
 
+    /// MessageKit's `prepareForReuse` resets the cell's labels but not its `avatarView`, and this
+    /// controller is a singleton shared by every group chat, so a cell recycled from another room
+    /// still holds that room's avatar. Any path that neither hides the view nor sets an avatar
+    /// therefore shows a stranger's face - most visibly on messages sent from our own other
+    /// devices, which carry no buddyUniqueId. Every exit below must hide or set.
+    private func placeholderAvatar(for message: MessageType) -> Avatar {
+        return Avatar(image: nil, initials: String(message.sender.displayName.prefix(2)))
+    }
+
     public func configureAvatarView(_ avatarView: AvatarView, for message: MessageType, at indexPath: IndexPath, in mcv: MessagesCollectionView) {
-        
-        //guard let rmessage = message as? ChatRoomMessage else { return }
         
         if let next = nextMessageForItem(at: indexPath), message.sender.senderId == next.sender.senderId {
             avatarView.isHidden = true
             return
         }
         
-        guard let message = message as? ChatRoomMessage else { return }
+        guard let roomMessage = message as? ChatRoomMessage else {
+            avatarView.isHidden = false
+            avatarView.set(avatar: placeholderAvatar(for: message))
+            return
+        }
         
-        if self.isUpdateMessage(message) {
+        if self.isUpdateMessage(roomMessage) {
             avatarView.isHidden = true
             return
         }
         
         avatarView.isHidden = false
-        if isFromCurrentSender(message: message) {
-            if let avatar = self.fromAvatar {
-                avatarView.set(avatar: avatar)
-            }
+        if isFromCurrentSender(message: roomMessage) {
+            avatarView.set(avatar: self.fromAvatar ?? placeholderAvatar(for: roomMessage))
+        } else if let buddyid = roomMessage.buddyUniqueId, let avatar = self.toAvatars[buddyid] {
+            avatarView.set(avatar: avatar)
         } else {
-            guard let buddyid = message.buddyUniqueId else {
-                return
-            }
-            
-            if let avatar = self.toAvatars[buddyid] {
-                avatarView.set(avatar: avatar)
-            }
+            avatarView.set(avatar: placeholderAvatar(for: roomMessage))
         }
     }
 
@@ -3389,12 +3446,47 @@ extension ChatRoomViewController: MessagesDisplayDelegate {
             }
         } else {
             imageView.kf.cancelDownloadTask()
+            recoverMediaServer(for: chatMsg.uniqueId, at: ip)
             if retriedSet.contains(chatMsg.uniqueId) == false {
                 if let xmpp = xmppManager() {
                     retriedSet.insert(chatMsg.uniqueId)
                     xmpp.fileTransferManager.retryDownloadMedia(ChatRoomMessageModel(message: chatMsg))
                 }
             }
+        }
+    }
+
+    /// Called when a media item could not produce a URL. That happens when the local
+    /// media server isn't running: `MediaServer` builds every URL from the web server's
+    /// `serverURL`, which is nil while it is stopped, and it is stopped on background
+    /// task teardown and only restarted on the next foregrounding. Every caller reads
+    /// the resulting nil as "no media", so the cell keeps the gray placeholder MessageKit
+    /// set before configuring it, and nothing ever redraws it - the bubble stays gray
+    /// until the row happens to be recycled.
+    ///
+    /// Bring the server back up and reconfigure that one row. One attempt per message per
+    /// room, so a server that will not start can't drive a reconfigure loop.
+    private func recoverMediaServer(for messageId: String, at ip: IndexPath) {
+        guard mediaServerRecoverySet.contains(messageId) == false else { return }
+        mediaServerRecoverySet.insert(messageId)
+
+        let server: MediaServer = MediaServer.sharedInstance()
+        let wasRunning = server.isRunning()
+        guard server.ensureRunning() else {
+            DDLogError("No media server URL for \(messageId): the media server will not start")
+            return
+        }
+        guard wasRunning == false else {
+            // The server was already up, so the nil URL came from the item having no
+            // media path rather than from the server being down. Nothing to recover.
+            DDLogError("No media server URL for \(messageId) while the media server is running")
+            return
+        }
+
+        DDLogWarn("Restarted the local media server to draw media for \(messageId)")
+        collectionUpdateQueue.async { [weak self] in
+            guard let self = self, self.shownMessages.count > ip.section else { return }
+            self.safeReconfigureItems(at: [ip])
         }
     }
 

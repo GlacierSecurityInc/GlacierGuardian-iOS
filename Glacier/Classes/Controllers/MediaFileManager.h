@@ -47,6 +47,24 @@ completionQueue:(nullable dispatch_queue_t)completionQueue;
 
 - (BOOL) fileExistsForChatMediaItem:(ChatMediaItemModel *)mediaItem buddyUniqueId:(NSString *)buddyUniqueId;
 
+/**
+ *  Streams the decrypted contents of a chat media item out to a plaintext file on
+ *  the regular file system. Data is copied in chunks so large media (e.g. video)
+ *  is never held in memory all at once. The caller is responsible for deleting the
+ *  destination file when finished with it.
+ *
+ *  @param mediaItem     the media item to export
+ *  @param buddyUniqueId the thread/buddy unique id used to resolve the media path
+ *  @param destinationURL a file URL to write the decrypted bytes to
+ *  @param error         populated on failure
+ *
+ *  @return YES on success, NO on failure
+ */
+- (BOOL)exportChatItem:(ChatMediaItemModel *)mediaItem
+         buddyUniqueId:(NSString *)buddyUniqueId
+             toFileURL:(NSURL *)destinationURL
+                 error:(NSError * __autoreleasing *)error;
+
 + (nullable NSString *)pathForChatMediaItem:(ChatMediaItemModel *)mediaItem buddyUniqueId:(NSString *)buddyUniqueId;
 + (nullable NSString *)pathForChatMediaItem:(ChatMediaItemModel *)mediaItem buddyUniqueId:(NSString *)buddyUniqueId withLeadingSlash:(BOOL)includeLeadingSlash;
 

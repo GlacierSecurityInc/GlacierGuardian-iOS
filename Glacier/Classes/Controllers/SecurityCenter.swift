@@ -73,19 +73,26 @@ import NetworkExtension
         var compromised = false
         
         let jailStatus = IOSSecuritySuite.amIJailbrokenWithFailMessage()
-        let reStatus = IOSSecuritySuite.amIReverseEngineeredWithFailedChecks()
-        if jailStatus.jailbroken {
+        let extraJail = GlacierJailbreakChecks.run()
+        // Ignore the EXPERIMENTAL pSelectFlag check: P_SELECT is set on any process
+        // sitting in select()/poll() (normal networking), so it false-positives on
+        // clean devices with "Suspicious PFlag value". See isReverseEngineered().
+        let reFailedChecks = SecurityCenter.significantReverseEngineeringChecks()
+        if jailStatus.jailbroken || extraJail.jailbroken {
             compromised = true
-            let reason = " with reason: \(jailStatus.failMessage)"
+            var reasons: [String] = []
+            if jailStatus.jailbroken { reasons.append(jailStatus.failMessage) }
+            if extraJail.jailbroken { reasons.append(extraJail.indicators.joined(separator: ", ")) }
+            let reason = " with reason: \(reasons.joined(separator: "; "))"
             self.secInfoUtil.securityInfo.compromised_detail = COMPROMISED_JAILBROKEN + reason
         } else if IOSSecuritySuite.amIProxied() {
             compromised = true
             self.secInfoUtil.securityInfo.compromised_detail = COMPROMISED_PROXIED
         //} else if IOSSecuritySuite.amIDebugged() {
         //    compromised = true
-        } else if reStatus.reverseEngineered {
+        } else if !reFailedChecks.isEmpty {
             compromised = true
-            let reason = ": The following checks failed: \(reStatus.failedChecks)"
+            let reason = ": The following checks failed: \(reFailedChecks)"
             self.secInfoUtil.securityInfo.compromised_detail = COMPROMISED_REVERSE_ENGINEERED + reason
         } else if IOSSecuritySuite.amIRunInEmulator() {
             compromised = true
@@ -126,6 +133,22 @@ import NetworkExtension
     
     @objc public func getCurrentCompromisedStatus() -> Bool {
         return self.compromisedStatus
+    }
+
+    /// Reverse-engineering failed checks, excluding the EXPERIMENTAL `.pSelectFlag`
+    /// check. That check reads P_SELECT, which the kernel sets on any process that is
+    /// currently in a select()/poll() call, so it false-positives on clean devices
+    /// ("Suspicious PFlag value"). Use this instead of IOSSecuritySuite's raw APIs.
+    static func significantReverseEngineeringChecks() -> [FailedCheckType] {
+        return IOSSecuritySuite.amIReverseEngineeredWithFailedChecks()
+            .failedChecks
+            .filter { $0.check != .pSelectFlag }
+    }
+
+    /// Whether the device shows real signs of reverse engineering, ignoring the
+    /// pSelectFlag false positive. Replacement for IOSSecuritySuite.amIReverseEngineered().
+    @objc public static func isReverseEngineered() -> Bool {
+        return !significantReverseEngineeringChecks().isEmpty
     }
     
     @objc public func shouldIgnoreCompromisedAlert() -> Bool {

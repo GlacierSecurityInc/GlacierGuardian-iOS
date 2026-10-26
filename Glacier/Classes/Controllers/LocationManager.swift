@@ -33,6 +33,14 @@ class LocationManager: NSObject, CLLocationManagerDelegate, OrgUpdateDel {
     let dateFormatter = DateFormatter()
     private var account:ChatAccountModel?
     private var waitingForPermission = false
+
+    /// One-shot: skips the explanatory alert in `handleNotDetermined` for the next
+    /// request only, and is cleared as soon as it is read.
+    ///
+    /// Location is the one permission that already explained itself before prompting. The
+    /// post-login primer now carries that explanation for every permission, so leaving
+    /// this alert in place would put a second primer in front of the same prompt.
+    var suppressesNextExplanatoryAlert = false
     
     let internalQueue = DispatchQueue(label: "LocationManager Queue")
     let sessionManager = Alamofire.Session(configuration: URLSessionConfiguration.ephemeral, serverTrustManager: GlacierPinningConfiguration.makeServerTrustManager())
@@ -109,7 +117,9 @@ class LocationManager: NSObject, CLLocationManagerDelegate, OrgUpdateDel {
         self.trackingOn = self.account?.trackingOn ?? false
     }
     
-    private func isTrackingAvailable() -> Bool {
+    /// Internal rather than private so `GuardianPermissionManager.isApplicable` can tell
+    /// whether location is provisioned for this account before offering to ask for it.
+    func isTrackingAvailable() -> Bool {
         if let account = self.account, account.username.starts(with: "appleuser") {
             return true
         }
@@ -268,6 +278,12 @@ class LocationManager: NSObject, CLLocationManagerDelegate, OrgUpdateDel {
     
     private func handleNotDetermined() {
         DispatchQueue.main.async {
+            if self.suppressesNextExplanatoryAlert {
+                self.suppressesNextExplanatoryAlert = false
+                self.locationManager.requestWhenInUseAuthorization()
+                return
+            }
+
             var alertMessage = "Your organization enabled live tracking for your account. In order to provide this service, Guardian will need location access.\n\nOn the first prompt, please select \"Allow While Using App\".\n\nThat will be followed by another prompt, select \"Change to Always Allow.\""
             
             if let account = ChatAccountModel.allXMPPAccounts().first, account.username.starts(with: "appleuser") {
@@ -348,13 +364,13 @@ class LocationManager: NSObject, CLLocationManagerDelegate, OrgUpdateDel {
     private func handleLocationUpdate(_ location: CLLocation?) {
         
         if self.username == nil {
-            if let glacierDefaults = UserDefaults.init(suiteName: kGlacierGroup) {
-                if let userstr = glacierDefaults.string(forKey: "username") {
-                    let userjid = XMPPJID(string: userstr)
-                    self.username = userjid?.user
-                }
-                
-                self.organization = glacierDefaults.string(forKey: "orgid")
+            // Both of these used to be read from the shared app-group plist, which is how
+            // they ended up in an unencrypted backup (GUA 02). The account record is the
+            // same two values in the SQLCipher database.
+            if let account = ChatAccountModel.firstAccount() {
+                let userjid = XMPPJID(string: account.username)
+                self.username = userjid?.user
+                self.organization = AWSAcctManager.sharedMgr().currentOrganization
                 if let devid = UIDevice.current.identifierForVendor?.uuidString, let username = self.username {
                     self.deviceId = username + "_" + devid
                 }

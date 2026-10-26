@@ -14,6 +14,12 @@
 
 - (BOOL)startOnPort:(NSUInteger)port error:(NSError **)error;
 
+/// Starts the web server if it isn't already running, and returns whether it is
+/// running once it returns. Safe to call from any thread, any number of times.
+/// Callers that need a URL should use this before asking for one: with the server
+/// stopped, -urlForPath: and -urlForChatMediaItem: can only return nil.
+- (BOOL)ensureRunning;
+
 - (NSURL *)urlForChatMediaItem:(ChatMediaItemModel *)mediaItem buddyUniqueId:(NSString *)buddyUniqueId;
 
 - (NSURL *)urlForPath:(NSString *)path;

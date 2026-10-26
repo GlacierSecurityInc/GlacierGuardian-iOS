@@ -40,6 +40,20 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readwrite) BOOL isRegisteringNewAccount;
 @property (nonatomic, readwrite) BOOL userInitiatedConnection;
+/// When the current run of SASL failures last re-fetched credentials from /glacier-users.
+/// Throttles the refresh to once per kCredentialRefreshInterval while auth keeps failing;
+/// nil again after a successful authentication.
+@property (nonatomic, strong, nullable) NSDate *credentialRefreshDate;
+@property (nonatomic, readwrite) BOOL credentialRefreshInFlight;
+/// Which path the last -authenticateWithStream: took, read back in didNotAuthenticate.
+@property (nonatomic, readwrite) BOOL lastAuthUsedToken;
+/// Set when a freshly fetched token was still rejected and we have a password: the server
+/// is not accepting JWTs, so authenticate with the password until the next credential
+/// refresh (which a password rejection triggers, so a later JWT-only switch still recovers).
+@property (nonatomic, readwrite) BOOL skipTokenAuth;
+/// Set when a credential refresh found the Cognito session gone. The stream stays down
+/// until a sign-in posts GlacierXMPPCredentialsUpdated (see -cognitoCredentialsUpdated:).
+@property (nonatomic, readwrite) BOOL awaitingCognitoSignIn;
 @property (atomic, readwrite) GlacierLoginStatus loginStatus;
 
 @property (nonatomic, strong) NSDate *lastDisconnect;

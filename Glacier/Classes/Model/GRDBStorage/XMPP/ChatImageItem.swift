@@ -178,7 +178,7 @@ extension ChatImageItem: MediaItem {
             completion?(nil, urlString)
             return
         }*/
-        URLSession.shared.dataTask(with: url) { (data, response, error) in
+        GlacierMediaSession.session.dataTask(with: url) { (data, response, error) in
             if let error = error {
                 print("error in downloading image: \(error)")
                 completion?(nil, url, nil)

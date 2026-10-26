@@ -366,8 +366,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/stasel/WebRTC.git",
       "state" : {
-        "revision" : "86dbb5cb57e4da009b859a6245b1c10d610f215a",
-        "version" : "140.0.0"
+        "revision" : "6ed87f05368632f71dc95c89c14c051561710925",
+        "version" : "150.0.0"
       }
     },
     {
@@ -376,7 +376,7 @@
       "location" : "https://github.com/afriedmanGlacier/wireguard-apple.git",
       "state" : {
         "branch" : "master",
-        "revision" : "019969672c5367f04e9007ae97312723d27f1c29"
+        "revision" : "d3cad86c5cbbce29c783f619057fb4ffdbe8733b"
       }
     }
   ],

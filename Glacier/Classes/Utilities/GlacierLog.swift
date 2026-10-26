@@ -28,6 +28,12 @@ import os.log
 extension OSLog {
     private static var subsystem = Bundle.main.bundleIdentifier!
     public static let login = OSLog(subsystem: subsystem, category: "GlacierLogin")
+    /// Cognito/Amplify session lifecycle. Logged at info/default so it survives
+    /// into a sysdiagnose — these paths used to use print(), which never reaches
+    /// os_log and left field reports undiagnosable.
+    public static let auth = OSLog(subsystem: subsystem, category: "auth")
+    /// On-disk cache and temporary-file hygiene. See GlacierCacheHygiene.
+    public static let storage = OSLog(subsystem: subsystem, category: "storage")
 }
 
 @objc open class GlacierLog: NSObject {
