@@ -513,6 +513,8 @@ That's all there is to it!
 
 
 </string>
+			<key>License</key>
+			<string>unknown</string>
 			<key>Type</key>
 			<string>PSGroupSpecifier</string>
 		</dict>

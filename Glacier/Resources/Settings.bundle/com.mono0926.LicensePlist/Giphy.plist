@@ -6,8 +6,9 @@
 	<array>
 		<dict>
 			<key>FooterText</key>
-			<string>HTMLReader is in the public domain.
-</string>
+			<string>Copyright (C) GIPHY, Inc - All Rights Reserved. Unauthorized copying of the GIPHY SDK, via any medium is strictly prohibited.</string>
+			<key>License</key>
+			<string>unknown</string>
 			<key>Type</key>
 			<string>PSGroupSpecifier</string>
 		</dict>

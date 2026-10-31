@@ -260,22 +260,30 @@
                     }
                 } //if its a new room (ie invited) there might not be a name
                 
-                NSNumber *pubnum = [self.roomStatusDict objectForKey:room.roomJID.bare];
-                if (pubnum != nil && [pubnum boolValue] == NO) {
-                    //do nothing
-                } else {
-                    NSArray *features = [caps elementsForName:@"feature"];
-                    [features enumerateObjectsUsingBlock:^(NSXMLElement * _Nonnull feature, NSUInteger idx, BOOL * _Nonnull stop) {
-                        NSString *value = [feature attributeStringValueForName:@"var"];
-                        if ([value isEqualToString:@"muc_open"]) {
-                            if (!xroom.isPublic) {
-                                xroom.isPublic = YES;
-                                changed = YES;
-                            }
-                            *stop = YES;
+                // Rooms are private unless the server clearly says otherwise. Follow the
+                // server both ways, so a room that was wrongly marked public is corrected
+                // the next time it advertises muc_membersonly.
+                //
+                // While a room is still being created or joined (it has a roomStatusDict
+                // entry), muc_open is not trusted: ejabberd creates every room open and
+                // advertises muc_open until our configuration lands, which used to mark
+                // private groups public for good (and send them in plaintext).
+                // muc_membersonly is always trusted, so a guessed-public join is corrected
+                // at once.
+                BOOL settingUp = [self.roomStatusDict objectForKey:room.roomJID.bare] != nil;
+                NSArray *features = [caps elementsForName:@"feature"];
+                [features enumerateObjectsUsingBlock:^(NSXMLElement * _Nonnull feature, NSUInteger idx, BOOL * _Nonnull stop) {
+                    NSString *value = [feature attributeStringValueForName:@"var"];
+                    BOOL isOpen = [value isEqualToString:@"muc_open"];
+                    if (isOpen || [value isEqualToString:@"muc_membersonly"]) {
+                        if (xroom && xroom.isPublic != isOpen && !(isOpen && settingUp)) {
+                            DDLogWarn(@"Room %@ isPublic %d -> %d from disco features", room.roomJID.bare, xroom.isPublic, isOpen);
+                            xroom.isPublic = isOpen;
+                            changed = YES;
                         }
-                    }];
-                }
+                        *stop = YES;
+                    }
+                }];
                 
                 if (changed) {
                     [xroom saveThread];
@@ -991,9 +999,10 @@ didReceiveRetractionsForJIDs:(NSArray<XMPPJID *> *)jids {
     NSNumber *pubnum = [self.roomStatusDict objectForKey:sender.roomJID.bare];
     if (pubnum != nil) {
         ispublic = [pubnum boolValue];
-        [self.roomStatusDict removeObjectForKey:sender.roomJID.bare];
+        // Removed in didConfigure, not here: the room is still open on the server until
+        // the configuration below is applied, and the caps handler must not see that.
     }
-    
+
     NSString *roomname = [self.tempRoomName objectForKey:sender.roomJID.bare];
     if (self.updateRoomName) {
         [sender configureRoomUsingOptions:[[self class] roomNameConfiguration:configForm withName:roomname]];
@@ -1006,8 +1015,7 @@ didReceiveRetractionsForJIDs:(NSArray<XMPPJID *> *)jids {
 - (void)xmppRoom:(XMPPRoom *)sender didConfigure:(XMPPIQ *)iqResult {
     //Set Room Name
     NSString *name = [self.tempRoomName objectForKey:sender.roomJID.bare];
-    NSNumber *pubnum = [self.roomStatusDict objectForKey:sender.roomJID.bare];
-    BOOL ispublic = NO;
+    [self.roomStatusDict removeObjectForKey:sender.roomJID.bare];
     if (name) {
         [self.tempRoomName removeObjectForKey:sender.roomJID.bare];
         
@@ -1046,21 +1054,49 @@ didReceiveRetractionsForJIDs:(NSArray<XMPPJID *> *)jids {
     }];
 }
 
+- (void)xmppRoom:(XMPPRoom *)sender didNotConfigure:(XMPPIQ *)iqResult {
+    DDLogError(@"Room %@ configuration rejected: %@", sender.roomJID.bare, iqResult);
+    [self.roomStatusDict removeObjectForKey:sender.roomJID.bare];
+}
+
 - (void)xmppRoomDidJoin:(XMPPRoom *)sender
 {
-    // Older prosody servers have a bug where they consider all room as already
-    // existing, so the status 201 is never sent.
-    if ([self.roomsToConfigure containsObject:sender.roomJID.bare]) {
-        [self xmppRoomDidCreate:sender];
-    } else {
-        // Fetch member list
-        [self performBlockAsync:^{
-            [sender fetchMembersList];
-            [sender fetchAdminsList];
-            [sender fetchOwnersList];
-            [sender fetchModeratorsList];
-        }];
+    // Only a room the server reports as new (status 201, xmppRoomDidCreate, which
+    // fires before this for the same presence) is configured. A room still listed in
+    // roomsToConfigure here already existed - e.g. joined from the room list, which
+    // goes through startGroupChat - and must never be reconfigured: as its owner we
+    // would overwrite its real settings (members-only, listing, name) with our defaults
+    // and a public/private guess. This used to call xmppRoomDidCreate as a workaround
+    // for old Prosody servers that never send 201; ejabberd does.
+    NSString *roomJID = sender.roomJID.bare;
+    if ([self.roomsToConfigure containsObject:roomJID]) {
+        DDLogWarn(@"Room %@ already existed; joining without reconfiguring", roomJID);
+        [self.roomsToConfigure removeObject:roomJID];
+        [self.roomStatusDict removeObjectForKey:roomJID];
+
+        // Invites do not change the room's configuration, so still send any that
+        // were queued for it.
+        NSArray<NSString*> *buddyUniqueIds = [self.inviteDictionary objectForKey:roomJID];
+        if (buddyUniqueIds) {
+            [self.inviteDictionary removeObjectForKey:roomJID];
+            [self inviteBuddies:buddyUniqueIds toRoom:sender];
+        }
+
+        // muc_open is ignored while a room has a roomStatusDict entry, so the join's
+        // disco reply may have been dropped. Ask again now that the server's answer
+        // is trusted both ways.
+        ChatAccountModel *account = [ChatAccountModel accountForStream:self.xmppStream];
+        GlacierXMPPManager *xmppManager = (GlacierXMPPManager *)[[GlacierProtocolManager sharedInstance] xmppManagerForChatAccount:account];
+        [xmppManager.serverCheck.xmppCapabilities sendDiscoInfoQueryTo:sender.roomJID withNode:nil ver:nil];
     }
+
+    // Fetch member list
+    [self performBlockAsync:^{
+        [sender fetchMembersList];
+        [sender fetchAdminsList];
+        [sender fetchOwnersList];
+        [sender fetchModeratorsList];
+    }];
 }
 
 - (void)xmppRoomDidLeave:(XMPPRoom *)sender {

@@ -33,6 +33,8 @@ Font Awesome CSS, LESS, and SASS files are licensed under the MIT License: http:
 
 The Font Awesome pictograms are licensed under the CC BY 3.0 License: http://creativecommons.org/licenses/by/3.0
 </string>
+			<key>License</key>
+			<string>MIT</string>
 			<key>Type</key>
 			<string>PSGroupSpecifier</string>
 		</dict>
