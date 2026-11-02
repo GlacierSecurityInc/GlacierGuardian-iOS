@@ -3233,7 +3233,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1267;
+				CURRENT_PROJECT_VERSION = 1275;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 5MXM7J8H38;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3254,7 +3254,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Glacier/Includes",
 				);
-				MARKETING_VERSION = 7.3.2;
+				MARKETING_VERSION = 7.3.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.glacier.Messenger;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -3286,7 +3286,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1267;
+				CURRENT_PROJECT_VERSION = 1275;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 5MXM7J8H38;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3307,7 +3307,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Glacier/Includes",
 				);
-				MARKETING_VERSION = 7.3.2;
+				MARKETING_VERSION = 7.3.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.glacier.Messenger;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";

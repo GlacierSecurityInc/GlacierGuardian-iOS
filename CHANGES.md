@@ -1,5 +1,9 @@
 # Glacier Guardian Changelog
 
+## Version 7.3.3
+
+* Security updates to bundled third-party networking libraries
+
 ## Version 7.3.2
 
 * Group privacy hardening: new group chats are private by default, and a group is
