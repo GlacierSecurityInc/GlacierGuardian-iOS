@@ -262,9 +262,6 @@
 		F52B9243249943E900657875 /* Compatibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52B913F249943E600657875 /* Compatibility.swift */; };
 		F52B92452499865600657875 /* Pods-GlacierPods-Glacier-acknowledgements.plist in Resources */ = {isa = PBXBuildFile; fileRef = F52B92442499865600657875 /* Pods-GlacierPods-Glacier-acknowledgements.plist */; };
 		F52B9257249A300100657875 /* GlacierViewHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52B9247249A300100657875 /* GlacierViewHelper.swift */; };
-		F52B925B249A300100657875 /* StringsConverter.py in Resources */ = {isa = PBXBuildFile; fileRef = F52B9252249A300100657875 /* StringsConverter.py */; };
-		F52B925C249A300100657875 /* StringsUnused.py in Resources */ = {isa = PBXBuildFile; fileRef = F52B9253249A300100657875 /* StringsUnused.py */; };
-		F52B925D249A300100657875 /* readme.md in Resources */ = {isa = PBXBuildFile; fileRef = F52B9254249A300100657875 /* readme.md */; };
 		F52B925E249A300100657875 /* strings.json in Resources */ = {isa = PBXBuildFile; fileRef = F52B9255249A300100657875 /* strings.json */; };
 		F52B925F249A300100657875 /* GlacierStrings.m in Sources */ = {isa = PBXBuildFile; fileRef = F52B9256249A300100657875 /* GlacierStrings.m */; };
 		F52B9261249A40ED00657875 /* GlacierInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = F52B9260249A40ED00657875 /* GlacierInfo.m */; };
@@ -305,6 +302,7 @@
 		F547F24129270AE000A0B584 /* SwiftyToolTip.swift in Sources */ = {isa = PBXBuildFile; fileRef = F547F24029270AE000A0B584 /* SwiftyToolTip.swift */; };
 		F54E17A8255497150081E889 /* ProfileManager.m in Sources */ = {isa = PBXBuildFile; fileRef = F54E17A7255497150081E889 /* ProfileManager.m */; };
 		F54F4ED32F3397E2009DD790 /* RelativeTimeFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F54F4ED22F3397E2009DD790 /* RelativeTimeFormatter.swift */; };
+		F550636D2C498B7700F3B24E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F550636C2C498B7700F3B24E /* PrivacyInfo.xcprivacy */; };
 		F55A2C822D91ED28006C32AE /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = F55A2C812D91ED28006C32AE /* WebRTC */; };
 		F55A2C842D92CD32006C32AE /* WebRTCClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F55A2C832D92CD32006C32AE /* WebRTCClient.swift */; };
 		F55BCF692874B6D3002B0F06 /* GifHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F55BCF682874B6D3002B0F06 /* GifHelper.swift */; };
@@ -2100,6 +2098,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F5AE284D24993496009056F2 /* GlacierResources.bundle in Resources */,
+				F550636D2C498B7700F3B24E /* PrivacyInfo.xcprivacy in Resources */,
 				F5CFAF45263841A5000820BC /* outboundring.wav in Resources */,
 				F5AF5B332C90E2D300429D2C /* CoreProfileCell.xib in Resources */,
 				F5AE288124993CD1009056F2 /* Settings.bundle in Resources */,
@@ -2110,14 +2109,11 @@
 				F52B91B1249943E700657875 /* XMPPAccountCell.xib in Resources */,
 				F52B91B2249943E800657875 /* OMEMODeviceFingerprintCell.xib in Resources */,
 				F52B91BC249943E800657875 /* UserInfoProfileCell.xib in Resources */,
-				F52B925B249A300100657875 /* StringsConverter.py in Resources */,
 				F52B91B8249943E800657875 /* ComposeGroupBuddyCell.xib in Resources */,
 				F5AE287C24993CD1009056F2 /* Images.xcassets in Resources */,
-				F52B925D249A300100657875 /* readme.md in Resources */,
 				F5AE287F24993CD1009056F2 /* FontAwesome.ttf in Resources */,
 				F5AE288524993CD1009056F2 /* BusySignal.mp3 in Resources */,
 				F52B92452499865600657875 /* Pods-GlacierPods-Glacier-acknowledgements.plist in Resources */,
-				F52B925C249A300100657875 /* StringsUnused.py in Resources */,
 				F5624836255D95A800707D9E /* CustomCollectionViewCell.xib in Resources */,
 				F5AE288724993CD1009056F2 /* NewMessageAlert.wav in Resources */,
 				F5AE288624993CD1009056F2 /* LaunchMsgr.xib in Resources */,
@@ -2853,7 +2849,7 @@
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
 				STRIP_INSTALLED_PRODUCT = YES;
-				STRIP_STYLE = debugging;
+				STRIP_STYLE = all;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -3233,7 +3229,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1275;
+				CURRENT_PROJECT_VERSION = 1281;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 5MXM7J8H38;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3254,7 +3250,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Glacier/Includes",
 				);
-				MARKETING_VERSION = 7.3.3;
+				MARKETING_VERSION = 7.3.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.glacier.Messenger;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -3286,7 +3282,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1275;
+				CURRENT_PROJECT_VERSION = 1281;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 5MXM7J8H38;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3307,7 +3303,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Glacier/Includes",
 				);
-				MARKETING_VERSION = 7.3.3;
+				MARKETING_VERSION = 7.3.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.glacier.Messenger;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";

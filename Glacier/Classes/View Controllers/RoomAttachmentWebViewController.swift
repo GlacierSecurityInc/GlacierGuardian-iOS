@@ -18,7 +18,26 @@ open class RoomAttachmentWebViewController: UIViewController, WKUIDelegate {
     
     var saveUrl: URL
     var saving: Bool
-    
+
+    // Attachment content is supplied by whoever sent it, so the viewer treats it as
+    // untrusted: no page JavaScript, no persistent web storage, no remote fetches, and
+    // no navigation away from the attachment inside the app's own chrome.
+    private var initialNavigationAllowed = false
+    private static let ruleListIdentifier = "GlacierAttachmentBlockRemote"
+    // Block every http(s)/ws(s) load except the localhost MediaServer (GCDWebServer
+    // reports its URL as http://localhost:<port>/). Non-network schemes (file:, data:,
+    // blob:, about:, x-apple-ql-id: for QuickLook-converted documents) are left alone
+    // so local rendering keeps working. WebKit's url-filter regex has no `|`, hence
+    // one rule per pattern.
+    private static let blockRemoteRules = #"""
+    [
+      {"trigger": {"url-filter": "^https?://"}, "action": {"type": "block"}},
+      {"trigger": {"url-filter": "^wss?://"}, "action": {"type": "block"}},
+      {"trigger": {"url-filter": "^https?://localhost(:[0-9]+)?/"}, "action": {"type": "ignore-previous-rules"}},
+      {"trigger": {"url-filter": "^https?://127\\.0\\.0\\.1(:[0-9]+)?/"}, "action": {"type": "ignore-previous-rules"}}
+    ]
+    """#
+
     @objc public init(url:URL, data:Data?, baseurl:URL) {
         attachUrl = url
         saveUrl = attachUrl
@@ -34,19 +53,48 @@ open class RoomAttachmentWebViewController: UIViewController, WKUIDelegate {
     
     override open func loadView() {
         let webConfiguration = WKWebViewConfiguration()
+        webConfiguration.websiteDataStore = .nonPersistent()
+        webConfiguration.defaultWebpagePreferences.allowsContentJavaScript = false
+        webConfiguration.preferences.javaScriptCanOpenWindowsAutomatically = false
+        webConfiguration.dataDetectorTypes = []
         webView = WKWebView(frame: .zero, configuration: webConfiguration)
+        webView.allowsLinkPreview = false
         webView.uiDelegate = self
         webView.navigationDelegate = self
         view = webView
     }
-    
+
     override open func viewDidLoad() {
         super.viewDidLoad()
-        
+
+        // The rule list must be installed before the first load, so the load waits for it.
+        WKContentRuleListStore.default().compileContentRuleList(
+            forIdentifier: Self.ruleListIdentifier,
+            encodedContentRuleList: Self.blockRemoteRules) { [weak self] ruleList, error in
+                guard let self = self else { return }
+                if let ruleList = ruleList {
+                    self.webView.configuration.userContentController.add(ruleList)
+                } else {
+                    // The rules are static, so this only fails if they are edited badly.
+                    // JavaScript stays off and navigation stays restricted either way.
+                    DDLogError("Attachment viewer content rules failed to compile: \(String(describing: error))")
+                }
+                self.loadAttachment()
+            }
+
+        saving = false
+        let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(saveFile(_:)))
+        self.navigationItem.rightBarButtonItem = saveButton
+    }
+
+    private func loadAttachment() {
         if let data = attachData {
             let type = UTType(tag: attachUrl.pathExtension, tagClass: .filenameExtension, conformingTo: nil)
             let contentType = type?.preferredMIMEType ?? "nil"
-            webView.load(data, mimeType: contentType, characterEncodingName: "UTF-8", baseURL: baseUrl)
+            // In-memory content is self-contained. A remote base URL would only give
+            // sender-supplied content that server's origin, and the rule list blocks it.
+            let base = baseUrl.isFileURL ? baseUrl : URL(string: "about:blank")!
+            webView.load(data, mimeType: contentType, characterEncodingName: "UTF-8", baseURL: base)
         } else {
             if (attachUrl.isFileURL) {
                 webView.loadFileURL(attachUrl, allowingReadAccessTo: attachUrl)
@@ -55,10 +103,6 @@ open class RoomAttachmentWebViewController: UIViewController, WKUIDelegate {
                 webView.load(myRequest)
             }
         }
-        
-        saving = false
-        let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(saveFile(_:)))
-        self.navigationItem.rightBarButtonItem = saveButton
     }
     
     open override func viewWillDisappear(_ animated: Bool) {
@@ -167,6 +211,43 @@ extension RoomAttachmentWebViewController: WKNavigationDelegate {
         print(error)
     }
     
+    public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
+        decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+
+        // The first main-frame navigation is the load this controller issued itself.
+        if !initialNavigationAllowed && navigationAction.targetFrame?.isMainFrame == true {
+            initialNavigationAllowed = true
+            decisionHandler(.allow)
+            return
+        }
+
+        guard let url = navigationAction.request.url else {
+            decisionHandler(.cancel)
+            return
+        }
+
+        // A link the user tapped (e.g. in a PDF) goes to the system browser, where the
+        // real address is visible, rather than replacing the attachment in-app.
+        if navigationAction.navigationType == .linkActivated {
+            decisionHandler(.cancel)
+            if let scheme = url.scheme?.lowercased(), scheme == "https" || scheme == "http" {
+                UIApplication.shared.open(url)
+            }
+            return
+        }
+
+        // Anything else the document tries on its own (form posts, meta refresh,
+        // iframes) may only stay on non-network schemes such as about: or data:
+        // (x-apple-ql-id: is WebKit's scheme for QuickLook-converted Office documents).
+        switch url.scheme?.lowercased() {
+        case "about", "data", "blob", "x-apple-ql-id":
+            decisionHandler(navigationAction.navigationType == .formSubmitted ||
+                            navigationAction.navigationType == .formResubmitted ? .cancel : .allow)
+        default:
+            decisionHandler(.cancel)
+        }
+    }
+
     public func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse,
         decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
 

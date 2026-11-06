@@ -1,5 +1,9 @@
 # Glacier Guardian Changelog
 
+## Version 7.3.4
+
+* Hardened the in-app attachment viewer and tightened App Transport Security
+
 ## Version 7.3.3
 
 * Security updates to bundled third-party networking libraries
